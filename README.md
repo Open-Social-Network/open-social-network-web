@@ -22,6 +22,8 @@ It does three simple things:
 
 There is no account system in this MVP. Follows are stored locally in your browser.
 
+If you already have a sovereign page, the browser can also log in locally with that page folder. The private key stays in your browser and is used only to sign new posts.
+
 ## The Social Browser for a Protocol-First Network
 
 The internet already has powerful protocols:
@@ -84,11 +86,14 @@ The aggregator is intentionally neutral. It reads the network, but it does not o
 - Merges verified posts chronologically.
 - Shows trust diagnostics for rejected posts and failed feeds.
 - Supports manual following by entering a `profile.json` URL.
+- Logs in locally with a generated page folder.
+- Signs new posts in the browser and exports an updated `feed.json`.
 
 ## What This MVP Does Not Do Yet
 
 - It does not create accounts.
-- It does not publish posts.
+- It does not upload your private key to a server.
+- It does not deploy posts automatically.
 - It does not provide global search.
 - It does not implement moderation or ranking.
 - It does not store data on a server.
@@ -128,6 +133,20 @@ The profile must expose:
 - a valid Open Social Network identity file
 - a feed endpoint
 - posts signed by the matching private key
+
+### Log In With Your Page
+
+If you created a page with the CLI, select `Log in with page folder` and choose the generated project folder.
+
+The folder must contain:
+
+```text
+public/profile.json
+public/feed.json
+private/identity.private.jwk.json
+```
+
+Open Social Network Web validates that the private key owns the profile. After that, it remembers the session in local browser storage, shows your page as logged in, lets you sign a new post, and lets you download the updated `feed.json`.
 
 ### Read Trust Diagnostics
 

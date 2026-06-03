@@ -129,7 +129,9 @@ button {
 .post-card header,
 .post-card footer,
 .profile-row,
-.follow-form {
+.follow-form,
+.owner-actions,
+.owner-identity {
   display: flex;
   align-items: center;
 }
@@ -161,6 +163,14 @@ button {
     transform 140ms ease,
     background 140ms ease,
     color 140ms ease;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
 }
 
 .button:hover,
@@ -201,9 +211,83 @@ button {
   outline: none;
 }
 
-.follow-form input:focus {
+.follow-form input:focus,
+.owner-post-form textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(21, 87, 255, 0.14);
+}
+
+.owner-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.owner-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.owner-post-form {
+  display: grid;
+  gap: 10px;
+}
+
+.owner-post-form textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0b1120;
+  color: var(--ink);
+  padding: 10px 11px;
+  outline: none;
+}
+
+.owner-post-form textarea {
+  resize: vertical;
+}
+
+.owner-folder-button {
+  width: 100%;
+}
+
+.owner-identity {
+  gap: 10px;
+  min-width: 0;
+}
+
+.owner-identity strong,
+.owner-identity span span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.owner-identity strong {
+  font-size: 0.9rem;
+}
+
+.owner-identity span span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.owner-actions {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.owner-link {
+  justify-content: center;
+  min-height: 38px;
+  text-decoration: none;
+}
+
+.panel-divider {
+  height: 1px;
+  margin: 4px 0 16px;
+  background: var(--border);
 }
 
 .profile-list,

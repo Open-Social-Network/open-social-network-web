@@ -6,6 +6,16 @@ import {
   saveStoredFollows,
   toggleFollow,
 } from './app/follows';
+import {
+  clearStoredOwnerSession,
+  connectOwnerPage,
+  exportOwnerFeed,
+  loadStoredOwnerSession,
+  mergeOwnerTimeline,
+  saveStoredOwnerSession,
+  signOwnerPost,
+  type OwnerSession,
+} from './app/owner-session';
 import { profileAvatarUrl, profilePageUrl } from './app/profile-links';
 import './styles.css';
 
@@ -13,8 +23,10 @@ interface AppState {
   directoryProfiles: string[];
   follows: string[];
   timeline: TimelineResult | null;
+  owner: OwnerSession | null;
   loading: boolean;
   error: string | null;
+  ownerError: string | null;
 }
 
 const appRoot = document.querySelector<HTMLDivElement>('#app');
@@ -29,8 +41,10 @@ const state: AppState = {
   directoryProfiles: [],
   follows: [],
   timeline: null,
+  owner: null,
   loading: true,
   error: null,
+  ownerError: null,
 };
 
 void boot();
@@ -39,6 +53,7 @@ async function boot(): Promise<void> {
   render();
 
   try {
+    state.owner = loadStoredOwnerSession();
     state.directoryProfiles = await loadDirectory();
     state.follows = loadStoredFollows(state.directoryProfiles);
     await refreshTimeline();
@@ -100,9 +115,11 @@ function render(): void {
         </section>
 
         <aside class="panel diagnostics-panel" aria-label="Diagnostics">
+          ${renderOwnerPanel()}
+          <div class="panel-divider"></div>
           <div class="panel-header">
             <h2>Trust</h2>
-            <span>${state.timeline?.rejectedPosts.length ?? 0} rejected</span>
+            <span>${currentTimeline().rejectedPosts.length} rejected</span>
           </div>
           ${renderDiagnostics()}
         </aside>
@@ -157,6 +174,23 @@ function bindEvents(): void {
       void refreshTimeline();
     });
   }
+
+  const ownerFolderInput = app.querySelector<HTMLInputElement>('[data-owner-folder]');
+  ownerFolderInput?.addEventListener('change', () => {
+    void connectOwnerFromFolder(ownerFolderInput.files);
+  });
+
+  app.querySelector<HTMLFormElement>('[data-form="owner-post"]')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    void publishOwnerPost(event.currentTarget as HTMLFormElement);
+  });
+
+  app.querySelector<HTMLButtonElement>('[data-action="owner-disconnect"]')?.addEventListener('click', () => {
+    clearStoredOwnerSession();
+    state.owner = null;
+    state.ownerError = null;
+    render();
+  });
 }
 
 function renderFollowForm(): string {
@@ -170,8 +204,9 @@ function renderFollowForm(): string {
 }
 
 function renderProfiles(): string {
+  const timeline = currentTimeline();
   const profilesByUrl = new Map(
-    state.timeline?.profiles.map((profile) => [profile.endpoints.profile, profile]) ?? [],
+    timeline.profiles.map((profile) => [profile.endpoints.profile, profile]),
   );
   const knownProfiles = [...new Set([...state.directoryProfiles, ...state.follows])];
 
@@ -183,7 +218,7 @@ function renderProfiles(): string {
     .map((profileUrl) => {
       const profile =
         profilesByUrl.get(profileUrl) ??
-        state.timeline?.profiles.find((item) => item.endpoints.profile === new URL(profileUrl).pathname);
+        timeline.profiles.find((item) => item.endpoints.profile === new URL(profileUrl).pathname);
       const followed = state.follows.includes(profileUrl);
       const name = profile?.name ?? shortUrl(profileUrl);
       const handle = profile?.handle ?? profileUrl;
@@ -215,8 +250,9 @@ function renderProfiles(): string {
 }
 
 function renderTimelineSummary(): string {
-  const postCount = state.timeline?.posts.length ?? 0;
-  const profileCount = state.timeline?.profiles.length ?? 0;
+  const timeline = currentTimeline();
+  const postCount = timeline.posts.length;
+  const profileCount = timeline.profiles.length;
 
   return `
     <div class="timeline-summary">
@@ -233,15 +269,17 @@ function renderTimelineSummary(): string {
 }
 
 function renderTimeline(): string {
-  if (state.loading && !state.timeline) {
+  const timeline = currentTimeline();
+
+  if (state.loading && !state.timeline && !state.owner) {
     return renderSkeletonPosts();
   }
 
-  if (!state.timeline || state.timeline.posts.length === 0) {
+  if (timeline.posts.length === 0) {
     return '<p class="empty-state">Follow a profile to load signed posts.</p>';
   }
 
-  return state.timeline.posts
+  return timeline.posts
     .map(
       (post) => {
         const pageUrl = profilePageUrl(post.profile, window.location.href);
@@ -271,11 +309,13 @@ function renderTimeline(): string {
 }
 
 function renderDiagnostics(): string {
-  if (!state.timeline) {
+  const timeline = currentTimeline();
+
+  if (!state.timeline && !state.owner) {
     return '<p class="empty-state">Diagnostics load with the timeline.</p>';
   }
 
-  const rejected = state.timeline.rejectedPosts
+  const rejected = timeline.rejectedPosts
     .map(
       (post) => `
         <li>
@@ -285,7 +325,7 @@ function renderDiagnostics(): string {
       `,
     )
     .join('');
-  const failures = state.timeline.failures
+  const failures = timeline.failures
     .map(
       (failure) => `
         <li>
@@ -311,6 +351,134 @@ function renderDiagnostics(): string {
       ${failures}
     </ul>
   `;
+}
+
+function renderOwnerPanel(): string {
+  if (!state.owner) {
+    return `
+      <section class="owner-panel" aria-label="Owner">
+        <div class="panel-header">
+          <h2>Owner</h2>
+          <span>Not connected</span>
+        </div>
+        <p class="owner-copy">Choose your Open Social Network page folder. Nothing is uploaded.</p>
+        ${state.ownerError ? `<p class="app-error">${escapeHtml(state.ownerError)}</p>` : ''}
+        <label class="button button-primary owner-folder-button" for="ownerFolder">Log in with page folder</label>
+        <input
+          class="sr-only"
+          id="ownerFolder"
+          type="file"
+          data-owner-folder
+          webkitdirectory
+          multiple
+        />
+      </section>
+    `;
+  }
+
+  const pageUrl = ownerPageUrl(state.owner);
+  const avatarUrl = profileAvatarUrl(state.owner.profile, state.owner.pageUrl ?? window.location.href);
+
+  return `
+    <section class="owner-panel" aria-label="Owner">
+      <div class="panel-header">
+        <h2>Owner</h2>
+        <span>Logged in</span>
+      </div>
+      ${state.ownerError ? `<p class="app-error">${escapeHtml(state.ownerError)}</p>` : ''}
+      <div class="owner-identity">
+        ${renderAvatar(state.owner.profile.name, avatarUrl, 'profile-picture')}
+        <span>
+          <strong>${escapeHtml(state.owner.profile.name)}</strong>
+          <span>${escapeHtml(state.owner.profile.handle)}</span>
+        </span>
+      </div>
+      <form class="owner-post-form" data-form="owner-post">
+        <label class="sr-only" for="ownerPostContent">New signed post</label>
+        <textarea id="ownerPostContent" name="content" rows="4" maxlength="1000" placeholder="Write a signed post..."></textarea>
+        <button class="button button-primary" type="submit">Sign post</button>
+      </form>
+      <div class="owner-actions">
+        <a class="button button-secondary owner-link" href="${escapeAttribute(pageUrl)}" target="_blank" rel="noreferrer">My page</a>
+        <a
+          class="button button-secondary owner-link"
+          href="${escapeAttribute(ownerFeedDownloadHref(state.owner))}"
+          download="feed.json"
+        >Download feed.json</a>
+        <button class="icon-button" type="button" data-action="owner-disconnect" title="Disconnect owner session" aria-label="Disconnect owner session">Out</button>
+      </div>
+      <p class="owner-copy">After posting, replace your public feed.json with the downloaded file and deploy your page.</p>
+    </section>
+  `;
+}
+
+async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
+  try {
+    const projectFiles = Array.from(files ?? []);
+    const profileFile = ownerProjectFile(projectFiles, 'public/profile.json');
+    const feedFile = ownerProjectFile(projectFiles, 'public/feed.json');
+    const privateKeyFile = ownerProjectFile(projectFiles, 'private/identity.private.jwk.json');
+    const owner = await connectOwnerPage({
+      profile: (await readJsonFile(profileFile)) as OwnerSession['profile'],
+      feed: (await readJsonFile(feedFile)) as OwnerSession['feed'],
+      privateKeyJwk: (await readJsonFile(privateKeyFile)) as JsonWebKey,
+    });
+
+    state.owner = owner;
+    state.ownerError = null;
+    saveStoredOwnerSession(owner);
+    render();
+  } catch (error) {
+    state.ownerError = error instanceof Error ? error.message : 'Could not log in with this folder';
+    render();
+  }
+}
+
+async function publishOwnerPost(form: HTMLFormElement): Promise<void> {
+  if (!state.owner) {
+    return;
+  }
+
+  try {
+    const content = (form.elements.namedItem('content') as HTMLTextAreaElement | null)?.value ?? '';
+    state.owner = await signOwnerPost(state.owner, content);
+    state.ownerError = null;
+    saveStoredOwnerSession(state.owner);
+    render();
+  } catch (error) {
+    state.ownerError = error instanceof Error ? error.message : 'Could not sign this post';
+    render();
+  }
+}
+
+function currentTimeline(): TimelineResult {
+  return mergeOwnerTimeline(state.timeline, state.owner);
+}
+
+function ownerPageUrl(session: OwnerSession): string {
+  return session.pageUrl ?? session.profile.website ?? profilePageUrl(session.profile, window.location.href);
+}
+
+function ownerFeedDownloadHref(session: OwnerSession): string {
+  return `data:application/json;charset=utf-8,${encodeURIComponent(exportOwnerFeed(session))}`;
+}
+
+async function readJsonFile(file: File): Promise<unknown> {
+  return JSON.parse(await file.text());
+}
+
+function ownerProjectFile(files: File[], path: string): File {
+  const file = files.find((candidate) => filePath(candidate).endsWith(path));
+
+  if (!file) {
+    throw new Error('Choose the page folder that contains public/ and private/.');
+  }
+
+  return file;
+}
+
+function filePath(file: File): string {
+  return file.webkitRelativePath || file.name;
 }
 
 function renderSkeletonPosts(): string {
