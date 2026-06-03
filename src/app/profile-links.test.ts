@@ -29,6 +29,21 @@ describe('profile links', () => {
     );
   });
 
+  it('opens local example pages through their static index file', () => {
+    expect(
+      profilePageUrl(
+        {
+          ...baseProfile,
+          endpoints: {
+            ...baseProfile.endpoints,
+            profile: '/profiles/ada/profile.json',
+          },
+        },
+        'http://127.0.0.1:5173/profiles/ada/profile.json',
+      ),
+    ).toBe('http://127.0.0.1:5173/profiles/ada/index.html');
+  });
+
   it('falls back to website when the profile endpoint is not a profile.json file', () => {
     expect(
       profilePageUrl(
