@@ -72,7 +72,10 @@ await mkdir(profilesRoot, { recursive: true });
 const directory = {
   protocol: 'opensocial',
   version: '0.1',
-  profiles: demoProfiles.map((profile) => `/profiles/${profile.slug}/profile.json`),
+  profiles: [
+    'https://open-social-organization.github.io/opensocial-official/profile.json',
+    ...demoProfiles.map((profile) => `/profiles/${profile.slug}/profile.json`),
+  ],
 };
 
 await writeJson(join(profilesRoot, 'directory.json'), directory);
