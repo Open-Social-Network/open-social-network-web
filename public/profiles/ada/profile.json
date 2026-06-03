@@ -1,0 +1,25 @@
+{
+  "protocol": "opensocial",
+  "version": "0.1",
+  "handle": "ada@opensocial.local",
+  "name": "Ada Lovelace",
+  "bio": "Protocol designer testing sovereign pages.",
+  "website": "https://example.com/ada",
+  "publicKey": {
+    "alg": "ES256",
+    "jwk": {
+      "key_ops": [
+        "verify"
+      ],
+      "ext": true,
+      "kty": "EC",
+      "x": "FyLwZWmGxQq0uIwfhwbC8Vdd4PleUS2SVXcRrfxd6ag",
+      "y": "MQDa0rMS4l-Ufi0dg5hLv2ZV8ckoWqwubFa_HMUJc6o",
+      "crv": "P-256"
+    }
+  },
+  "endpoints": {
+    "profile": "/profiles/ada/profile.json",
+    "feed": "/profiles/ada/feed.json"
+  }
+}

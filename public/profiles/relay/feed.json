@@ -1,0 +1,17 @@
+{
+  "protocol": "opensocial",
+  "version": "0.1",
+  "author": "relay@indieweb.test",
+  "posts": [
+    {
+      "id": "relay_001",
+      "author": "relay@indieweb.test",
+      "createdAt": "2026-06-03T10:45:00.000Z",
+      "content": "Aggregators are social browsers. They can index, rank, and display, but they do not own the graph.",
+      "signature": {
+        "alg": "ES256",
+        "value": "8mjB6AhrkZE3y1fJZtFY8_to6r3Eqt7KrQ4VQszH_qk32-6eP0g7bC4BLBYkjVbsEIvFt4wpoUyjmqhf19VX7Q"
+      }
+    }
+  ]
+}

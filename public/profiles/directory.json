@@ -1,0 +1,9 @@
+{
+  "protocol": "opensocial",
+  "version": "0.1",
+  "profiles": [
+    "/profiles/ada/profile.json",
+    "/profiles/tommy/profile.json",
+    "/profiles/relay/profile.json"
+  ]
+}

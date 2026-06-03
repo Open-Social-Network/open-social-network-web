@@ -1,0 +1,30 @@
+{
+  "name": "opensocial-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The official OpenSocial web aggregator for reading sovereign signed feeds.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Open-Social-Organization/opensocial-web.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Open-Social-Organization/opensocial-web/issues"
+  },
+  "homepage": "https://github.com/Open-Social-Organization/opensocial-web#readme",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "generate:demo": "node scripts/generate-demo-profiles.mjs",
+    "preview": "vite preview",
+    "audit": "npm audit --audit-level=moderate"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.8.0",
+    "vite": "^7.0.0",
+    "vitest": "^4.1.8"
+  }
+}

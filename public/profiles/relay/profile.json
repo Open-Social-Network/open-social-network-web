@@ -1,0 +1,25 @@
+{
+  "protocol": "opensocial",
+  "version": "0.1",
+  "handle": "relay@indieweb.test",
+  "name": "Indie Relay",
+  "bio": "A sample profile showing aggregators can read any compatible page.",
+  "website": "https://indieweb.test",
+  "publicKey": {
+    "alg": "ES256",
+    "jwk": {
+      "key_ops": [
+        "verify"
+      ],
+      "ext": true,
+      "kty": "EC",
+      "x": "3DUEsR3WazLLpSOrcmPIJQ66zUpmucLMRzyTdXQJDVE",
+      "y": "WM4xB3XzhPg1XVhoC8vUTrwQl7M7gOrX7qo9tdqSEEo",
+      "crv": "P-256"
+    }
+  },
+  "endpoints": {
+    "profile": "/profiles/relay/profile.json",
+    "feed": "/profiles/relay/feed.json"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "protocol": "opensocial",
+  "version": "0.1",
+  "author": "tommy@tommy.page",
+  "posts": [
+    {
+      "id": "tommy_001",
+      "author": "tommy@tommy.page",
+      "createdAt": "2026-06-03T13:15:00.000Z",
+      "content": "MVP target: identity file, signed posts, static feeds, and one aggregator that merges follows chronologically.",
+      "signature": {
+        "alg": "ES256",
+        "value": "6GGplAuOQ2PcIvQGOmTvTO-y9-T3pwY8pZpxQMCyKB-ZcLzNOi8XaTrK4Al9tslNCoHHPVtRt7HMnYNGwcHoEA"
+      }
+    },
+    {
+      "id": "tommy_002",
+      "author": "tommy@tommy.page",
+      "createdAt": "2026-06-01T09:00:00.000Z",
+      "content": "No blockchain, no token, no central account. HTTP and signed JSON are enough for the first proof.",
+      "signature": {
+        "alg": "ES256",
+        "value": "VAmH-mrXaUPUR5Q7Dfz7u-FA8QL019ezkY9NAcyrx8ID_97v8nY3Rs23wxNitVd7f8AvULzTPkeNCAUah58uNw"
+      }
+    }
+  ]
+}
