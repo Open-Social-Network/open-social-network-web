@@ -97,6 +97,16 @@ Those are separate layers. This client is a first proof that sovereign pages and
 
 ## How To Use It
 
+### Publish Your Own Profile
+
+The easiest way to publish a compatible OpenSocial profile is:
+
+```bash
+npx opensocial
+```
+
+That guided CLI creates a sovereign page, signs posts, validates the feed, and deploys it to a free static host.
+
 ### Run the Demo
 
 ```bash
@@ -167,6 +177,7 @@ npm run generate:demo
 
 ## Related Repositories
 
+- [`opensocial-cli`](https://github.com/Open-Social-Organization/opensocial-cli) - guided publishing for real sovereign profiles
 - [`opensocial-core`](https://github.com/Open-Social-Organization/opensocial-core) - protocol primitives, schemas, and specification
 - [`opensocial-page`](https://github.com/Open-Social-Organization/opensocial-page) - sovereign page template
 
