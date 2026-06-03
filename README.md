@@ -225,3 +225,42 @@ npm run generate:demo
 Open Social Network Web is early alpha. The current priority is correctness, clarity, and protocol usability before social features expand.
 
 The long-term goal is not to create another social platform. The goal is to make platforms optional.
+
+## How Open Social Network Differs From Existing Decentralized Social Platforms
+
+Open Social Network is not based on the idea that decentralized social media is new. Projects such as Mastodon, ActivityPub, Nostr, Bluesky, Diaspora, Matrix, and the broader fediverse have already made important contributions to open social systems, decentralized identity, federation, and protocol-based communication.
+
+This project exists because we believe there is still room to explore a different direction.
+
+The goal is not to dismiss previous work. The goal is to learn from it, keep the core smaller, and make social identity feel more like open internet infrastructure than an account inside a platform.
+
+### Where Existing Systems Still Struggle
+
+Many decentralized systems still depend heavily on servers, relays, instances, or providers. Even when the network is federated, identity can remain tied to infrastructure that users do not fully control. Open Social Network aims for profiles that feel closer to a website, a domain, or an email identity than an account rented from a server.
+
+Many systems also ask mainstream users to understand federation, relays, instances, self-hosting, keys, or protocol internals. Most people simply want a profile, posts, followers, discovery, portability, and a familiar way to interact. Open Social Network treats decentralization as an infrastructure property, not as a burden users should have to understand before they can participate.
+
+Creator ownership is another unresolved problem. Visibility, reputation, ranking, recommendations, and social graphs can still become dependent on a specific platform, app, host, or algorithm. Open Social Network is designed around portable identity, portable followers, portable reputation, and replaceable aggregators.
+
+Finally, decentralized social systems can become architecturally complex. Federation rules, relay ecosystems, moderation boundaries, incompatible implementations, and difficult onboarding can make the user experience feel fragmented. Open Social Network intentionally starts with a small protocol surface: identity, profiles, feeds, follows, signed posts, and portable signed actions.
+
+### Core Direction
+
+Open Social Network is built around a few principles:
+
+- Profiles belong to their creators, not to a platform.
+- Aggregators display the network; they do not own the network.
+- Followers and audiences should move with creators across apps, hosts, and interfaces.
+- The protocol itself should not contain a central authority that can remove an identity globally, while hosts, apps, and aggregators remain free to moderate what they store, index, or display.
+- Algorithms should compete. No single company should control visibility for the whole network.
+- Simplicity matters. If open social identity requires technical expertise, it cannot become normal social infrastructure.
+
+### How We Hope To Move The Space Forward
+
+Open Social Network starts with the smallest useful foundation and grows through optional, interoperable layers. Users should be able to create a page, write posts, react, comment, follow, move hosts, change aggregators, or self-host without losing identity or audience.
+
+Not every user needs to self-host. A healthy Open Social Network ecosystem should support hosted providers, local folders, personal domains, managed hosting, mirrors, and self-managed infrastructure. The experience should feel familiar to users while preserving protocol-level portability underneath.
+
+The long-term goal is not to create a dominant social media company. The goal is to define open social infrastructure that anyone can implement, inspect, host, aggregate, or replace.
+
+Open Social Network does not claim to have solved decentralized social media. Moderation, spam, discovery, scaling, onboarding, incentives, and safety remain difficult problems. This project is an attempt to explore a simpler, more user-centric, and more sovereign direction for social identity on the internet.
