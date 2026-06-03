@@ -12,13 +12,14 @@ It is a web client that follows sovereign Open Social Network profiles, reads th
 
 ## In One Minute
 
-Open Social Network Web is a social browser.
+Open Social Network Web is the easiest place to use Open Social Network.
 
-It does three simple things:
+It keeps the main flow simple:
 
-1. follows Open Social Network profile URLs
-2. reads each profile's signed feed
-3. shows only posts that verify against the profile public key
+1. read signed posts from people you follow
+2. create your own page
+3. write posts
+4. download your site and host it anywhere
 
 There is no account system in this MVP. Follows are stored locally in your browser.
 
@@ -86,8 +87,10 @@ The aggregator is intentionally neutral. It reads the network, but it does not o
 - Merges verified posts chronologically.
 - Shows trust diagnostics for rejected posts and failed feeds.
 - Supports manual following by entering a `profile.json` URL.
+- Creates a new page directly in the browser.
 - Logs in locally with a generated page folder.
 - Signs new posts in the browser and exports an updated `feed.json`.
+- Exports public files that can be hosted anywhere static files are supported.
 
 ## What This MVP Does Not Do Yet
 
@@ -112,6 +115,8 @@ npx open-social-network
 
 That guided CLI creates a sovereign page, signs posts, validates the feed, and deploys it to a free static host.
 
+You can also create a page directly in Open Social Network Web with `Create my page`.
+
 ### Run the Demo
 
 ```bash
@@ -122,7 +127,7 @@ npm run dev -- --host 127.0.0.1
 
 Open `http://127.0.0.1:5173/`.
 
-The app starts with three demo profiles and five signed posts.
+The app starts with demo profiles and signed posts.
 
 ### Follow a Profile
 
@@ -147,6 +152,21 @@ private/identity.private.jwk.json
 ```
 
 Open Social Network Web validates that the private key owns the profile. After that, it remembers the session in local browser storage, shows your page as logged in, lets you sign a new post, and lets you download the updated `feed.json`.
+
+### Host It Anywhere
+
+Open Social Network does not require a specific host.
+
+Download the public site and upload it to any static host:
+
+- GitHub Pages
+- Cloudflare Pages
+- Netlify
+- Vercel
+- S3-compatible hosting
+- your own server
+
+Only publish the public files. Never publish the private folder.
 
 ### Read Trust Diagnostics
 

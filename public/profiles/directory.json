@@ -2,7 +2,7 @@
   "protocol": "open-social-network",
   "version": "0.1",
   "profiles": [
-    "https://open-social-network.github.io/open-social-network-official/profile.json",
+    "/profiles/official/profile.json",
     "/profiles/ada/profile.json",
     "/profiles/tommy/profile.json",
     "/profiles/relay/profile.json"

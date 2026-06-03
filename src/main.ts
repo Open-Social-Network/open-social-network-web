@@ -9,7 +9,9 @@ import {
 import {
   clearStoredOwnerSession,
   connectOwnerPage,
+  createOwnerPage,
   exportOwnerFeed,
+  exportOwnerSiteZip,
   loadStoredOwnerSession,
   mergeOwnerTimeline,
   saveStoredOwnerSession,
@@ -87,7 +89,7 @@ function render(): void {
           <img class="brand-logo" src="/assets/open-social-network-logo.png" alt="" aria-hidden="true" />
           <div>
             <h1>Open Social Network</h1>
-            <p>Signed sovereign feeds</p>
+            <p>Read, create, post, publish anywhere</p>
           </div>
         </div>
         <button class="button button-primary" data-action="refresh" type="button">
@@ -114,11 +116,11 @@ function render(): void {
           </div>
         </section>
 
-        <aside class="panel diagnostics-panel" aria-label="Diagnostics">
+        <aside class="panel diagnostics-panel" aria-label="My Page and Verification">
           ${renderOwnerPanel()}
           <div class="panel-divider"></div>
           <div class="panel-header">
-            <h2>Trust</h2>
+            <h2>Verification</h2>
             <span>${currentTimeline().rejectedPosts.length} rejected</span>
           </div>
           ${renderDiagnostics()}
@@ -180,10 +182,22 @@ function bindEvents(): void {
     void connectOwnerFromFolder(ownerFolderInput.files);
   });
 
+  app.querySelector<HTMLFormElement>('[data-form="owner-create"]')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    void createOwnerFromForm(event.currentTarget as HTMLFormElement);
+  });
+
   app.querySelector<HTMLFormElement>('[data-form="owner-post"]')?.addEventListener('submit', (event) => {
     event.preventDefault();
     void publishOwnerPost(event.currentTarget as HTMLFormElement);
   });
+
+  for (const button of app.querySelectorAll<HTMLButtonElement>('[data-owner-download]')) {
+    button.addEventListener('click', () => {
+      const includePrivate = button.dataset.ownerDownload === 'full';
+      downloadOwnerSite(includePrivate);
+    });
+  }
 
   app.querySelector<HTMLButtonElement>('[data-action="owner-disconnect"]')?.addEventListener('click', () => {
     clearStoredOwnerSession();
@@ -197,7 +211,7 @@ function renderFollowForm(): string {
   return `
     <form class="follow-form" data-form="follow">
       <label class="sr-only" for="profileUrl">Profile URL</label>
-      <input id="profileUrl" name="profileUrl" type="url" placeholder="Profile URL" />
+      <input id="profileUrl" name="profileUrl" type="url" placeholder="Paste a profile link" />
       <button class="button button-secondary" type="submit">Follow</button>
     </form>
   `;
@@ -297,10 +311,11 @@ function renderTimeline(): string {
             </a>
           </header>
           <p class="post-content">${escapeHtml(post.content)}</p>
-          <footer>
-            <span>ES256</span>
+          <details class="technical-details post-details">
+            <summary>Technical details</summary>
+            <span>Signature algorithm: ES256</span>
             <code>${escapeHtml(post.signature.value.slice(0, 18))}...</code>
-          </footer>
+          </details>
         </article>
       `;
       },
@@ -356,22 +371,37 @@ function renderDiagnostics(): string {
 function renderOwnerPanel(): string {
   if (!state.owner) {
     return `
-      <section class="owner-panel" aria-label="Owner">
+      <section class="owner-panel" aria-label="My Page">
         <div class="panel-header">
-          <h2>Owner</h2>
-          <span>Not connected</span>
+          <h2>My Page</h2>
+          <span>Create</span>
         </div>
-        <p class="owner-copy">Choose your Open Social Network page folder. Nothing is uploaded.</p>
+        <p class="owner-copy">Create a page, write posts, and host it anywhere.</p>
         ${state.ownerError ? `<p class="app-error">${escapeHtml(state.ownerError)}</p>` : ''}
-        <label class="button button-primary owner-folder-button" for="ownerFolder">Log in with page folder</label>
-        <input
-          class="sr-only"
-          id="ownerFolder"
-          type="file"
-          data-owner-folder
-          webkitdirectory
-          multiple
-        />
+        <form class="owner-create-form" data-form="owner-create">
+          <label class="sr-only" for="ownerName">Name</label>
+          <input id="ownerName" name="name" type="text" autocomplete="name" placeholder="Your name or project" required />
+          <label class="sr-only" for="ownerHandle">Handle</label>
+          <input id="ownerHandle" name="handle" type="text" autocomplete="username" placeholder="your-name@example.com" required />
+          <label class="sr-only" for="ownerBio">Bio</label>
+          <textarea id="ownerBio" name="bio" rows="2" maxlength="240" placeholder="Short bio"></textarea>
+          <label class="sr-only" for="ownerFirstPost">First post</label>
+          <textarea id="ownerFirstPost" name="firstPost" rows="3" maxlength="1000" placeholder="Write your first post..." required></textarea>
+          <button class="button button-primary" type="submit">Create my page</button>
+        </form>
+        <details class="technical-details">
+          <summary>Already have a page?</summary>
+          <p>Choose the folder created by Open Social Network. Nothing is uploaded.</p>
+          <label class="button button-secondary owner-folder-button" for="ownerFolder">Open my page</label>
+          <input
+            class="sr-only"
+            id="ownerFolder"
+            type="file"
+            data-owner-folder
+            webkitdirectory
+            multiple
+          />
+        </details>
       </section>
     `;
   }
@@ -380,12 +410,13 @@ function renderOwnerPanel(): string {
   const avatarUrl = profileAvatarUrl(state.owner.profile, state.owner.pageUrl ?? window.location.href);
 
   return `
-    <section class="owner-panel" aria-label="Owner">
+    <section class="owner-panel" aria-label="My Page">
       <div class="panel-header">
-        <h2>Owner</h2>
-        <span>Logged in</span>
+        <h2>My Page</h2>
+        <span>Open</span>
       </div>
       ${state.ownerError ? `<p class="app-error">${escapeHtml(state.ownerError)}</p>` : ''}
+      <p class="owner-warning">This file proves this page is yours. Back it up.</p>
       <div class="owner-identity">
         ${renderAvatar(state.owner.profile.name, avatarUrl, 'profile-picture')}
         <span>
@@ -395,21 +426,46 @@ function renderOwnerPanel(): string {
       </div>
       <form class="owner-post-form" data-form="owner-post">
         <label class="sr-only" for="ownerPostContent">New signed post</label>
-        <textarea id="ownerPostContent" name="content" rows="4" maxlength="1000" placeholder="Write a signed post..."></textarea>
-        <button class="button button-primary" type="submit">Sign post</button>
+        <textarea id="ownerPostContent" name="content" rows="4" maxlength="1000" placeholder="What do you want to post?"></textarea>
+        <button class="button button-primary" type="submit">Post</button>
       </form>
       <div class="owner-actions">
         <a class="button button-secondary owner-link" href="${escapeAttribute(pageUrl)}" target="_blank" rel="noreferrer">My page</a>
-        <a
-          class="button button-secondary owner-link"
-          href="${escapeAttribute(ownerFeedDownloadHref(state.owner))}"
-          download="feed.json"
-        >Download feed.json</a>
+        <button class="button button-secondary" type="button" data-owner-download="full">Download my site</button>
+        <button class="button button-secondary" type="button" data-owner-download="public">Download public site</button>
         <button class="icon-button" type="button" data-action="owner-disconnect" title="Disconnect owner session" aria-label="Disconnect owner session">Out</button>
       </div>
-      <p class="owner-copy">After posting, replace your public feed.json with the downloaded file and deploy your page.</p>
+      <section class="publish-anywhere">
+        <strong>Publish anywhere</strong>
+        <p>Upload the public folder to any static host.</p>
+        <p>Examples: GitHub Pages, Cloudflare Pages, Netlify, Vercel, S3, or your own server.</p>
+      </section>
+      <details class="technical-details">
+        <summary>Technical details</summary>
+        <p>The private folder must never be hosted publicly.</p>
+        <a href="${escapeAttribute(ownerFeedDownloadHref(state.owner))}" download="feed.json">Download feed only</a>
+      </details>
     </section>
   `;
+}
+
+async function createOwnerFromForm(form: HTMLFormElement): Promise<void> {
+  try {
+    const owner = await createOwnerPage({
+      name: formValue(form, 'name'),
+      handle: formValue(form, 'handle'),
+      bio: formValue(form, 'bio'),
+      firstPost: formValue(form, 'firstPost'),
+    });
+
+    state.owner = owner;
+    state.ownerError = null;
+    saveStoredOwnerSession(owner);
+    render();
+  } catch (error) {
+    state.ownerError = error instanceof Error ? error.message : 'Could not create your page';
+    render();
+  }
 }
 
 async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
@@ -461,6 +517,35 @@ function ownerPageUrl(session: OwnerSession): string {
 
 function ownerFeedDownloadHref(session: OwnerSession): string {
   return `data:application/json;charset=utf-8,${encodeURIComponent(exportOwnerFeed(session))}`;
+}
+
+function downloadOwnerSite(includePrivate: boolean): void {
+  if (!state.owner) {
+    return;
+  }
+
+  const zip = exportOwnerSiteZip(state.owner, { includePrivate });
+  const blob = new Blob([zip as BlobPart], { type: 'application/zip' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = includePrivate ? 'open-social-network-site.zip' : 'open-social-network-public-site.zip';
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function formValue(form: HTMLFormElement, name: string): string {
+  const field = form.elements.namedItem(name);
+
+  if (
+    field instanceof HTMLInputElement ||
+    field instanceof HTMLTextAreaElement ||
+    field instanceof HTMLSelectElement
+  ) {
+    return field.value.trim();
+  }
+
+  return '';
 }
 
 async function readJsonFile(file: File): Promise<unknown> {

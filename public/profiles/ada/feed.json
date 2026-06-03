@@ -5,22 +5,22 @@
   "posts": [
     {
       "id": "ada_001",
-      "author": "ada@open-social-network.local",
       "createdAt": "2026-06-03T12:10:00.000Z",
-      "content": "Published my identity file and feed as static JSON. The aggregator can verify this post without an account.",
+      "content": "I created my page in a few minutes. Now any compatible reader can show my posts.",
+      "author": "ada@open-social-network.local",
       "signature": {
         "alg": "ES256",
-        "value": "ymyoOyJzRdkkmQnjjTqGSSJyqHU971S51sg0P0ZE1JMA1_hywECpKErn19IUl7C06j-g0-LoJ0WAOa3nr4aryw"
+        "value": "H08PVCoEPPljLIAH_Aw1pxUl0CjGkMM-yACMYgud4Dp3htSOp845k6-bwvCWmS0VfWWN_OtxFQlKSq64a7C57A"
       }
     },
     {
       "id": "ada_002",
-      "author": "ada@open-social-network.local",
       "createdAt": "2026-06-02T18:25:00.000Z",
-      "content": "The important invariant: followers should track public keys and handles, not platforms.",
+      "content": "The important invariant: followers choose people and pages, not platforms.",
+      "author": "ada@open-social-network.local",
       "signature": {
         "alg": "ES256",
-        "value": "_UP16SBuLAvT7Yl08pSlTob82IxnXxfKklaYUikjdFJQ8tkmw8qR0apDTItEFE2TZL35uV2ByOuUn2HJJS0JfA"
+        "value": "AnWtsyDtDcUKORkTqGn-98D2p1cex9XTicQDW4nFLYthIiAwz7gGo2a9BjcYTO9NIKgSxcaS1EVcCxe44y_Dgw"
       }
     }
   ]

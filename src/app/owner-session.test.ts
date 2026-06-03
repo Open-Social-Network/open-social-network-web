@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
+import { strFromU8, unzipSync } from 'fflate';
 import { exportPrivateKeyJwk, exportPublicKeyJwk, generateIdentityKeyPair } from '../protocol/keys';
 import { signPost, verifyPost } from '../protocol/signing';
 import type { OpenSocialNetworkFeed, OpenSocialNetworkIdentity } from '../protocol/types';
 import {
   connectOwnerPage,
   clearStoredOwnerSession,
+  createOwnerPage,
   exportOwnerFeed,
+  exportOwnerSiteFiles,
+  exportOwnerSiteZip,
   loadStoredOwnerSession,
   mergeOwnerTimeline,
   saveStoredOwnerSession,
@@ -21,6 +25,21 @@ describe('owner session', () => {
 
     expect(session.profile.handle).toBe('owner@example.test');
     expect(session.feed.posts).toHaveLength(1);
+  });
+
+  it('creates a new page with a valid profile, key, and signed first post', async () => {
+    const session = await createOwnerPage({
+      name: 'Ada Lovelace',
+      handle: 'ada@example.test',
+      bio: 'Building a social page.',
+      firstPost: 'Hello from my page.',
+    });
+
+    expect(session.profile.name).toBe('Ada Lovelace');
+    expect(session.profile.handle).toBe('ada@example.test');
+    expect(session.feed.posts).toHaveLength(1);
+    expect(session.feed.posts[0]?.content).toBe('Hello from my page.');
+    await expect(verifyPost(session.feed.posts[0]!, session.profile)).resolves.toBe(true);
   });
 
   it('rejects a private key that does not own the profile', async () => {
@@ -63,6 +82,45 @@ describe('owner session', () => {
 
     expect(JSON.parse(exportOwnerFeed(session))).toEqual(session.feed);
     expect(exportOwnerFeed(session)).toContain('\n  "posts": [\n');
+  });
+
+  it('exports public site files and keeps private key out of public-only exports', async () => {
+    const session = await createOwnerPage({
+      name: 'Ada Lovelace',
+      handle: 'ada@example.test',
+      bio: 'Building a social page.',
+      firstPost: 'Hello from my page.',
+    });
+
+    const publicFiles = exportOwnerSiteFiles(session, { includePrivate: false });
+    const fullFiles = exportOwnerSiteFiles(session, { includePrivate: true });
+
+    expect(Object.keys(publicFiles).sort()).toEqual([
+      'public/.well-known/open-social-network.json',
+      'public/feed.json',
+      'public/index.html',
+      'public/page.js',
+      'public/profile.json',
+      'public/styles.css',
+    ]);
+    expect(publicFiles['private/identity.private.jwk.json']).toBeUndefined();
+    expect(JSON.parse(fullFiles['private/identity.private.jwk.json']!)).toEqual(session.privateKeyJwk);
+  });
+
+  it('exports zip archives for the full site and public-only site', async () => {
+    const session = await createOwnerPage({
+      name: 'Ada Lovelace',
+      handle: 'ada@example.test',
+      bio: 'Building a social page.',
+      firstPost: 'Hello from my page.',
+    });
+
+    const publicZip = unzipSync(exportOwnerSiteZip(session, { includePrivate: false }));
+    const fullZip = unzipSync(exportOwnerSiteZip(session, { includePrivate: true }));
+
+    expect(Object.keys(publicZip).sort()).toEqual(Object.keys(exportOwnerSiteFiles(session, { includePrivate: false })).sort());
+    expect(publicZip['private/identity.private.jwk.json']).toBeUndefined();
+    expect(JSON.parse(strFromU8(fullZip['private/identity.private.jwk.json']!))).toEqual(session.privateKeyJwk);
   });
 
   it('restores a locally saved owner session', async () => {

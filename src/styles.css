@@ -33,9 +33,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 8% 0%, rgba(77, 124, 255, 0.28), transparent 34%),
-    radial-gradient(circle at 92% 10%, rgba(44, 231, 240, 0.18), transparent 30%),
-    radial-gradient(circle at 52% 0%, rgba(143, 91, 255, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(77, 124, 255, 0.1), transparent 320px),
     linear-gradient(180deg, #060810 0%, #0b1020 58%, #070a12 100%),
     var(--bg);
 }
@@ -212,6 +210,8 @@ button {
 }
 
 .follow-form input:focus,
+.owner-create-form input:focus,
+.owner-create-form textarea:focus,
 .owner-post-form textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(21, 87, 255, 0.14);
@@ -229,11 +229,14 @@ button {
   line-height: 1.45;
 }
 
+.owner-create-form,
 .owner-post-form {
   display: grid;
   gap: 10px;
 }
 
+.owner-create-form input,
+.owner-create-form textarea,
 .owner-post-form textarea {
   width: 100%;
   min-width: 0;
@@ -245,8 +248,24 @@ button {
   outline: none;
 }
 
+.owner-create-form input {
+  min-height: 38px;
+}
+
+.owner-create-form textarea,
 .owner-post-form textarea {
   resize: vertical;
+}
+
+.owner-warning {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(44, 231, 240, 0.22);
+  border-radius: 8px;
+  background: rgba(44, 231, 240, 0.09);
+  color: #c8f8fb;
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
 .owner-folder-button {
@@ -288,6 +307,47 @@ button {
   height: 1px;
   margin: 4px 0 16px;
   background: var(--border);
+}
+
+.publish-anywhere,
+.technical-details {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.publish-anywhere {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(17, 24, 39, 0.58);
+}
+
+.publish-anywhere strong,
+.technical-details summary {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.publish-anywhere p,
+.technical-details p {
+  margin: 0;
+}
+
+.technical-details {
+  display: block;
+}
+
+.technical-details summary {
+  cursor: pointer;
+}
+
+.technical-details a {
+  display: inline-flex;
+  margin: 8px 12px 0 0;
+  color: var(--accent-strong);
 }
 
 .profile-list,
