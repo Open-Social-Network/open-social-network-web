@@ -1,4 +1,5 @@
 import { loadVerifiedTimeline, type TimelineResult } from './aggregator/timeline';
+import { accountAccessCopy } from './app/account-access';
 import { loadDirectory } from './app/directory';
 import {
   loadStoredFollows,
@@ -369,12 +370,14 @@ function renderDiagnostics(): string {
 }
 
 function renderOwnerPanel(): string {
+  const { connected, disconnected } = accountAccessCopy;
+
   if (!state.owner) {
     return `
       <section class="owner-panel" aria-label="My Page">
         <div class="panel-header">
           <h2>My Page</h2>
-          <span>Create</span>
+          <span>${disconnected.status}</span>
         </div>
         <p class="owner-copy">Create a page, write posts, and host it anywhere.</p>
         ${state.ownerError ? `<p class="app-error">${escapeHtml(state.ownerError)}</p>` : ''}
@@ -389,10 +392,12 @@ function renderOwnerPanel(): string {
           <textarea id="ownerFirstPost" name="firstPost" rows="3" maxlength="1000" placeholder="Write your first post..." required></textarea>
           <button class="button button-primary" type="submit">Create my page</button>
         </form>
-        <details class="technical-details">
-          <summary>Already have a page?</summary>
-          <p>Choose the folder created by Open Social Network. Nothing is uploaded.</p>
-          <label class="button button-secondary owner-folder-button" for="ownerFolder">Open my page</label>
+        <section class="owner-access-card" aria-label="Open existing page">
+          <div>
+            <strong>${disconnected.openExistingTitle}</strong>
+            <p>${disconnected.openExistingHelp}</p>
+          </div>
+          <label class="button button-secondary owner-folder-button" for="ownerFolder">${disconnected.openExistingLabel}</label>
           <input
             class="sr-only"
             id="ownerFolder"
@@ -401,6 +406,10 @@ function renderOwnerPanel(): string {
             webkitdirectory
             multiple
           />
+        </section>
+        <details class="technical-details">
+          <summary>${disconnected.technicalSummary}</summary>
+          <p>${disconnected.technicalHelp}</p>
         </details>
       </section>
     `;
@@ -413,7 +422,7 @@ function renderOwnerPanel(): string {
     <section class="owner-panel" aria-label="My Page">
       <div class="panel-header">
         <h2>My Page</h2>
-        <span>Open</span>
+        <span>${connected.status}</span>
       </div>
       ${state.ownerError ? `<p class="app-error">${escapeHtml(state.ownerError)}</p>` : ''}
       <p class="owner-warning">This file proves this page is yours. Back it up.</p>
@@ -433,8 +442,9 @@ function renderOwnerPanel(): string {
         <a class="button button-secondary owner-link" href="${escapeAttribute(pageUrl)}" target="_blank" rel="noreferrer">My page</a>
         <button class="button button-secondary" type="button" data-owner-download="full">Download my site</button>
         <button class="button button-secondary" type="button" data-owner-download="public">Download public site</button>
-        <button class="icon-button" type="button" data-action="owner-disconnect" title="Disconnect owner session" aria-label="Disconnect owner session">Out</button>
+        <button class="button button-secondary owner-logout-button" type="button" data-action="owner-disconnect" aria-label="Log out of this page">${connected.logoutLabel}</button>
       </div>
+      <p class="owner-session-note">${connected.logoutHelp}</p>
       <section class="publish-anywhere">
         <strong>Publish anywhere</strong>
         <p>Upload the public folder to any static host.</p>
