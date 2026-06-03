@@ -10,7 +10,7 @@
       "content": "MVP target: identity file, signed posts, static feeds, and one aggregator that merges follows chronologically.",
       "signature": {
         "alg": "ES256",
-        "value": "mF2bzs5TrVxkCpGIkgDElZnC0S9zlHhDel548xqzoLhtUiaOizu2-yN-ZbiNswNQozk6j9CcoOaRznBUUxOtgQ"
+        "value": "4tm6txr_oXBcnWS1rGALGBQj_ZkUSJKKe4DOWMWuTfLDM2ekHdvF5dc51vwdOgeDBDdumjr6dquVzSazpz1IHg"
       }
     },
     {
@@ -20,7 +20,7 @@
       "content": "No blockchain, no token, no central account. HTTP and signed JSON are enough for the first proof.",
       "signature": {
         "alg": "ES256",
-        "value": "y_V-wjUCcQatXexr6ixlzKVwuBHiyBGE5wUOM1uRioVBCcNa8UzTgYDp_7DY_pAlZn1S7NULAl_oo_KRyqxFMA"
+        "value": "TTkCr_LxTW2vssaUhd5ssDgCHnw00uhxtAw0QLOANS3c9qZiBgrQ8aBTCgQqvEBPzOuWZFfc9ITIL-CLA3XGfQ"
       }
     }
   ]

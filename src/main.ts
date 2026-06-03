@@ -6,6 +6,7 @@ import {
   saveStoredFollows,
   toggleFollow,
 } from './app/follows';
+import { profileAvatarUrl, profilePageUrl } from './app/profile-links';
 import './styles.css';
 
 interface AppState {
@@ -186,13 +187,18 @@ function renderProfiles(): string {
       const followed = state.follows.includes(profileUrl);
       const name = profile?.name ?? shortUrl(profileUrl);
       const handle = profile?.handle ?? profileUrl;
+      const pageUrl = profile ? profilePageUrl(profile, profileUrl) : profileUrl;
+      const avatarUrl = profile ? profileAvatarUrl(profile, profileUrl) : null;
 
       return `
         <article class="profile-row ${followed ? 'profile-row-active' : ''}">
-          <div>
-            <strong>${escapeHtml(name)}</strong>
-            <span>${escapeHtml(handle)}</span>
-          </div>
+          <a class="profile-link" href="${escapeAttribute(pageUrl)}" aria-label="Open ${escapeAttribute(name)} page">
+            ${renderAvatar(name, avatarUrl, 'profile-picture')}
+            <span class="profile-copy">
+              <strong>${escapeHtml(name)}</strong>
+              <span>${escapeHtml(handle)}</span>
+            </span>
+          </a>
           <button
             class="icon-button ${followed ? 'icon-button-active' : ''}"
             type="button"
@@ -237,14 +243,20 @@ function renderTimeline(): string {
 
   return state.timeline.posts
     .map(
-      (post) => `
+      (post) => {
+        const pageUrl = profilePageUrl(post.profile, window.location.href);
+        const avatarUrl = profileAvatarUrl(post.profile, window.location.href);
+
+        return `
         <article class="post-card">
           <header>
-            <div class="avatar">${initials(post.profile.name)}</div>
-            <div>
-              <h3>${escapeHtml(post.profile.name)}</h3>
-              <p>${escapeHtml(post.author)} · ${formatDate(post.createdAt)}</p>
-            </div>
+            <a class="post-author-link" href="${escapeAttribute(pageUrl)}" aria-label="Open ${escapeAttribute(post.profile.name)} page">
+              ${renderAvatar(post.profile.name, avatarUrl, 'avatar')}
+              <span>
+                <h3>${escapeHtml(post.profile.name)}</h3>
+                <p>${escapeHtml(post.author)} · ${formatDate(post.createdAt)}</p>
+              </span>
+            </a>
           </header>
           <p class="post-content">${escapeHtml(post.content)}</p>
           <footer>
@@ -252,7 +264,8 @@ function renderTimeline(): string {
             <code>${escapeHtml(post.signature.value.slice(0, 18))}...</code>
           </footer>
         </article>
-      `,
+      `;
+      },
     )
     .join('');
 }
@@ -321,6 +334,14 @@ function initials(name: string): string {
     .map((part) => part[0])
     .join('')
     .toUpperCase();
+}
+
+function renderAvatar(name: string, avatarUrl: string | null, className: string): string {
+  if (avatarUrl) {
+    return `<img class="${className}" src="${escapeAttribute(avatarUrl)}" alt="" loading="lazy" />`;
+  }
+
+  return `<span class="${className}" aria-hidden="true">${initials(name)}</span>`;
 }
 
 function formatDate(value: string): string {

@@ -4,6 +4,7 @@
   "handle": "tommy@tommy.page",
   "name": "Tommy",
   "bio": "Building an open social layer on plain web infrastructure.",
+  "avatar": "/profiles/tommy/avatar.svg",
   "website": "https://tommy.page",
   "publicKey": {
     "alg": "ES256",
@@ -13,13 +14,14 @@
       ],
       "ext": true,
       "kty": "EC",
-      "x": "7hb0XpSvJ3E92VvXI34KmkxZGE0vuost-vTmhDrAVtE",
-      "y": "PJPHUA5QivZ9D_JPMwwsA67c8VqLK0ujpkGzhLCRMtg",
+      "x": "bTJwDJPp9nr627hhBVdPrdawzgkzMRd_GZlMZ0-9V94",
+      "y": "JPGWnTwfCGYYJUVNeYJlBhLep-sm0qyuAm5FJwRQ79M",
       "crv": "P-256"
     }
   },
   "endpoints": {
     "profile": "/profiles/tommy/profile.json",
-    "feed": "/profiles/tommy/feed.json"
+    "feed": "/profiles/tommy/feed.json",
+    "avatar": "/profiles/tommy/avatar.svg"
   }
 }

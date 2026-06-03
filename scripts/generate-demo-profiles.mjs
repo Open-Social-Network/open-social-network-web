@@ -14,6 +14,7 @@ const demoProfiles = [
     name: 'Ada Lovelace',
     bio: 'Protocol designer testing sovereign pages.',
     website: 'https://example.com/ada',
+    colors: ['#5338f2', '#00c7d9'],
     posts: [
       {
         id: 'ada_001',
@@ -35,6 +36,7 @@ const demoProfiles = [
     name: 'Tommy',
     bio: 'Building an open social layer on plain web infrastructure.',
     website: 'https://tommy.page',
+    colors: ['#102a43', '#12b886'],
     posts: [
       {
         id: 'tommy_001',
@@ -56,6 +58,7 @@ const demoProfiles = [
     name: 'Indie Relay',
     bio: 'A sample profile showing aggregators can read any compatible page.',
     website: 'https://indieweb.test',
+    colors: ['#f9734d', '#7c3aed'],
     posts: [
       {
         id: 'relay_001',
@@ -82,6 +85,7 @@ await writeJson(join(profilesRoot, 'directory.json'), directory);
 
 for (const demoProfile of demoProfiles) {
   const profileDirectory = join(profilesRoot, demoProfile.slug);
+  const avatarPath = `/profiles/${demoProfile.slug}/avatar.svg`;
   const keyPair = await webcrypto.subtle.generateKey(
     {
       name: 'ECDSA',
@@ -97,6 +101,7 @@ for (const demoProfile of demoProfiles) {
     handle: demoProfile.handle,
     name: demoProfile.name,
     bio: demoProfile.bio,
+    avatar: avatarPath,
     website: demoProfile.website,
     publicKey: {
       alg: 'ES256',
@@ -105,6 +110,7 @@ for (const demoProfile of demoProfiles) {
     endpoints: {
       profile: `/profiles/${demoProfile.slug}/profile.json`,
       feed: `/profiles/${demoProfile.slug}/feed.json`,
+      avatar: avatarPath,
     },
   };
   const posts = [];
@@ -131,6 +137,8 @@ for (const demoProfile of demoProfiles) {
   };
 
   await mkdir(profileDirectory, { recursive: true });
+  await writeFile(join(profileDirectory, 'avatar.svg'), renderAvatarSvg(demoProfile), 'utf8');
+  await writeFile(join(profileDirectory, 'index.html'), renderProfilePage(demoProfile), 'utf8');
   await writeJson(join(profileDirectory, 'profile.json'), profile);
   await writeJson(join(profileDirectory, 'feed.json'), feed);
 }
@@ -197,4 +205,92 @@ function bytesToBase64Url(bytes) {
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/u, '');
+}
+
+function renderAvatarSvg(profile) {
+  const initials = profile.name
+    .split(/\s+/u)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="${escapeHtml(profile.name)}">
+  <defs>
+    <linearGradient id="avatarGradient" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="${profile.colors[0]}" />
+      <stop offset="1" stop-color="${profile.colors[1]}" />
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" rx="52" fill="url(#avatarGradient)" />
+  <circle cx="190" cy="48" r="38" fill="rgba(255,255,255,0.2)" />
+  <circle cx="46" cy="198" r="58" fill="rgba(255,255,255,0.12)" />
+  <text x="120" y="137" text-anchor="middle" dominant-baseline="middle" fill="white" font-family="Inter, Arial, sans-serif" font-size="68" font-weight="800">${escapeHtml(initials)}</text>
+</svg>
+`;
+}
+
+function renderProfilePage(profile) {
+  const posts = profile.posts
+    .map(
+      (post) => `<article>
+        <time datetime="${escapeHtml(post.createdAt)}">${escapeHtml(new Date(post.createdAt).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' }))}</time>
+        <p>${escapeHtml(post.content)}</p>
+      </article>`,
+    )
+    .join('\n');
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${escapeHtml(profile.name)} · Open Social Network</title>
+    <style>
+      :root { color: #14242c; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f4f7f9; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-width: 320px; background: linear-gradient(135deg, rgba(15, 118, 110, 0.1), transparent 38%), #f4f7f9; }
+      main { width: min(760px, 100%); margin: 0 auto; padding: 42px 18px; }
+      header, article { border: 1px solid #d8e1e7; border-radius: 8px; background: rgba(255,255,255,0.94); box-shadow: 0 18px 55px rgba(20, 36, 44, 0.1); }
+      header { display: grid; grid-template-columns: 92px 1fr; gap: 18px; align-items: center; padding: 24px; margin-bottom: 14px; }
+      img { width: 92px; height: 92px; border-radius: 8px; object-fit: cover; }
+      h1, p { margin: 0; }
+      h1 { font-size: clamp(2rem, 6vw, 3.6rem); line-height: 1; }
+      header p { margin-top: 10px; color: #667883; line-height: 1.5; }
+      nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+      a { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px; border-radius: 8px; background: #d9f0ee; color: #0b4f49; font-weight: 750; text-decoration: none; }
+      section { display: grid; gap: 12px; }
+      article { padding: 18px; }
+      time { color: #667883; font-size: 0.84rem; }
+      article p { margin-top: 8px; font-size: 1.05rem; line-height: 1.58; }
+      @media (max-width: 580px) { header { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <img src="./avatar.svg" alt="" />
+        <div>
+          <h1>${escapeHtml(profile.name)}</h1>
+          <p>${escapeHtml(profile.bio)}</p>
+          <nav>
+            <a href="./profile.json">profile.json</a>
+            <a href="./feed.json">feed.json</a>
+          </nav>
+        </div>
+      </header>
+      <section>${posts}</section>
+    </main>
+  </body>
+</html>
+`;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }

@@ -4,6 +4,7 @@
   "handle": "ada@open-social-network.local",
   "name": "Ada Lovelace",
   "bio": "Protocol designer testing sovereign pages.",
+  "avatar": "/profiles/ada/avatar.svg",
   "website": "https://example.com/ada",
   "publicKey": {
     "alg": "ES256",
@@ -13,13 +14,14 @@
       ],
       "ext": true,
       "kty": "EC",
-      "x": "DjAcIpv9CUtf9RE2wyRZ-oFExHp_ZJYLx85-LPghszo",
-      "y": "ruE42lSgNb3je5k5OfvSVGxFBapZg9Ec7z5GtNK4Mw0",
+      "x": "0XvYSNv2HLRgNJyJvV-cNINzj4nS9qt9X1zomFYkbaw",
+      "y": "Zes4lQlCEo-ua3zlWH-0k01oTMyPA9iruT_AP_mIaTo",
       "crv": "P-256"
     }
   },
   "endpoints": {
     "profile": "/profiles/ada/profile.json",
-    "feed": "/profiles/ada/feed.json"
+    "feed": "/profiles/ada/feed.json",
+    "avatar": "/profiles/ada/avatar.svg"
   }
 }

@@ -4,6 +4,7 @@
   "handle": "relay@indieweb.test",
   "name": "Indie Relay",
   "bio": "A sample profile showing aggregators can read any compatible page.",
+  "avatar": "/profiles/relay/avatar.svg",
   "website": "https://indieweb.test",
   "publicKey": {
     "alg": "ES256",
@@ -13,13 +14,14 @@
       ],
       "ext": true,
       "kty": "EC",
-      "x": "4M7D-JLPcF2YFNAZuF1D0c91OTN6TOGYbE6L0rhnNxM",
-      "y": "Ykete8zn0KqR9RhfiDX_LWdm9o7EjKM8og7N3whfrqc",
+      "x": "Wf3nb0LWf4sSuxhuKIxVZHHhefTpsI4HntUpfinxk4E",
+      "y": "lbvxmndcaUploCSUvD4vZQgJQjqF9ndpNxy-koAXZ7Q",
       "crv": "P-256"
     }
   },
   "endpoints": {
     "profile": "/profiles/relay/profile.json",
-    "feed": "/profiles/relay/feed.json"
+    "feed": "/profiles/relay/feed.json",
+    "avatar": "/profiles/relay/avatar.svg"
   }
 }

@@ -10,7 +10,7 @@
       "content": "Published my identity file and feed as static JSON. The aggregator can verify this post without an account.",
       "signature": {
         "alg": "ES256",
-        "value": "jvciVmj635ukut_0B8Zd8H9QhJznoWcrZ9ZPx7B5ExgL83w5kCrNYk_piHXO6XT9ITJGrfl6Kj2jfaUHdu62RA"
+        "value": "ymyoOyJzRdkkmQnjjTqGSSJyqHU971S51sg0P0ZE1JMA1_hywECpKErn19IUl7C06j-g0-LoJ0WAOa3nr4aryw"
       }
     },
     {
@@ -20,7 +20,7 @@
       "content": "The important invariant: followers should track public keys and handles, not platforms.",
       "signature": {
         "alg": "ES256",
-        "value": "2XsAPVRw4rSUVFhNZFAZEJSmyMpJH7pOfO7imFjUFXlCroA80Q83VEdgrcsDx1LCwU-CcGUPyAWQBJhMGPb57Q"
+        "value": "_UP16SBuLAvT7Yl08pSlTob82IxnXxfKklaYUikjdFJQ8tkmw8qR0apDTItEFE2TZL35uV2ByOuUn2HJJS0JfA"
       }
     }
   ]
