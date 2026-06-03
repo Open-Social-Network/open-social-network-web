@@ -1,7 +1,7 @@
 {
-  "protocol": "opensocial",
+  "protocol": "open-social-network",
   "version": "0.1",
-  "handle": "ada@opensocial.local",
+  "handle": "ada@open-social-network.local",
   "name": "Ada Lovelace",
   "bio": "Protocol designer testing sovereign pages.",
   "website": "https://example.com/ada",
@@ -13,8 +13,8 @@
       ],
       "ext": true,
       "kty": "EC",
-      "x": "FyLwZWmGxQq0uIwfhwbC8Vdd4PleUS2SVXcRrfxd6ag",
-      "y": "MQDa0rMS4l-Ufi0dg5hLv2ZV8ckoWqwubFa_HMUJc6o",
+      "x": "DjAcIpv9CUtf9RE2wyRZ-oFExHp_ZJYLx85-LPghszo",
+      "y": "ruE42lSgNb3je5k5OfvSVGxFBapZg9Ec7z5GtNK4Mw0",
       "crv": "P-256"
     }
   },

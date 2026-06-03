@@ -1,6 +1,6 @@
 # Security Policy
 
-OpenSocial Web is early alpha software.
+Open Social Network Web is early alpha software.
 
 ## Reporting Security Issues
 

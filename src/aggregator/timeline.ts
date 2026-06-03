@@ -1,5 +1,5 @@
 import { verifyPost } from '../protocol/signing';
-import type { OpenSocialFeed, OpenSocialIdentity, OpenSocialPost } from '../protocol/types';
+import type { OpenSocialNetworkFeed, OpenSocialNetworkIdentity, OpenSocialNetworkPost } from '../protocol/types';
 
 export type JsonFetcher = (url: string) => Promise<unknown>;
 
@@ -14,12 +14,12 @@ export interface TimelineFailure {
   reason: string;
 }
 
-export interface TimelinePost extends OpenSocialPost {
-  profile: OpenSocialIdentity;
+export interface TimelinePost extends OpenSocialNetworkPost {
+  profile: OpenSocialNetworkIdentity;
 }
 
 export interface TimelineResult {
-  profiles: OpenSocialIdentity[];
+  profiles: OpenSocialNetworkIdentity[];
   posts: TimelinePost[];
   rejectedPosts: RejectedPost[];
   failures: TimelineFailure[];
@@ -63,7 +63,7 @@ async function loadProfileFeed(
   fetcher: JsonFetcher,
 ): Promise<
   | {
-      profile: OpenSocialIdentity;
+      profile: OpenSocialNetworkIdentity;
       posts: TimelinePost[];
       rejectedPosts: RejectedPost[];
     }
@@ -123,13 +123,13 @@ function resolveEndpoint(endpoint: string, profileUrl: string): string {
   return new URL(endpoint, profileUrl).toString();
 }
 
-function parseIdentity(value: unknown): OpenSocialIdentity {
+function parseIdentity(value: unknown): OpenSocialNetworkIdentity {
   if (!isRecord(value)) {
     throw new Error('Profile response is not an object');
   }
 
   if (
-    value.protocol !== 'opensocial' ||
+    value.protocol !== 'open-social-network' ||
     value.version !== '0.1' ||
     typeof value.handle !== 'string' ||
     typeof value.name !== 'string' ||
@@ -140,27 +140,27 @@ function parseIdentity(value: unknown): OpenSocialIdentity {
     typeof value.endpoints.feed !== 'string' ||
     typeof value.endpoints.profile !== 'string'
   ) {
-    throw new Error('Profile response is not a valid OpenSocial identity file');
+    throw new Error('Profile response is not a valid Open Social Network identity file');
   }
 
-  return value as unknown as OpenSocialIdentity;
+  return value as unknown as OpenSocialNetworkIdentity;
 }
 
-function parseFeed(value: unknown): OpenSocialFeed {
+function parseFeed(value: unknown): OpenSocialNetworkFeed {
   if (!isRecord(value)) {
     throw new Error('Feed response is not an object');
   }
 
   if (
-    value.protocol !== 'opensocial' ||
+    value.protocol !== 'open-social-network' ||
     value.version !== '0.1' ||
     typeof value.author !== 'string' ||
     !Array.isArray(value.posts)
   ) {
-    throw new Error('Feed response is not a valid OpenSocial feed file');
+    throw new Error('Feed response is not a valid Open Social Network feed file');
   }
 
-  return value as unknown as OpenSocialFeed;
+  return value as unknown as OpenSocialNetworkFeed;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

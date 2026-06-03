@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { canonicalStringify, postSigningPayload } from './canonical';
-import type { OpenSocialPost } from './types';
+import type { OpenSocialNetworkPost } from './types';
 
 describe('canonicalStringify', () => {
   it('sorts object keys recursively while preserving array order', () => {
@@ -24,7 +24,7 @@ describe('canonicalStringify', () => {
 
 describe('postSigningPayload', () => {
   it('removes the mutable signature field before creating the signing payload', () => {
-    const post: OpenSocialPost = {
+    const post: OpenSocialNetworkPost = {
       id: 'post_1',
       author: 'ada@example.test',
       createdAt: '2026-06-03T12:00:00.000Z',

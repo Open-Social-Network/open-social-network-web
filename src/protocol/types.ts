@@ -1,25 +1,25 @@
-export type OpenSocialVersion = '0.1';
-export type OpenSocialSignatureAlgorithm = 'ES256';
+export type OpenSocialNetworkVersion = '0.1';
+export type OpenSocialNetworkSignatureAlgorithm = 'ES256';
 
-export interface OpenSocialSignature {
-  alg: OpenSocialSignatureAlgorithm;
+export interface OpenSocialNetworkSignature {
+  alg: OpenSocialNetworkSignatureAlgorithm;
   value: string;
 }
 
-export interface OpenSocialPublicKey {
-  alg: OpenSocialSignatureAlgorithm;
+export interface OpenSocialNetworkPublicKey {
+  alg: OpenSocialNetworkSignatureAlgorithm;
   jwk: JsonWebKey;
 }
 
-export interface OpenSocialIdentity {
-  protocol: 'opensocial';
-  version: OpenSocialVersion;
+export interface OpenSocialNetworkIdentity {
+  protocol: 'open-social-network';
+  version: OpenSocialNetworkVersion;
   handle: string;
   name: string;
   bio?: string;
   avatar?: string;
   website?: string;
-  publicKey: OpenSocialPublicKey;
+  publicKey: OpenSocialNetworkPublicKey;
   endpoints: {
     profile: string;
     feed: string;
@@ -27,7 +27,7 @@ export interface OpenSocialIdentity {
   };
 }
 
-export interface UnsignedOpenSocialPost {
+export interface UnsignedOpenSocialNetworkPost {
   id: string;
   author: string;
   createdAt: string;
@@ -41,13 +41,13 @@ export interface UnsignedOpenSocialPost {
   }>;
 }
 
-export interface OpenSocialPost extends UnsignedOpenSocialPost {
-  signature: OpenSocialSignature;
+export interface OpenSocialNetworkPost extends UnsignedOpenSocialNetworkPost {
+  signature: OpenSocialNetworkSignature;
 }
 
-export interface OpenSocialFeed {
-  protocol: 'opensocial';
-  version: OpenSocialVersion;
+export interface OpenSocialNetworkFeed {
+  protocol: 'open-social-network';
+  version: OpenSocialNetworkVersion;
   author: string;
-  posts: OpenSocialPost[];
+  posts: OpenSocialNetworkPost[];
 }

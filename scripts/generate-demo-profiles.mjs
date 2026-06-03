@@ -10,7 +10,7 @@ const encoder = new TextEncoder();
 const demoProfiles = [
   {
     slug: 'ada',
-    handle: 'ada@opensocial.local',
+    handle: 'ada@open-social-network.local',
     name: 'Ada Lovelace',
     bio: 'Protocol designer testing sovereign pages.',
     website: 'https://example.com/ada',
@@ -70,10 +70,10 @@ const demoProfiles = [
 await mkdir(profilesRoot, { recursive: true });
 
 const directory = {
-  protocol: 'opensocial',
+  protocol: 'open-social-network',
   version: '0.1',
   profiles: [
-    'https://open-social-organization.github.io/opensocial-official/profile.json',
+    'https://open-social-network.github.io/open-social-network-official/profile.json',
     ...demoProfiles.map((profile) => `/profiles/${profile.slug}/profile.json`),
   ],
 };
@@ -92,7 +92,7 @@ for (const demoProfile of demoProfiles) {
   );
   const publicJwk = await webcrypto.subtle.exportKey('jwk', keyPair.publicKey);
   const profile = {
-    protocol: 'opensocial',
+    protocol: 'open-social-network',
     version: '0.1',
     handle: demoProfile.handle,
     name: demoProfile.name,
@@ -124,7 +124,7 @@ for (const demoProfile of demoProfiles) {
   }
 
   const feed = {
-    protocol: 'opensocial',
+    protocol: 'open-social-network',
     version: '0.1',
     author: demoProfile.handle,
     posts,

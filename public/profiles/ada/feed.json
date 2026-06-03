@@ -1,26 +1,26 @@
 {
-  "protocol": "opensocial",
+  "protocol": "open-social-network",
   "version": "0.1",
-  "author": "ada@opensocial.local",
+  "author": "ada@open-social-network.local",
   "posts": [
     {
       "id": "ada_001",
-      "author": "ada@opensocial.local",
+      "author": "ada@open-social-network.local",
       "createdAt": "2026-06-03T12:10:00.000Z",
       "content": "Published my identity file and feed as static JSON. The aggregator can verify this post without an account.",
       "signature": {
         "alg": "ES256",
-        "value": "fTxVOtyrvUnvl-CRFq_MjWop74YKtGGXuEZZD5BVsLolGO7-KsK2yFijLJhgmSlwF9uhfxrAbOZ91y4x9reDpg"
+        "value": "jvciVmj635ukut_0B8Zd8H9QhJznoWcrZ9ZPx7B5ExgL83w5kCrNYk_piHXO6XT9ITJGrfl6Kj2jfaUHdu62RA"
       }
     },
     {
       "id": "ada_002",
-      "author": "ada@opensocial.local",
+      "author": "ada@open-social-network.local",
       "createdAt": "2026-06-02T18:25:00.000Z",
       "content": "The important invariant: followers should track public keys and handles, not platforms.",
       "signature": {
         "alg": "ES256",
-        "value": "Phc9DXlUwLhFU66EK5QivG_cXQdav6VMEc0RFj00oJCWudAyaFTleGtWyQs3FoVElOaYn-DzFri32SGcm-oU6w"
+        "value": "2XsAPVRw4rSUVFhNZFAZEJSmyMpJH7pOfO7imFjUFXlCroA80Q83VEdgrcsDx1LCwU-CcGUPyAWQBJhMGPb57Q"
       }
     }
   ]

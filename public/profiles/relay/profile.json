@@ -1,5 +1,5 @@
 {
-  "protocol": "opensocial",
+  "protocol": "open-social-network",
   "version": "0.1",
   "handle": "relay@indieweb.test",
   "name": "Indie Relay",
@@ -13,8 +13,8 @@
       ],
       "ext": true,
       "kty": "EC",
-      "x": "3DUEsR3WazLLpSOrcmPIJQ66zUpmucLMRzyTdXQJDVE",
-      "y": "WM4xB3XzhPg1XVhoC8vUTrwQl7M7gOrX7qo9tdqSEEo",
+      "x": "4M7D-JLPcF2YFNAZuF1D0c91OTN6TOGYbE6L0rhnNxM",
+      "y": "Ykete8zn0KqR9RhfiDX_LWdm9o7EjKM8og7N3whfrqc",
       "crv": "P-256"
     }
   },

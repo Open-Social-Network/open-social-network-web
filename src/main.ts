@@ -43,7 +43,7 @@ async function boot(): Promise<void> {
     await refreshTimeline();
   } catch (error) {
     state.loading = false;
-    state.error = error instanceof Error ? error.message : 'Could not start OpenSocial';
+    state.error = error instanceof Error ? error.message : 'Could not start Open Social Network';
     render();
   }
 }
@@ -68,9 +68,9 @@ function render(): void {
     <main class="shell">
       <section class="topbar">
         <div class="brand">
-          <img class="brand-logo" src="/assets/open-social-logo.png" alt="" aria-hidden="true" />
+          <img class="brand-logo" src="/assets/open-social-network-logo.png" alt="" aria-hidden="true" />
           <div>
-            <h1>OpenSocial</h1>
+            <h1>Open Social Network</h1>
             <p>Signed sovereign feeds</p>
           </div>
         </div>

@@ -1,5 +1,5 @@
 {
-  "protocol": "opensocial",
+  "protocol": "open-social-network",
   "version": "0.1",
   "handle": "tommy@tommy.page",
   "name": "Tommy",
@@ -13,8 +13,8 @@
       ],
       "ext": true,
       "kty": "EC",
-      "x": "Sn-8h0QCyL2UJXOI6gdh9N09OnSo0Y5RwKRvxtXv2q4",
-      "y": "nPl-2HT49qtWbIkIT7DlGwg00rmDzWe-HsmgC12VALg",
+      "x": "7hb0XpSvJ3E92VvXI34KmkxZGE0vuost-vTmhDrAVtE",
+      "y": "PJPHUA5QivZ9D_JPMwwsA67c8VqLK0ujpkGzhLCRMtg",
       "crv": "P-256"
     }
   },

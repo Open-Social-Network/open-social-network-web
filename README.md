@@ -1,22 +1,22 @@
 <p align="center">
-  <img src="./public/assets/open-social-logo.png" width="96" alt="OpenSocial logo" />
+  <img src="./public/assets/open-social-network-logo.png" width="96" alt="Open Social Network logo" />
 </p>
 
-# OpenSocial Web
+# Open Social Network Web
 
-OpenSocial Web is the official browser interface for the OpenSocial network.
+Open Social Network Web is the official browser interface for the Open Social Network.
 
 It is not the network. It is not an account provider. It is not a central authority.
 
-It is a web client that follows sovereign OpenSocial profiles, reads their signed feeds, verifies post ownership locally, and renders a chronological timeline.
+It is a web client that follows sovereign Open Social Network profiles, reads their signed feeds, verifies post ownership locally, and renders a chronological timeline.
 
 ## In One Minute
 
-OpenSocial Web is a social browser.
+Open Social Network Web is a social browser.
 
 It does three simple things:
 
-1. follows OpenSocial profile URLs
+1. follows Open Social Network profile URLs
 2. reads each profile's signed feed
 3. shows only posts that verify against the profile public key
 
@@ -34,13 +34,13 @@ The internet already has powerful protocols:
 
 But social media still behaves as if identity must live inside centralized platforms.
 
-OpenSocial Web is built around a different assumption: social content can be browsed from the open web. A profile can be hosted anywhere. A feed can be a signed JSON file. An aggregator can be replaced without losing the person, the posts, or the audience.
+Open Social Network Web is built around a different assumption: social content can be browsed from the open web. A profile can be hosted anywhere. A feed can be a signed JSON file. An aggregator can be replaced without losing the person, the posts, or the audience.
 
 This app is the first official interface for that idea.
 
 ## Philosophy
 
-OpenSocial Web exists to prove that social media can be browsed like the open web:
+Open Social Network Web exists to prove that social media can be browsed like the open web:
 
 - profiles are independent pages
 - posts are signed by their authors
@@ -76,7 +76,7 @@ The aggregator is intentionally neutral. It reads the network, but it does not o
 
 ## What This MVP Does
 
-- Loads a demo OpenSocial profile directory.
+- Loads a demo Open Social Network profile directory.
 - Follows profile URLs in local browser storage.
 - Fetches each `profile.json` and `feed.json`.
 - Verifies ES256 signatures on every post.
@@ -99,10 +99,10 @@ Those are separate layers. This client is a first proof that sovereign pages and
 
 ### Publish Your Own Profile
 
-The easiest way to publish a compatible OpenSocial profile is:
+The easiest way to publish a compatible Open Social Network profile is:
 
 ```bash
-npx opensocial
+npx open-social-network
 ```
 
 That guided CLI creates a sovereign page, signs posts, validates the feed, and deploys it to a free static host.
@@ -125,7 +125,7 @@ Paste a URL to a compatible `profile.json` file into the profile input and selec
 
 The profile must expose:
 
-- a valid OpenSocial identity file
+- a valid Open Social Network identity file
 - a feed endpoint
 - posts signed by the matching private key
 
@@ -177,12 +177,12 @@ npm run generate:demo
 
 ## Related Repositories
 
-- [`opensocial-cli`](https://github.com/Open-Social-Organization/opensocial-cli) - guided publishing for real sovereign profiles
-- [`opensocial-core`](https://github.com/Open-Social-Organization/opensocial-core) - protocol primitives, schemas, and specification
-- [`opensocial-page`](https://github.com/Open-Social-Organization/opensocial-page) - sovereign page template
+- [`open-social-network-cli`](https://github.com/Open-Social-Network/open-social-network-cli) - guided publishing for real sovereign profiles
+- [`open-social-network-core`](https://github.com/Open-Social-Network/open-social-network-core) - protocol primitives, schemas, and specification
+- [`open-social-network-page`](https://github.com/Open-Social-Network/open-social-network-page) - sovereign page template
 
 ## Status
 
-OpenSocial Web is early alpha. The current priority is correctness, clarity, and protocol usability before social features expand.
+Open Social Network Web is early alpha. The current priority is correctness, clarity, and protocol usability before social features expand.
 
 The long-term goal is not to create another social platform. The goal is to make platforms optional.

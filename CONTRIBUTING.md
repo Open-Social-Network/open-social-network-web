@@ -1,6 +1,6 @@
-# Contributing to OpenSocial Web
+# Contributing to Open Social Network Web
 
-OpenSocial Web should stay protocol-first, neutral, and easy to inspect.
+Open Social Network Web should stay protocol-first, neutral, and easy to inspect.
 
 ## Principles
 

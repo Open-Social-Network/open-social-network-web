@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { exportPublicKeyJwk, generateIdentityKeyPair } from './keys';
 import { signPost, verifyPost } from './signing';
-import type { OpenSocialIdentity, UnsignedOpenSocialPost } from './types';
+import type { OpenSocialNetworkIdentity, UnsignedOpenSocialNetworkPost } from './types';
 
 describe('signed posts', () => {
   it('verifies a post signed by the profile public key', async () => {
     const keyPair = await generateIdentityKeyPair();
-    const profile: OpenSocialIdentity = {
-      protocol: 'opensocial',
+    const profile: OpenSocialNetworkIdentity = {
+      protocol: 'open-social-network',
       version: '0.1',
       handle: 'ada@example.test',
       name: 'Ada',
@@ -20,7 +20,7 @@ describe('signed posts', () => {
         feed: 'https://example.test/feed.json',
       },
     };
-    const post: UnsignedOpenSocialPost = {
+    const post: UnsignedOpenSocialNetworkPost = {
       id: 'post_1',
       author: 'ada@example.test',
       createdAt: '2026-06-03T12:00:00.000Z',
@@ -34,8 +34,8 @@ describe('signed posts', () => {
 
   it('rejects content tampering after signing', async () => {
     const keyPair = await generateIdentityKeyPair();
-    const profile: OpenSocialIdentity = {
-      protocol: 'opensocial',
+    const profile: OpenSocialNetworkIdentity = {
+      protocol: 'open-social-network',
       version: '0.1',
       handle: 'ada@example.test',
       name: 'Ada',
@@ -65,8 +65,8 @@ describe('signed posts', () => {
 
   it('rejects a post whose author does not match the identity file', async () => {
     const keyPair = await generateIdentityKeyPair();
-    const profile: OpenSocialIdentity = {
-      protocol: 'opensocial',
+    const profile: OpenSocialNetworkIdentity = {
+      protocol: 'open-social-network',
       version: '0.1',
       handle: 'ada@example.test',
       name: 'Ada',

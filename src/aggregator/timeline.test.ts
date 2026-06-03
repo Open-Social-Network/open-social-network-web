@@ -3,17 +3,17 @@ import { loadVerifiedTimeline } from './timeline';
 import { exportPublicKeyJwk, generateIdentityKeyPair } from '../protocol/keys';
 import { signPost } from '../protocol/signing';
 import type {
-  OpenSocialFeed,
-  OpenSocialIdentity,
-  UnsignedOpenSocialPost,
+  OpenSocialNetworkFeed,
+  OpenSocialNetworkIdentity,
+  UnsignedOpenSocialNetworkPost,
 } from '../protocol/types';
 
 describe('loadVerifiedTimeline', () => {
   it('loads followed profiles, keeps verified posts, and sorts newest first', async () => {
     const adaKeys = await generateIdentityKeyPair();
     const tommyKeys = await generateIdentityKeyPair();
-    const ada: OpenSocialIdentity = {
-      protocol: 'opensocial',
+    const ada: OpenSocialNetworkIdentity = {
+      protocol: 'open-social-network',
       version: '0.1',
       handle: 'ada@example.test',
       name: 'Ada',
@@ -23,8 +23,8 @@ describe('loadVerifiedTimeline', () => {
         feed: 'https://ada.example.test/feed.json',
       },
     };
-    const tommy: OpenSocialIdentity = {
-      protocol: 'opensocial',
+    const tommy: OpenSocialNetworkIdentity = {
+      protocol: 'open-social-network',
       version: '0.1',
       handle: 'tommy@example.test',
       name: 'Tommy',
@@ -34,7 +34,7 @@ describe('loadVerifiedTimeline', () => {
         feed: 'https://tommy.example.test/feed.json',
       },
     };
-    const olderPost: UnsignedOpenSocialPost = {
+    const olderPost: UnsignedOpenSocialNetworkPost = {
       id: 'older',
       author: ada.handle,
       createdAt: '2026-06-03T11:00:00.000Z',
@@ -53,14 +53,14 @@ describe('loadVerifiedTimeline', () => {
       ...(await signPost(olderPost, adaKeys.privateKey)),
       content: 'Tampered later',
     };
-    const adaFeed: OpenSocialFeed = {
-      protocol: 'opensocial',
+    const adaFeed: OpenSocialNetworkFeed = {
+      protocol: 'open-social-network',
       version: '0.1',
       author: ada.handle,
       posts: [await signPost(olderPost, adaKeys.privateKey), tamperedPost],
     };
-    const tommyFeed: OpenSocialFeed = {
-      protocol: 'opensocial',
+    const tommyFeed: OpenSocialNetworkFeed = {
+      protocol: 'open-social-network',
       version: '0.1',
       author: tommy.handle,
       posts: [newestPost],

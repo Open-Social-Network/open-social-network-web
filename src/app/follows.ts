@@ -1,4 +1,4 @@
-const FOLLOW_STORAGE_KEY = 'opensocial.followedProfiles.v1';
+const FOLLOW_STORAGE_KEY = 'open-social-network.followedProfiles.v1';
 
 export function loadStoredFollows(fallback: string[]): string[] {
   try {

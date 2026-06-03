@@ -2,9 +2,9 @@ import { base64UrlToBytes, bytesToBase64Url } from './base64url';
 import { canonicalStringify, postSigningPayload } from './canonical';
 import { importPublicKeyJwk } from './keys';
 import type {
-  OpenSocialIdentity,
-  OpenSocialPost,
-  UnsignedOpenSocialPost,
+  OpenSocialNetworkIdentity,
+  OpenSocialNetworkPost,
+  UnsignedOpenSocialNetworkPost,
 } from './types';
 
 const SIGNING_ALGORITHM: EcdsaParams = {
@@ -13,9 +13,9 @@ const SIGNING_ALGORITHM: EcdsaParams = {
 };
 
 export async function signPost(
-  post: UnsignedOpenSocialPost,
+  post: UnsignedOpenSocialNetworkPost,
   privateKey: CryptoKey,
-): Promise<OpenSocialPost> {
+): Promise<OpenSocialNetworkPost> {
   const payload = new TextEncoder().encode(canonicalStringify(postSigningPayload(post)));
   const signature = await crypto.subtle.sign(SIGNING_ALGORITHM, privateKey, payload);
 
@@ -29,8 +29,8 @@ export async function signPost(
 }
 
 export async function verifyPost(
-  post: OpenSocialPost,
-  identity: OpenSocialIdentity,
+  post: OpenSocialNetworkPost,
+  identity: OpenSocialNetworkIdentity,
 ): Promise<boolean> {
   if (post.author !== identity.handle || post.signature?.alg !== 'ES256') {
     return false;
