@@ -1,4 +1,9 @@
-import type { OpenSocialNetworkPost, UnsignedOpenSocialNetworkPost } from './types';
+import type {
+  OpenSocialNetworkAction,
+  OpenSocialNetworkPost,
+  UnsignedOpenSocialNetworkAction,
+  UnsignedOpenSocialNetworkPost,
+} from './types';
 
 type CanonicalValue =
   | null
@@ -16,6 +21,14 @@ export function postSigningPayload(
   post: OpenSocialNetworkPost | UnsignedOpenSocialNetworkPost,
 ): UnsignedOpenSocialNetworkPost {
   const { signature: _signature, ...payload } = post as OpenSocialNetworkPost;
+
+  return payload;
+}
+
+export function actionSigningPayload(
+  action: OpenSocialNetworkAction | UnsignedOpenSocialNetworkAction,
+): UnsignedOpenSocialNetworkAction {
+  const { signature: _signature, ...payload } = action as OpenSocialNetworkAction;
 
   return payload;
 }

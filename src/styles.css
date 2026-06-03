@@ -557,6 +557,109 @@ button {
   font-size: 0.78rem;
 }
 
+.post-social-bar {
+  justify-content: flex-start;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.post-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  min-height: 36px;
+  gap: 7px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: rgba(29, 40, 61, 0.82);
+  color: var(--muted);
+  font-weight: 800;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    background 140ms ease;
+}
+
+.post-action-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(77, 124, 255, 0.36);
+  color: var(--ink);
+}
+
+.post-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.54;
+}
+
+.post-action-active {
+  border-color: rgba(44, 231, 240, 0.46);
+  background: rgba(44, 231, 240, 0.13);
+  color: #c8f8fb;
+}
+
+.post-action-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.post-comment-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.post-comment-form textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0b1120;
+  color: var(--ink);
+  padding: 10px 11px;
+  outline: none;
+  resize: vertical;
+}
+
+.post-comment-form textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(21, 87, 255, 0.14);
+}
+
+.post-comments {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.post-comment {
+  padding: 10px 12px;
+  border: 1px solid rgba(77, 124, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(11, 17, 32, 0.72);
+}
+
+.post-comment strong {
+  display: block;
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.post-comment p {
+  margin: 4px 0 0;
+  color: #dce7f7;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 .post-card code {
   overflow: hidden;
   color: var(--cyan);
@@ -698,5 +801,14 @@ button {
   .post-card footer {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .post-social-bar {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .post-comment-form {
+    grid-template-columns: 1fr;
   }
 }

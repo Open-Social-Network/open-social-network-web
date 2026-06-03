@@ -51,3 +51,41 @@ export interface OpenSocialNetworkFeed {
   author: string;
   posts: OpenSocialNetworkPost[];
 }
+
+export type OpenSocialNetworkActionKind = 'reaction' | 'comment';
+export type OpenSocialNetworkReaction = 'like' | 'dislike' | 'none';
+
+export interface OpenSocialNetworkActionTarget {
+  type: 'post';
+  id: string;
+  author: string;
+  url?: string;
+}
+
+interface UnsignedOpenSocialNetworkActionBase {
+  id: string;
+  kind: OpenSocialNetworkActionKind;
+  actor: string;
+  createdAt: string;
+  target: OpenSocialNetworkActionTarget;
+}
+
+export interface UnsignedOpenSocialNetworkReactionAction
+  extends UnsignedOpenSocialNetworkActionBase {
+  kind: 'reaction';
+  reaction: OpenSocialNetworkReaction;
+}
+
+export interface UnsignedOpenSocialNetworkCommentAction
+  extends UnsignedOpenSocialNetworkActionBase {
+  kind: 'comment';
+  content: string;
+}
+
+export type UnsignedOpenSocialNetworkAction =
+  | UnsignedOpenSocialNetworkReactionAction
+  | UnsignedOpenSocialNetworkCommentAction;
+
+export type OpenSocialNetworkAction = UnsignedOpenSocialNetworkAction & {
+  signature: OpenSocialNetworkSignature;
+};

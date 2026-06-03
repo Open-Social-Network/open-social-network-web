@@ -8,6 +8,12 @@ import {
   toggleFollow,
 } from './app/follows';
 import {
+  loadStoredOwnerActions,
+  saveStoredOwnerActions,
+  signOwnerComment,
+  signOwnerReaction,
+} from './app/owner-actions';
+import {
   clearStoredOwnerSession,
   connectOwnerPage,
   createOwnerPage,
@@ -20,6 +26,12 @@ import {
   type OwnerSession,
 } from './app/owner-session';
 import { profileAvatarUrl, profilePageUrl } from './app/profile-links';
+import { summarizePostActions, type OpenSocialNetworkPostActionSummary } from './protocol/public-actions';
+import type {
+  OpenSocialNetworkAction,
+  OpenSocialNetworkActionTarget,
+  OpenSocialNetworkReaction,
+} from './protocol/types';
 import './styles.css';
 
 interface AppState {
@@ -27,9 +39,11 @@ interface AppState {
   follows: string[];
   timeline: TimelineResult | null;
   owner: OwnerSession | null;
+  actions: OpenSocialNetworkAction[];
   loading: boolean;
   error: string | null;
   ownerError: string | null;
+  commentTargetKey: string | null;
 }
 
 const appRoot = document.querySelector<HTMLDivElement>('#app');
@@ -45,9 +59,11 @@ const state: AppState = {
   follows: [],
   timeline: null,
   owner: null,
+  actions: [],
   loading: true,
   error: null,
   ownerError: null,
+  commentTargetKey: null,
 };
 
 void boot();
@@ -57,6 +73,7 @@ async function boot(): Promise<void> {
 
   try {
     state.owner = loadStoredOwnerSession();
+    state.actions = loadStoredOwnerActions();
     state.directoryProfiles = await loadDirectory();
     state.follows = loadStoredFollows(state.directoryProfiles);
     await refreshTimeline();
@@ -204,8 +221,42 @@ function bindEvents(): void {
     clearStoredOwnerSession();
     state.owner = null;
     state.ownerError = null;
+    state.commentTargetKey = null;
     render();
   });
+
+  for (const button of app.querySelectorAll<HTMLButtonElement>('[data-post-reaction]')) {
+    button.addEventListener('click', () => {
+      void reactToPost(button);
+    });
+  }
+
+  for (const button of app.querySelectorAll<HTMLButtonElement>('[data-action="toggle-comment"]')) {
+    button.addEventListener('click', () => {
+      const targetKey = button.dataset.targetKey;
+
+      if (!targetKey) {
+        return;
+      }
+
+      if (!state.owner) {
+        state.ownerError = 'Open your page to comment.';
+        render();
+        return;
+      }
+
+      state.commentTargetKey = state.commentTargetKey === targetKey ? null : targetKey;
+      state.ownerError = null;
+      render();
+    });
+  }
+
+  for (const form of app.querySelectorAll<HTMLFormElement>('[data-form="post-comment"]')) {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      void commentOnPost(form);
+    });
+  }
 }
 
 function renderFollowForm(): string {
@@ -299,6 +350,9 @@ function renderTimeline(): string {
       (post) => {
         const pageUrl = profilePageUrl(post.profile, window.location.href);
         const avatarUrl = profileAvatarUrl(post.profile, window.location.href);
+        const target = postActionTarget(post);
+        const targetKey = encodeActionTarget(target);
+        const actionSummary = summarizePostActions(state.actions, target);
 
         return `
         <article class="post-card">
@@ -312,6 +366,8 @@ function renderTimeline(): string {
             </a>
           </header>
           <p class="post-content">${escapeHtml(post.content)}</p>
+          ${renderPostActions(target, targetKey, actionSummary)}
+          ${renderPostComments(actionSummary)}
           <details class="technical-details post-details">
             <summary>Technical details</summary>
             <span>Signature algorithm: ES256</span>
@@ -322,6 +378,92 @@ function renderTimeline(): string {
       },
     )
     .join('');
+}
+
+function renderPostActions(
+  target: OpenSocialNetworkActionTarget,
+  targetKey: string,
+  summary: OpenSocialNetworkPostActionSummary,
+): string {
+  const ownerHandle = state.owner?.profile.handle;
+  const activeReaction = ownerHandle ? summary.reactionsByActor[ownerHandle] : null;
+  const disabled = state.owner ? '' : 'disabled';
+  const disabledTitle = state.owner ? '' : ' title="Open your page to interact"';
+  const commentOpen = state.commentTargetKey === targetKey;
+
+  return `
+    <footer class="post-social-bar" aria-label="Post actions">
+      <button
+        class="post-action-button ${activeReaction === 'like' ? 'post-action-active' : ''}"
+        type="button"
+        data-post-reaction="like"
+        data-target-key="${escapeAttribute(targetKey)}"
+        aria-label="Like post"
+        ${disabled}
+        ${disabledTitle}
+      >
+        ${heartIcon(activeReaction === 'like')}
+        <span>${summary.likes}</span>
+      </button>
+      <button
+        class="post-action-button ${activeReaction === 'dislike' ? 'post-action-active' : ''}"
+        type="button"
+        data-post-reaction="dislike"
+        data-target-key="${escapeAttribute(targetKey)}"
+        aria-label="Dislike post"
+        ${disabled}
+        ${disabledTitle}
+      >
+        ${thumbDownIcon(activeReaction === 'dislike')}
+        <span>${summary.dislikes}</span>
+      </button>
+      <button
+        class="post-action-button ${commentOpen ? 'post-action-active' : ''}"
+        type="button"
+        data-action="toggle-comment"
+        data-target-key="${escapeAttribute(targetKey)}"
+        aria-label="Comment on post"
+        ${disabled}
+        ${disabledTitle}
+      >
+        ${commentIcon()}
+        <span>${summary.comments.length}</span>
+      </button>
+    </footer>
+    ${
+      commentOpen
+        ? `
+          <form class="post-comment-form" data-form="post-comment">
+            <input type="hidden" name="targetKey" value="${escapeAttribute(targetKey)}" />
+            <label class="sr-only" for="comment-${escapeAttribute(target.id)}">Comment</label>
+            <textarea id="comment-${escapeAttribute(target.id)}" name="content" rows="2" maxlength="600" placeholder="Write a comment..."></textarea>
+            <button class="button button-primary" type="submit">Post</button>
+          </form>
+        `
+        : ''
+    }
+  `;
+}
+
+function renderPostComments(summary: OpenSocialNetworkPostActionSummary): string {
+  if (summary.comments.length === 0) {
+    return '';
+  }
+
+  return `
+    <div class="post-comments" aria-label="Comments">
+      ${summary.comments
+        .map(
+          (comment) => `
+            <article class="post-comment">
+              <strong>${escapeHtml(comment.actor)}</strong>
+              <p>${escapeHtml(comment.content)}</p>
+            </article>
+          `,
+        )
+        .join('')}
+    </div>
+  `;
 }
 
 function renderDiagnostics(): string {
@@ -517,8 +659,134 @@ async function publishOwnerPost(form: HTMLFormElement): Promise<void> {
   }
 }
 
+async function reactToPost(button: HTMLButtonElement): Promise<void> {
+  if (!state.owner) {
+    state.ownerError = 'Open your page to react.';
+    render();
+    return;
+  }
+
+  const targetKey = button.dataset.targetKey;
+  const requestedReaction = button.dataset.postReaction as OpenSocialNetworkReaction | undefined;
+
+  if (!targetKey || (requestedReaction !== 'like' && requestedReaction !== 'dislike')) {
+    return;
+  }
+
+  try {
+    const target = decodeActionTarget(targetKey);
+    const currentReaction = summarizePostActions(state.actions, target).reactionsByActor[
+      state.owner.profile.handle
+    ];
+    const nextReaction: OpenSocialNetworkReaction =
+      currentReaction === requestedReaction ? 'none' : requestedReaction;
+    const signedAction = await signOwnerReaction(state.owner, target, nextReaction);
+
+    state.actions = [signedAction, ...state.actions];
+    state.ownerError = null;
+    saveStoredOwnerActions(state.actions);
+    render();
+  } catch (error) {
+    state.ownerError = error instanceof Error ? error.message : 'Could not react to this post';
+    render();
+  }
+}
+
+async function commentOnPost(form: HTMLFormElement): Promise<void> {
+  if (!state.owner) {
+    state.ownerError = 'Open your page to comment.';
+    render();
+    return;
+  }
+
+  try {
+    const targetKey = formValue(form, 'targetKey');
+    const content = formValue(form, 'content');
+    const signedAction = await signOwnerComment(state.owner, decodeActionTarget(targetKey), content);
+
+    state.actions = [signedAction, ...state.actions];
+    state.commentTargetKey = null;
+    state.ownerError = null;
+    saveStoredOwnerActions(state.actions);
+    render();
+  } catch (error) {
+    state.ownerError = error instanceof Error ? error.message : 'Could not post this comment';
+    render();
+  }
+}
+
 function currentTimeline(): TimelineResult {
   return mergeOwnerTimeline(state.timeline, state.owner);
+}
+
+function postActionTarget(post: TimelineResult['posts'][number]): OpenSocialNetworkActionTarget {
+  return {
+    type: 'post',
+    id: post.id,
+    author: post.author,
+    url: profilePageUrl(post.profile, window.location.href),
+  };
+}
+
+function encodeActionTarget(target: OpenSocialNetworkActionTarget): string {
+  return encodeURIComponent(JSON.stringify(target));
+}
+
+function decodeActionTarget(encoded: string): OpenSocialNetworkActionTarget {
+  const target = JSON.parse(decodeURIComponent(encoded)) as Partial<OpenSocialNetworkActionTarget>;
+
+  if (target.type !== 'post' || typeof target.id !== 'string' || typeof target.author !== 'string') {
+    throw new Error('Post target is invalid');
+  }
+
+  return {
+    type: 'post',
+    id: target.id,
+    author: target.author,
+    url: typeof target.url === 'string' ? target.url : undefined,
+  };
+}
+
+function heartIcon(filled: boolean): string {
+  return `
+    <svg class="post-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M20.8 4.6c-2-1.8-5.1-1.5-6.9.6L12 7.4l-1.9-2.2C8.3 3.1 5.2 2.8 3.2 4.6 1 6.6.9 10 .9 10.1c0 4.9 7.8 10 10.2 11.4.6.3 1.2.3 1.8 0C15.3 20.1 23.1 15 23.1 10.1c0-.1-.1-3.5-2.3-5.5Z"
+        fill="${filled ? 'currentColor' : 'none'}"
+        stroke="currentColor"
+        stroke-width="1.8"
+      />
+    </svg>
+  `;
+}
+
+function thumbDownIcon(filled: boolean): string {
+  return `
+    <svg class="post-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M6.5 3.5h9.4c1.1 0 2.1.7 2.5 1.8l2 5.5c.6 1.6-.6 3.2-2.3 3.2h-4.4l.6 4.1c.2 1.3-.8 2.4-2.1 2.4h-.3c-.8 0-1.5-.4-1.9-1.1L6.5 14"
+        fill="${filled ? 'currentColor' : 'none'}"
+        stroke="currentColor"
+        stroke-linejoin="round"
+        stroke-width="1.8"
+      />
+      <path d="M3.5 4v10" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" />
+    </svg>
+  `;
+}
+
+function commentIcon(): string {
+  return `
+    <svg class="post-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M5.2 5.1h13.6c1.2 0 2.2 1 2.2 2.2v6.9c0 1.2-1 2.2-2.2 2.2h-5.5L8 20.4v-4H5.2c-1.2 0-2.2-1-2.2-2.2V7.3c0-1.2 1-2.2 2.2-2.2Z"
+        fill="none"
+        stroke="currentColor"
+        stroke-linejoin="round"
+        stroke-width="1.8"
+      />
+    </svg>
+  `;
 }
 
 function ownerPageUrl(session: OwnerSession): string {
