@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { strFromU8, unzipSync } from 'fflate';
 import { exportPrivateKeyJwk, exportPublicKeyJwk, generateIdentityKeyPair } from '../protocol/keys';
 import { signPost, verifyPost } from '../protocol/signing';
-import type { OpenSocialNetworkFeed, OpenSocialNetworkIdentity } from '../protocol/types';
+import type { OpenSocialNetworkActionLog, OpenSocialNetworkFeed, OpenSocialNetworkIdentity } from '../protocol/types';
+import { signOwnerReaction } from './owner-actions';
 import {
   connectOwnerPage,
   clearStoredOwnerSession,
@@ -99,12 +100,52 @@ describe('owner session', () => {
       'public/.well-known/open-social-network.json',
       'public/feed.json',
       'public/index.html',
+      'public/opensocial/actions/index.json',
       'public/page.js',
       'public/profile.json',
       'public/styles.css',
     ]);
     expect(publicFiles['private/identity.private.jwk.json']).toBeUndefined();
+    expect(JSON.parse(publicFiles['public/opensocial/actions/index.json']!)).toEqual({
+      protocol: 'open-social-network',
+      version: '0.1',
+      actor: session.profile.handle,
+      actions: [],
+    });
     expect(JSON.parse(fullFiles['private/identity.private.jwk.json']!)).toEqual(session.privateKeyJwk);
+  });
+
+  it('exports signed public actions into the portable action folder', async () => {
+    const session = await createOwnerPage({
+      name: 'Ada Lovelace',
+      handle: 'ada@example.test',
+      bio: 'Building a social page.',
+      firstPost: 'Hello from my page.',
+    });
+    const action = await signOwnerReaction(
+      session,
+      {
+        type: 'post',
+        id: session.feed.posts[0]!.id,
+        author: session.feed.posts[0]!.author,
+      },
+      'like',
+      {
+        id: 'reaction_1',
+        createdAt: '2026-06-03T12:00:00.000Z',
+      },
+    );
+
+    const publicFiles = exportOwnerSiteFiles(session, {
+      includePrivate: false,
+      actions: [action],
+    });
+    const actionLog = JSON.parse(
+      publicFiles['public/opensocial/actions/index.json']!,
+    ) as OpenSocialNetworkActionLog;
+
+    expect(actionLog.actor).toBe(session.profile.handle);
+    expect(actionLog.actions).toEqual([action]);
   });
 
   it('exports zip archives for the full site and public-only site', async () => {

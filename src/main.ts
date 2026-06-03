@@ -802,7 +802,8 @@ function downloadOwnerSite(includePrivate: boolean): void {
     return;
   }
 
-  const zip = exportOwnerSiteZip(state.owner, { includePrivate });
+  const ownerActions = state.actions.filter((action) => action.actor === state.owner?.profile.handle);
+  const zip = exportOwnerSiteZip(state.owner, { includePrivate, actions: ownerActions });
   const blob = new Blob([zip as BlobPart], { type: 'application/zip' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

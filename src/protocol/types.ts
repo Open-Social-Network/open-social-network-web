@@ -89,3 +89,10 @@ export type UnsignedOpenSocialNetworkAction =
 export type OpenSocialNetworkAction = UnsignedOpenSocialNetworkAction & {
   signature: OpenSocialNetworkSignature;
 };
+
+export interface OpenSocialNetworkActionLog {
+  protocol: 'open-social-network';
+  version: OpenSocialNetworkVersion;
+  actor: string;
+  actions: OpenSocialNetworkAction[];
+}

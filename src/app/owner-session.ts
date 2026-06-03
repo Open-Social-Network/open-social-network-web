@@ -9,6 +9,8 @@ import { signPost, verifyPost } from '../protocol/signing';
 import type { TimelinePost, TimelineResult } from '../aggregator/timeline';
 import type {
   OpenSocialNetworkFeed,
+  OpenSocialNetworkAction,
+  OpenSocialNetworkActionLog,
   OpenSocialNetworkIdentity,
   OpenSocialNetworkPost,
   UnsignedOpenSocialNetworkPost,
@@ -37,6 +39,7 @@ export interface OwnerPostOptions {
 
 export interface OwnerSiteExportOptions {
   includePrivate: boolean;
+  actions?: OpenSocialNetworkAction[];
 }
 
 export type OwnerSiteFiles = Record<string, string>;
@@ -176,10 +179,17 @@ export function exportOwnerSiteFiles(
   session: OwnerSession,
   options: OwnerSiteExportOptions,
 ): OwnerSiteFiles {
+  const actionLog: OpenSocialNetworkActionLog = {
+    protocol: 'open-social-network',
+    version: '0.1',
+    actor: session.profile.handle,
+    actions: options.actions ?? [],
+  };
   const files: OwnerSiteFiles = {
     'public/.well-known/open-social-network.json': jsonFile(session.profile),
     'public/feed.json': exportOwnerFeed(session),
     'public/index.html': pageHtml(session.profile),
+    'public/opensocial/actions/index.json': jsonFile(actionLog),
     'public/page.js': pageScript(),
     'public/profile.json': jsonFile(session.profile),
     'public/styles.css': pageStyles(),
