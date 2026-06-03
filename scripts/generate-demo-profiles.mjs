@@ -76,7 +76,7 @@ const directory = {
   protocol: 'open-social-network',
   version: '0.1',
   profiles: [
-    'https://open-social-network.github.io/open-social-network-official/profile.json',
+    'https://open-social-network.github.io/profile.json',
     ...demoProfiles.map((profile) => `/profiles/${profile.slug}/profile.json`),
   ],
 };
