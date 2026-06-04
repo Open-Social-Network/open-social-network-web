@@ -1,6 +1,6 @@
 export const messageInboxCopy = {
-  help: 'Open message files sent to this page. They stay private in this browser.',
-  openLabel: 'Open message file',
-  empty: 'No messages opened yet.',
-  invalidFile: 'Choose a message file',
+  help: 'Messages sent to this page appear here. Open message files to read them privately.',
+  openLabel: 'Open messages',
+  empty: 'No messages yet. When someone sends you a message file, open it here.',
+  invalidFile: 'Choose a message file to read it.',
 } as const;
