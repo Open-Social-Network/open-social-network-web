@@ -12,7 +12,7 @@ describe('publish ready view', () => {
 
     expect(html).toContain('2 posts ready to publish');
     expect(html).toContain('Download your public site to publish your latest posts.');
-    expect(html).toContain('Upload the downloaded public folder to your site.');
+    expect(html).toContain('Upload the public folder to your site.');
     expect(html).toContain('data-owner-download="public"');
     expect(html).toContain('Download public site');
     expect(html).toContain('data-action="owner-published"');
@@ -28,7 +28,7 @@ describe('publish ready view', () => {
 
     expect(html).toContain('data-owner-download="public-updates"');
     expect(html).toContain('Download update file');
-    expect(html).toContain('Upload the downloaded public folder to your site.');
+    expect(html).toContain('Upload the update file to your site so this activity appears on your page.');
   });
 
   it('escapes summary copy before rendering it', () => {

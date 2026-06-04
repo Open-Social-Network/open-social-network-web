@@ -9,7 +9,7 @@ describe('owner action feedback', () => {
   it('speaks like a social app after posting', () => {
     expect(ownerPostNotice('saved')).toBe('Posted. Saved to your page folder.');
     expect(ownerPostNotice('unavailable')).toBe(
-      'Posted. Download your public site when you want to publish it.',
+      'Posted. Saved in this browser. Download your public site to put it on your page.',
     );
     expect(ownerPostNotice('failed')).toBeNull();
   });
@@ -29,7 +29,7 @@ describe('owner action feedback', () => {
         saveResult: 'unavailable',
         manualPublishNeeded: true,
       }),
-    ).toBe('Disliked. Saved in this browser.');
+    ).toBe('Disliked. Saved in this browser. Download the update file to put it on your page.');
 
     expect(
       ownerReactionNotice({
@@ -53,7 +53,7 @@ describe('owner action feedback', () => {
         saveResult: 'unavailable',
         manualPublishNeeded: true,
       }),
-    ).toBe('Comment posted. Saved in this browser.');
+    ).toBe('Comment posted. Saved in this browser. Download the update file to put it on your page.');
 
     expect(
       ownerCommentNotice({

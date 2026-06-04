@@ -22,7 +22,7 @@ export function ownerPostNotice(saveResult: OwnerLocalSaveResult): string | null
     return 'Posted. Saved to your page folder.';
   }
 
-  return 'Posted. Download your public site when you want to publish it.';
+  return 'Posted. Saved in this browser. Download your public site to put it on your page.';
 }
 
 export function ownerReactionNotice(input: OwnerReactionNoticeInput): string | null {
@@ -51,7 +51,7 @@ function withSaveDetail(
   }
 
   if (manualPublishNeeded) {
-    return `${baseCopy} Saved in this browser.`;
+    return `${baseCopy} Saved in this browser. Download the update file to put it on your page.`;
   }
 
   return baseCopy;
