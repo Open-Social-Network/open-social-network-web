@@ -613,7 +613,7 @@ function renderMessageComposer(
     return `
       <section class="post-message-form post-message-notice" aria-label="Message ${escapeAttribute(profile.name)}">
         <strong>Messages unavailable</strong>
-        <p>${escapeHtml(access.notice ?? 'This profile cannot receive encrypted messages yet.')}</p>
+        <p>${escapeHtml(access.notice ?? 'This page cannot receive messages yet.')}</p>
       </section>
     `;
   }

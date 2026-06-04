@@ -45,7 +45,7 @@ export function messageAccessState(
   return {
     canSend: false,
     buttonDisabled: false,
-    buttonTitle: 'This profile cannot receive encrypted messages yet',
-    notice: `${profile.name} cannot receive encrypted messages yet.`,
+    buttonTitle: 'This page cannot receive messages yet',
+    notice: `${profile.name} cannot receive messages yet.`,
   };
 }

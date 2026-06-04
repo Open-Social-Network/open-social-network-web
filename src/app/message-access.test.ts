@@ -26,8 +26,8 @@ describe('message access state', () => {
     expect(messageAccessState(profile(), 'owner@example.test')).toEqual({
       canSend: false,
       buttonDisabled: false,
-      buttonTitle: 'This profile cannot receive encrypted messages yet',
-      notice: 'Ada cannot receive encrypted messages yet.',
+      buttonTitle: 'This page cannot receive messages yet',
+      notice: 'Ada cannot receive messages yet.',
     });
   });
 
