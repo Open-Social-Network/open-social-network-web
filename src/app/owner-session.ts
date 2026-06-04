@@ -13,6 +13,7 @@ import type { TimelinePost, TimelineResult } from '../aggregator/timeline';
 import type {
   OpenSocialNetworkFeed,
   OpenSocialNetworkAction,
+  OpenSocialNetworkActionInbox,
   OpenSocialNetworkActionLog,
   OpenSocialNetworkDirectMessageLog,
   OpenSocialNetworkIdentity,
@@ -255,6 +256,12 @@ export function exportOwnerSiteFiles(
     actor: session.profile.handle,
     actions: options.actions ?? [],
   };
+  const actionInbox: OpenSocialNetworkActionInbox = {
+    protocol: 'open-social-network',
+    version: '0.1',
+    owner: session.profile.handle,
+    actions: [],
+  };
   const messageLog: OpenSocialNetworkDirectMessageLog = {
     protocol: 'open-social-network',
     version: '0.1',
@@ -266,6 +273,7 @@ export function exportOwnerSiteFiles(
     'public/feed.json': exportOwnerFeed(session),
     'public/index.html': pageHtml(session.profile),
     'public/opensocial/actions/index.json': jsonFile(actionLog),
+    'public/opensocial/actions/inbox/index.json': jsonFile(actionInbox),
     'public/opensocial/messages/inbox/index.json': jsonFile(messageLog),
     'public/page.js': pageScript(),
     'public/profile.json': jsonFile(session.profile),

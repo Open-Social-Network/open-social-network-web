@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { strFromU8, unzipSync } from 'fflate';
 import { exportPrivateKeyJwk, exportPublicKeyJwk, generateIdentityKeyPair } from '../protocol/keys';
 import { signPost, verifyPost } from '../protocol/signing';
-import type { OpenSocialNetworkActionLog, OpenSocialNetworkFeed, OpenSocialNetworkIdentity } from '../protocol/types';
+import type {
+  OpenSocialNetworkActionInbox,
+  OpenSocialNetworkActionLog,
+  OpenSocialNetworkFeed,
+  OpenSocialNetworkIdentity,
+} from '../protocol/types';
 import { signOwnerReaction } from './owner-actions';
 import {
   connectOwnerPage,
@@ -103,6 +108,7 @@ describe('owner session', () => {
       'public/.well-known/open-social-network.json',
       'public/feed.json',
       'public/index.html',
+      'public/opensocial/actions/inbox/index.json',
       'public/opensocial/actions/index.json',
       'public/opensocial/messages/inbox/index.json',
       'public/page.js',
@@ -116,6 +122,12 @@ describe('owner session', () => {
       actor: session.profile.handle,
       actions: [],
     });
+    expect(JSON.parse(publicFiles['public/opensocial/actions/inbox/index.json']!)).toEqual({
+      protocol: 'open-social-network',
+      version: '0.1',
+      owner: session.profile.handle,
+      actions: [],
+    } satisfies OpenSocialNetworkActionInbox);
     expect(JSON.parse(fullFiles['private/identity.private.jwk.json']!)).toEqual(session.privateKeyJwk);
     expect(publicFiles['private/messages.private.jwk.json']).toBeUndefined();
     expect(JSON.parse(fullFiles['private/messages.private.jwk.json']!)).toEqual(
