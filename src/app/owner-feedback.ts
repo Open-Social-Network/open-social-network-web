@@ -70,7 +70,7 @@ function withSaveDetail(
   }
 
   if (manualPublishNeeded) {
-    return `${baseCopy} Saved in this browser. Download the update file to put it on your page.`;
+    return `${baseCopy} Saved in this browser. Download the activity update when you are ready.`;
   }
 
   return baseCopy;

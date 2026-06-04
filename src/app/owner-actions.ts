@@ -138,7 +138,7 @@ export function summarizeOwnerPublicUpdates(
     reactions,
     comments,
     title: `${ownerActions.length} ${ownerActions.length === 1 ? 'update' : 'updates'} ready`,
-    detail: 'Download the update file to make your latest activity visible on your page.',
+    detail: 'Download the activity update to make your latest activity visible on your page.',
   };
 }
 

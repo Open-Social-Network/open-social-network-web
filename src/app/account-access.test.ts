@@ -8,15 +8,15 @@ describe('account access copy', () => {
     expect(accountAccessCopy.disconnected.openExistingTitle).toBe('Already have a page?');
     expect(accountAccessCopy.disconnected.openExistingLabel).toBe('Open my page folder');
     expect(accountAccessCopy.disconnected.openExistingHelp).toBe(
-      'Choose your whole Open Social Network page folder. It opens only in this browser, and nothing is uploaded.',
+      'Choose the page folder you saved earlier. It opens only in this browser, and nothing is uploaded.',
     );
     expect(accountAccessCopy.disconnected.openExistingSteps).toEqual([
       'Click Open my page folder.',
-      'Choose the folder that contains public and private.',
+      'Choose your saved page folder.',
       'You are logged in only in this browser.',
     ]);
     expect(accountAccessCopy.disconnected.openExistingPrivateHelp).toBe(
-      'Your private folder proves the page is yours. Keep it backed up and never publish it.',
+      'Your owner file proves the page is yours. Keep it backed up and never share it.',
     );
     expect(accountAccessCopy.disconnected.technicalSummary).toBe('Technical details');
   });

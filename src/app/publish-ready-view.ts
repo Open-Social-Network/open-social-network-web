@@ -20,7 +20,7 @@ function downloadTargetAttribute(target: OwnerPublishReadySummary['downloadTarge
 
 function publishReadyHelper(target: OwnerPublishReadySummary['downloadTarget']): string {
   if (target === 'public-updates') {
-    return 'Upload the update file to your site so this activity appears on your page.';
+    return 'Upload the activity update to your site so this activity appears on your page.';
   }
 
   return 'Upload the public folder to your site.';

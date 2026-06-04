@@ -30,7 +30,7 @@ describe('owner action feedback', () => {
         saveResult: 'unavailable',
         manualPublishNeeded: true,
       }),
-    ).toBe('Disliked. Saved in this browser. Download the update file to put it on your page.');
+    ).toBe('Disliked. Saved in this browser. Download the activity update when you are ready.');
 
     expect(
       ownerReactionNotice({
@@ -54,7 +54,9 @@ describe('owner action feedback', () => {
         saveResult: 'unavailable',
         manualPublishNeeded: true,
       }),
-    ).toBe('Comment posted. Saved in this browser. Download the update file to put it on your page.');
+    ).toBe(
+      'Comment posted. Saved in this browser. Download the activity update when you are ready.',
+    );
 
     expect(
       ownerCommentNotice({

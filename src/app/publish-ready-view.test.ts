@@ -18,17 +18,17 @@ describe('publish ready view', () => {
     expect(html).toContain('data-action="owner-published"');
   });
 
-  it('can point the reminder at the smaller update-file download', () => {
+  it('can point the reminder at the smaller activity update download', () => {
     const html = renderPublishReady({
       title: '1 update ready',
-      detail: 'Download the update file to make your latest activity visible on your page.',
-      downloadLabel: 'Download update file',
+      detail: 'Download the activity update to make your latest activity visible on your page.',
+      downloadLabel: 'Download activity update',
       downloadTarget: 'public-updates',
     });
 
     expect(html).toContain('data-owner-download="public-updates"');
-    expect(html).toContain('Download update file');
-    expect(html).toContain('Upload the update file to your site so this activity appears on your page.');
+    expect(html).toContain('Download activity update');
+    expect(html).toContain('Upload the activity update to your site so this activity appears on your page.');
   });
 
   it('escapes summary copy before rendering it', () => {

@@ -124,7 +124,7 @@ export function summarizeOwnerPublishReady(
       ? {
           title: input.publicUpdates.title,
           detail: input.publicUpdates.detail,
-          downloadLabel: 'Download update file',
+          downloadLabel: 'Download activity update',
           downloadTarget: 'public-updates',
         }
       : null;

@@ -4,14 +4,14 @@ export const accountAccessCopy = {
     openExistingTitle: 'Already have a page?',
     openExistingLabel: 'Open my page folder',
     openExistingHelp:
-      'Choose your whole Open Social Network page folder. It opens only in this browser, and nothing is uploaded.',
+      'Choose the page folder you saved earlier. It opens only in this browser, and nothing is uploaded.',
     openExistingSteps: [
       'Click Open my page folder.',
-      'Choose the folder that contains public and private.',
+      'Choose your saved page folder.',
       'You are logged in only in this browser.',
     ],
     openExistingPrivateHelp:
-      'Your private folder proves the page is yours. Keep it backed up and never publish it.',
+      'Your owner file proves the page is yours. Keep it backed up and never share it.',
     technicalSummary: 'Technical details',
     technicalHelp:
       'Your page folder usually contains a public folder for your site and a private folder that stays on your device.',

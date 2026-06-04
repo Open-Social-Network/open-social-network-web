@@ -106,7 +106,7 @@ describe('owner public actions', () => {
       reactions: 1,
       comments: 1,
       title: '2 updates ready',
-      detail: 'Download the update file to make your latest activity visible on your page.',
+      detail: 'Download the activity update to make your latest activity visible on your page.',
     });
   });
 
