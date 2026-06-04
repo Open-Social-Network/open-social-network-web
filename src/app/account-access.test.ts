@@ -8,31 +8,31 @@ describe('account access copy', () => {
     expect(accountAccessCopy.disconnected.openExistingTitle).toBe('Already have a page?');
     expect(accountAccessCopy.disconnected.openExistingLabel).toBe('Open my page folder');
     expect(accountAccessCopy.disconnected.openExistingHelp).toBe(
-      'Choose the folder for your Open Social Network page. Nothing is uploaded.',
+      'Choose your whole Open Social Network page folder. It opens only in this browser, and nothing is uploaded.',
     );
     expect(accountAccessCopy.disconnected.openExistingSteps).toEqual([
       'Click Open my page folder.',
-      'Choose the whole page folder.',
-      'You will be logged in only in this browser.',
+      'Choose the folder that contains public and private.',
+      'You are logged in only in this browser.',
     ]);
     expect(accountAccessCopy.disconnected.openExistingPrivateHelp).toBe(
-      'Private files prove the page is yours. They stay on your device.',
+      'Your private folder proves the page is yours. Keep it backed up and never publish it.',
     );
     expect(accountAccessCopy.disconnected.technicalSummary).toBe('Technical details');
   });
 
   it('makes logout obvious and explains that it is local only', () => {
     expect(accountAccessCopy.connected.status).toBe('Logged in');
-    expect(accountAccessCopy.connected.logoutTitle).toBe('Log out anytime');
+    expect(accountAccessCopy.connected.logoutTitle).toBe('Log out from this browser');
     expect(accountAccessCopy.connected.logoutLabel).toBe('Log out');
     expect(accountAccessCopy.connected.logoutHelp).toBe(
-      'This only logs out of this browser. Your public page stays online.',
+      'This only disconnects this browser. Your public page stays online.',
     );
     expect(accountAccessCopy.connected.logoutReturnHelp).toBe(
-      'To come back, choose Open my page folder and select the same folder.',
+      'To sign in again, choose Open my page folder and select the same folder.',
     );
     expect(accountAccessCopy.connected.logoutSuccess).toBe(
-      'You are logged out of this browser. Your public page is still online.',
+      'Logged out from this browser. Your public page is still online.',
     );
   });
 });
