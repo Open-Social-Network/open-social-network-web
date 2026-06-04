@@ -317,8 +317,7 @@ button {
 }
 
 .owner-access-card p,
-.owner-session-note,
-.owner-logout-card p {
+.owner-session-note {
   margin: 0;
   color: var(--muted);
   font-size: 0.82rem;
@@ -364,31 +363,19 @@ button {
   gap: 8px;
 }
 
-.owner-logout-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
+.owner-status-actions {
+  display: flex;
   align-items: center;
-  padding: 12px;
-  border: 1px solid rgba(255, 138, 128, 0.22);
-  border-radius: 8px;
-  background: rgba(255, 138, 128, 0.08);
-}
-
-.owner-logout-card strong {
-  display: block;
-  margin-bottom: 4px;
-  color: #ffe1de;
-  font-size: 0.9rem;
-}
-
-.owner-logout-card p + p {
-  margin-top: 4px;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
 }
 
 .owner-logout-button {
-  background: rgba(255, 138, 128, 0.13);
-  color: #ffd1cc;
+  min-height: 32px;
+  padding: 7px 10px;
+  background: rgba(255, 138, 128, 0.12);
+  color: #ffd7d2;
 }
 
 .owner-link {

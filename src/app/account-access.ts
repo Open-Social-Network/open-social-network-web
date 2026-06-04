@@ -17,9 +17,9 @@ export const accountAccessCopy = {
   },
   connected: {
     status: 'Logged in',
-    logoutTitle: 'Finished here?',
+    logoutTitle: 'Log out anytime',
     logoutLabel: 'Log out',
-    logoutHelp: 'Log out only disconnects this browser. Your public page stays online.',
-    logoutReturnHelp: 'You can open the same page folder again whenever you want.',
+    logoutHelp: 'This only logs out of this browser. Your public page stays online.',
+    logoutReturnHelp: 'To come back, choose Open my page and select the same folder.',
   },
 } as const;

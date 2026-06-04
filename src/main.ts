@@ -777,7 +777,10 @@ function renderOwnerPanel(): string {
     <section class="owner-panel" aria-label="My Page" data-owner-access>
       <div class="panel-header">
         <h2>My Page</h2>
-        <span>${connected.status}</span>
+        <div class="owner-status-actions">
+          <span>${connected.status}</span>
+          <button class="button button-secondary owner-logout-button" type="button" data-action="owner-disconnect" aria-label="${connected.logoutTitle}">${connected.logoutLabel}</button>
+        </div>
       </div>
       ${state.ownerError ? `<p class="app-error">${escapeHtml(state.ownerError)}</p>` : ''}
       <p class="owner-warning">This file proves this page is yours. Back it up.</p>
@@ -788,6 +791,7 @@ function renderOwnerPanel(): string {
           <span>${escapeHtml(state.owner.profile.handle)}</span>
         </span>
       </div>
+      <p class="owner-session-note">${connected.logoutHelp} ${connected.logoutReturnHelp}</p>
       <form class="owner-post-form" data-form="owner-post">
         <label class="sr-only" for="ownerPostContent">New signed post</label>
         <textarea id="ownerPostContent" name="content" rows="4" maxlength="1000" placeholder="What do you want to post?" data-owner-post-content></textarea>
@@ -800,14 +804,6 @@ function renderOwnerPanel(): string {
       </div>
       ${publishReady ? renderPublishReady(publishReady) : ''}
       ${renderOwnerInbox()}
-      <section class="owner-logout-card" aria-label="Log out">
-        <div>
-          <strong>${connected.logoutTitle}</strong>
-          <p>${connected.logoutHelp}</p>
-          <p>${connected.logoutReturnHelp}</p>
-        </div>
-        <button class="button button-secondary owner-logout-button" type="button" data-action="owner-disconnect" aria-label="Log out of this page">${connected.logoutLabel}</button>
-      </section>
       <section class="publish-anywhere">
         <strong>Publish anywhere</strong>
         <p>Upload the public folder to any static host.</p>
