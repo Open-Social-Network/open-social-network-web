@@ -1,6 +1,7 @@
 import { loadVerifiedTimeline, type TimelineResult } from './aggregator/timeline';
 import { accountAccessCopy } from './app/account-access';
 import { commentAuthorDisplay } from './app/comment-display';
+import { renderPostCommentComposer } from './app/comment-composer';
 import {
   focusOwnerPostComposer,
   shouldShowFloatingComposeButton,
@@ -399,6 +400,14 @@ function bindEvents(): void {
     });
   }
 
+  for (const button of app.querySelectorAll<HTMLButtonElement>('[data-action="cancel-comment"]')) {
+    button.addEventListener('click', () => {
+      state.commentTargetKey = null;
+      state.ownerError = null;
+      render();
+    });
+  }
+
   for (const button of app.querySelectorAll<HTMLButtonElement>('[data-action="toggle-message"]')) {
     button.addEventListener('click', () => {
       const targetKey = button.dataset.messageTargetKey;
@@ -652,14 +661,14 @@ function renderPostActions(
     </footer>
     ${
       commentOpen
-        ? `
-          <form class="post-comment-form" data-form="post-comment">
-            <input type="hidden" name="targetKey" value="${escapeAttribute(targetKey)}" />
-            <label class="sr-only" for="comment-${escapeAttribute(target.id)}">Comment</label>
-            <textarea id="comment-${escapeAttribute(target.id)}" name="content" rows="2" maxlength="600" placeholder="${socialInteractionCopy.commentPlaceholder}"></textarea>
-            <button class="button button-primary" type="submit">${socialInteractionCopy.commentSubmit}</button>
-          </form>
-        `
+        ? renderPostCommentComposer({
+            targetId: target.id,
+            targetKey,
+            ownerName: state.owner?.profile.name ?? 'Your page',
+            ownerHandle: state.owner?.profile.handle ?? '',
+            placeholder: socialInteractionCopy.commentPlaceholder,
+            submitLabel: socialInteractionCopy.commentSubmit,
+          })
         : ''
     }
     ${messageOpen ? renderMessageComposer(profile, messageTargetKey, messageAccess) : ''}

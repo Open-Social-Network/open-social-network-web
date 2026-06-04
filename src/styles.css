@@ -799,6 +799,34 @@ button {
   margin-top: 12px;
 }
 
+.post-comment-composer {
+  grid-template-columns: 1fr;
+  padding: 12px;
+  border: 1px solid rgba(77, 124, 255, 0.22);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.post-comment-composer-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.post-comment-composer-header strong {
+  color: var(--ink);
+}
+
+.post-comment-composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .post-comment-form textarea,
 .post-message-form textarea {
   width: 100%;
