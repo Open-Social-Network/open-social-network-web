@@ -137,8 +137,8 @@ export function summarizeOwnerPublicUpdates(
     count: ownerActions.length,
     reactions,
     comments,
-    title: `${ownerActions.length} public ${ownerActions.length === 1 ? 'update' : 'updates'} ready`,
-    detail: `Download your public updates to publish your latest ${publicUpdateKinds(reactions, comments)}.`,
+    title: `${ownerActions.length} ${ownerActions.length === 1 ? 'update' : 'updates'} ready`,
+    detail: 'Download the update file to make your latest activity visible on your page.',
   };
 }
 
@@ -154,18 +154,6 @@ async function signOwnerAction(
   }
 
   return signedAction;
-}
-
-function publicUpdateKinds(reactions: number, comments: number): string {
-  if (reactions > 0 && comments > 0) {
-    return 'reaction and comment';
-  }
-
-  if (comments > 0) {
-    return comments === 1 ? 'comment' : 'comments';
-  }
-
-  return reactions === 1 ? 'reaction' : 'reactions';
 }
 
 function createActionId(kind: 'reaction' | 'comment', createdAt?: string): string {

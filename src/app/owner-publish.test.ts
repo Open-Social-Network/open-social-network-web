@@ -62,14 +62,14 @@ describe('owner publish reminder', () => {
           count: 1,
           reactions: 1,
           comments: 0,
-          title: '1 public update ready',
-          detail: 'Download your public updates to publish your latest reaction.',
+          title: '1 update ready',
+          detail: 'Download the update file to make your latest activity visible on your page.',
         },
       }),
     ).toEqual({
-      title: '1 public update ready',
-      detail: 'Download your public updates to publish your latest reaction.',
-      downloadLabel: 'Download public updates',
+      title: '1 update ready',
+      detail: 'Download the update file to make your latest activity visible on your page.',
+      downloadLabel: 'Download update file',
       downloadTarget: 'public-updates',
     });
   });
@@ -84,13 +84,13 @@ describe('owner publish reminder', () => {
           count: 2,
           reactions: 1,
           comments: 1,
-          title: '2 public updates ready',
-          detail: 'Download your public site to publish your latest reaction and comment.',
+          title: '2 updates ready',
+          detail: 'Download the update file to make your latest activity visible on your page.',
         },
       }),
     ).toEqual({
       title: '3 updates ready to publish',
-      detail: 'Download your public site to publish your latest post and public updates.',
+      detail: 'Download your public site to publish your latest post and activity updates.',
       downloadLabel: 'Download public site',
       downloadTarget: 'public-site',
     });
@@ -122,13 +122,13 @@ describe('owner publish reminder', () => {
           count: 1,
           reactions: 1,
           comments: 0,
-          title: '1 public update ready',
-          detail: 'Download your public updates to publish your latest reaction.',
+          title: '1 update ready',
+          detail: 'Download the update file to make your latest activity visible on your page.',
         },
       }),
     ).toEqual({
       title: '2 updates ready to publish',
-      detail: 'Download your public site to publish your latest public update and follow change.',
+      detail: 'Download your public site to publish your latest activity update and follow change.',
       downloadLabel: 'Download public site',
       downloadTarget: 'public-site',
     });

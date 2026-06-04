@@ -124,7 +124,7 @@ export function summarizeOwnerPublishReady(
       ? {
           title: input.publicUpdates.title,
           detail: input.publicUpdates.detail,
-          downloadLabel: 'Download public updates',
+          downloadLabel: 'Download update file',
           downloadTarget: 'public-updates',
         }
       : null;
@@ -171,7 +171,7 @@ function postLabel(count: number): string {
 }
 
 function publicUpdateLabel(count: number): string {
-  return count === 1 ? 'public update' : 'public updates';
+  return count === 1 ? 'activity update' : 'activity updates';
 }
 
 function followLabel(count: number): string {

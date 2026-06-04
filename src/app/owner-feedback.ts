@@ -51,7 +51,7 @@ function withSaveDetail(
   }
 
   if (manualPublishNeeded) {
-    return `${baseCopy} Public update is ready to publish.`;
+    return `${baseCopy} Saved in this browser.`;
   }
 
   return baseCopy;

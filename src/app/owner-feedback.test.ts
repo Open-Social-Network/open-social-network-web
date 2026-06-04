@@ -29,7 +29,7 @@ describe('owner action feedback', () => {
         saveResult: 'unavailable',
         manualPublishNeeded: true,
       }),
-    ).toBe('Disliked. Public update is ready to publish.');
+    ).toBe('Disliked. Saved in this browser.');
 
     expect(
       ownerReactionNotice({
@@ -53,7 +53,7 @@ describe('owner action feedback', () => {
         saveResult: 'unavailable',
         manualPublishNeeded: true,
       }),
-    ).toBe('Comment posted. Public update is ready to publish.');
+    ).toBe('Comment posted. Saved in this browser.');
 
     expect(
       ownerCommentNotice({

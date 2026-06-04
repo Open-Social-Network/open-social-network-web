@@ -12,21 +12,23 @@ describe('publish ready view', () => {
 
     expect(html).toContain('2 posts ready to publish');
     expect(html).toContain('Download your public site to publish your latest posts.');
+    expect(html).toContain('Upload the downloaded public folder to your site.');
     expect(html).toContain('data-owner-download="public"');
     expect(html).toContain('Download public site');
     expect(html).toContain('data-action="owner-published"');
   });
 
-  it('can point the reminder at the smaller public updates download', () => {
+  it('can point the reminder at the smaller update-file download', () => {
     const html = renderPublishReady({
-      title: '1 public update ready',
-      detail: 'Download your public updates to publish your latest reaction.',
-      downloadLabel: 'Download public updates',
+      title: '1 update ready',
+      detail: 'Download the update file to make your latest activity visible on your page.',
+      downloadLabel: 'Download update file',
       downloadTarget: 'public-updates',
     });
 
     expect(html).toContain('data-owner-download="public-updates"');
-    expect(html).toContain('Download public updates');
+    expect(html).toContain('Download update file');
+    expect(html).toContain('Upload the downloaded public folder to your site.');
   });
 
   it('escapes summary copy before rendering it', () => {

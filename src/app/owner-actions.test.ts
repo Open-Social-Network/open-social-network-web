@@ -105,8 +105,8 @@ describe('owner public actions', () => {
       count: 2,
       reactions: 1,
       comments: 1,
-      title: '2 public updates ready',
-      detail: 'Download your public updates to publish your latest reaction and comment.',
+      title: '2 updates ready',
+      detail: 'Download the update file to make your latest activity visible on your page.',
     });
   });
 
