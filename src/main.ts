@@ -8,6 +8,7 @@ import {
 import { renderVerificationDiagnostics, verificationRejectedCount } from './app/diagnostics';
 import { loadDirectory } from './app/directory';
 import { messageAccessState, type MessageAccessState } from './app/message-access';
+import { messageInboxCopy } from './app/message-inbox-copy';
 import {
   deliverOwnerAction,
   needsManualActionPublish,
@@ -829,9 +830,9 @@ function renderOwnerInbox(): string {
       <div class="owner-inbox-header">
         <div>
           <strong>Messages</strong>
-          <p>Open encrypted message files. They are read only in this browser.</p>
+          <p>${messageInboxCopy.help}</p>
         </div>
-        <label class="button button-secondary owner-message-button" for="ownerMessageFile">Open message</label>
+        <label class="button button-secondary owner-message-button" for="ownerMessageFile">${messageInboxCopy.openLabel}</label>
         <input
           class="sr-only"
           id="ownerMessageFile"
@@ -849,7 +850,7 @@ function renderOwnerInbox(): string {
 
 function renderOwnerInboxMessages(): string {
   if (state.inboxMessages.length === 0) {
-    return '<p class="owner-inbox-empty">No messages opened yet.</p>';
+    return `<p class="owner-inbox-empty">${messageInboxCopy.empty}</p>`;
   }
 
   return `
@@ -1342,7 +1343,7 @@ async function readJsonFile(file: File): Promise<unknown> {
 
 function assertDirectMessageFile(value: unknown): OpenSocialNetworkDirectMessage {
   if (!isRecord(value)) {
-    throw new Error('Choose an encrypted message file');
+    throw new Error(messageInboxCopy.invalidFile);
   }
 
   const message = value as Partial<OpenSocialNetworkDirectMessage>;
@@ -1362,7 +1363,7 @@ function assertDirectMessageFile(value: unknown): OpenSocialNetworkDirectMessage
     message.signature?.alg !== 'ES256' ||
     typeof message.signature.value !== 'string'
   ) {
-    throw new Error('Choose an encrypted message file');
+    throw new Error(messageInboxCopy.invalidFile);
   }
 
   return message as OpenSocialNetworkDirectMessage;
