@@ -82,6 +82,13 @@ export function clearStoredOwnerPublishChanges(storage: Storage = window.localSt
   storage.removeItem(OWNER_PUBLISH_STORAGE_KEY);
 }
 
+export function markOwnerPublishChangesPublished(
+  storage: Storage = window.localStorage,
+): OwnerPublishChanges {
+  clearStoredOwnerPublishChanges(storage);
+  return emptyOwnerPublishChanges();
+}
+
 export function summarizeOwnerPublishReady(
   input: OwnerPublishReadyInput,
 ): OwnerPublishReadySummary | null {

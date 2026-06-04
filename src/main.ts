@@ -24,6 +24,7 @@ import {
   clearStoredOwnerPublishChanges,
   emptyOwnerPublishChanges,
   loadStoredOwnerPublishChanges,
+  markOwnerPublishChangesPublished,
   saveStoredOwnerPublishChanges,
   summarizeOwnerPublishReady,
   type OwnerPublishChanges,
@@ -288,6 +289,12 @@ function bindEvents(): void {
     state.inboxError = null;
     state.pendingPublish = emptyOwnerPublishChanges();
     clearStoredOwnerPublishChanges();
+    render();
+  });
+
+  app.querySelector<HTMLButtonElement>('[data-action="owner-published"]')?.addEventListener('click', () => {
+    state.pendingPublish = markOwnerPublishChangesPublished();
+    state.ownerError = null;
     render();
   });
 
@@ -759,6 +766,7 @@ function renderPublishReady(summary: OwnerPublishReadySummary): string {
       <strong>${escapeHtml(summary.title)}</strong>
       <p>${escapeHtml(summary.detail)}</p>
       <p>Upload the public folder anywhere your page is hosted.</p>
+      <button class="button button-secondary" type="button" data-action="owner-published">I published this</button>
     </section>
   `;
 }

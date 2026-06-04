@@ -3,6 +3,7 @@ import type { OpenSocialNetworkAction } from '../protocol/types';
 import {
   clearStoredOwnerPublishChanges,
   loadStoredOwnerPublishChanges,
+  markOwnerPublishChangesPublished,
   saveStoredOwnerPublishChanges,
   summarizeOwnerPublishReady,
 } from './owner-publish';
@@ -137,6 +138,31 @@ describe('owner publish reminder', () => {
     );
     clearStoredOwnerPublishChanges(storage);
 
+    expect(loadStoredOwnerPublishChanges('owner@example.test', storage)).toEqual({
+      pageCreated: false,
+      postCount: 0,
+      actions: [],
+    });
+  });
+
+  it('marks pending publish changes as published and returns an empty reminder state', () => {
+    const storage = new MemoryStorage();
+
+    saveStoredOwnerPublishChanges(
+      'owner@example.test',
+      {
+        pageCreated: true,
+        postCount: 1,
+        actions: [actionFor('action_1', 'owner@example.test')],
+      },
+      storage,
+    );
+
+    expect(markOwnerPublishChangesPublished(storage)).toEqual({
+      pageCreated: false,
+      postCount: 0,
+      actions: [],
+    });
     expect(loadStoredOwnerPublishChanges('owner@example.test', storage)).toEqual({
       pageCreated: false,
       postCount: 0,
