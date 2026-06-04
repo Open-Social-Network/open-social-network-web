@@ -110,3 +110,23 @@ export interface OpenSocialNetworkDirectMessageLog {
   owner: string;
   messages: unknown[];
 }
+
+export interface UnsignedOpenSocialNetworkDirectMessage {
+  protocol: 'open-social-network';
+  version: OpenSocialNetworkVersion;
+  kind: 'direct-message';
+  id: string;
+  sender: string;
+  recipient: string;
+  createdAt: string;
+  encryption: {
+    alg: 'ECDH-P256-A256GCM';
+    epk: JsonWebKey;
+    iv: string;
+    ciphertext: string;
+  };
+}
+
+export interface OpenSocialNetworkDirectMessage extends UnsignedOpenSocialNetworkDirectMessage {
+  signature: OpenSocialNetworkSignature;
+}

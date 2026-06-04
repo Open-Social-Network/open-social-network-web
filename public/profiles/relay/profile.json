@@ -14,14 +14,26 @@
       ],
       "ext": true,
       "kty": "EC",
-      "x": "F6vFhfjeQcutJG1Dbd6VZaZeT8DTeysd3RJdR9lP5X8",
-      "y": "VZpjfIYE6uwWDyt5xyXDp6Ub90cdNo3ueVz_gpTDj1Y",
+      "x": "ujBgWX9fVxlhDAE0TH3IAUicgOcKa295IJq14gbSy9o",
+      "y": "ifex9VutIvUuRKWr_dCjLFe7PHjVnO-t9no6bk0MvdM",
+      "crv": "P-256"
+    }
+  },
+  "messagePublicKey": {
+    "alg": "ECDH-P256",
+    "jwk": {
+      "key_ops": [],
+      "ext": true,
+      "kty": "EC",
+      "x": "lUUib-Jads9fVM23XDRT7JeKPW-JjzO1s84eYu3SShQ",
+      "y": "deqFS3mEdR20lIvWD0DdsE4u8qv_7OaZlT8hoZlV6kI",
       "crv": "P-256"
     }
   },
   "endpoints": {
     "profile": "/profiles/relay/profile.json",
     "feed": "/profiles/relay/feed.json",
-    "avatar": "/profiles/relay/avatar.svg"
+    "avatar": "/profiles/relay/avatar.svg",
+    "messages": "/profiles/relay/opensocial/messages/inbox/index.json"
   }
 }

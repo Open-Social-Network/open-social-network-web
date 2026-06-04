@@ -5,22 +5,22 @@
   "posts": [
     {
       "id": "tommy_001",
-      "createdAt": "2026-06-03T13:15:00.000Z",
-      "content": "The first MVP is simple: create a page, write posts, and read everything in one timeline.",
       "author": "tommy@tommy.page",
+      "createdAt": "2026-06-03T13:15:00.000Z",
+      "content": "MVP target: identity file, signed posts, static feeds, and one aggregator that merges follows chronologically.",
       "signature": {
         "alg": "ES256",
-        "value": "MFUy3bxFsqusHFREKC2GzjbLXFQnIxysuk3JEHUf6VgnP7iq5ZWXj6O3rp8PYygvHHC_EPtFLrekIlH4NaNnGA"
+        "value": "bGRoUwYmH991HDWIQRPfwLf09RQd-O1Y2YgVoXAT6T6eeQSayvCq2WtJVt3K84fXamHAKw92iAhmMTFXd95JkA"
       }
     },
     {
       "id": "tommy_002",
-      "createdAt": "2026-06-01T09:00:00.000Z",
-      "content": "No token, no central account, no locked-in audience. A regular website is enough for the first proof.",
       "author": "tommy@tommy.page",
+      "createdAt": "2026-06-01T09:00:00.000Z",
+      "content": "No blockchain, no token, no central account. HTTP and signed JSON are enough for the first proof.",
       "signature": {
         "alg": "ES256",
-        "value": "jyvq2GV2UxT3ZbTR1_fAX5sf7KHx-m1_0cCNGiLnxHbrgf6Q15IM11uPoj4HFdxN0tiou0hs8z7rXs41OBB-OA"
+        "value": "V50Gvii_8pExcWmgMRZI25uMmgwZ6JqBXrK0m3vx68uyQv72ThNSgAgXd9AdV3ODIwwzHygOjF6qpo-6U0MKmQ"
       }
     }
   ]

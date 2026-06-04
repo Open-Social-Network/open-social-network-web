@@ -14,14 +14,26 @@
       ],
       "ext": true,
       "kty": "EC",
-      "x": "zHc7cItSV-M60nzx9diPr5TvFsa1Fl2pBfEkAs0oHqc",
-      "y": "XZhvj1zl7oZhv-m3WA_o3xQsls3ObX0epx_U1ppAoJI",
+      "x": "WUYyWZ0uGo4M-rqx0t_Av6QAE1DUzzhtS2FeCGl6OEc",
+      "y": "wp9avS5b_fvvdbv_XBeds9UAhVXXMgfywsre4ZeTRDI",
+      "crv": "P-256"
+    }
+  },
+  "messagePublicKey": {
+    "alg": "ECDH-P256",
+    "jwk": {
+      "key_ops": [],
+      "ext": true,
+      "kty": "EC",
+      "x": "5IvWLC8CFFVuuLU8-NLLKvEyposhNgV8hQHttM3m_iA",
+      "y": "Ap9iozVCTUafjDDDzWP3MQxVEwNFRNL6ieBEScijFUk",
       "crv": "P-256"
     }
   },
   "endpoints": {
     "profile": "/profiles/tommy/profile.json",
     "feed": "/profiles/tommy/feed.json",
-    "avatar": "/profiles/tommy/avatar.svg"
+    "avatar": "/profiles/tommy/avatar.svg",
+    "messages": "/profiles/tommy/opensocial/messages/inbox/index.json"
   }
 }

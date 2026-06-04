@@ -14,6 +14,11 @@ import {
   signOwnerReaction,
 } from './app/owner-actions';
 import {
+  createOwnerDirectMessage,
+  deliverDirectMessage,
+  type PreparedDirectMessage,
+} from './app/owner-messages';
+import {
   clearStoredOwnerSession,
   connectOwnerPage,
   createOwnerPage,
@@ -30,9 +35,24 @@ import { summarizePostActions, type OpenSocialNetworkPostActionSummary } from '.
 import type {
   OpenSocialNetworkAction,
   OpenSocialNetworkActionTarget,
+  OpenSocialNetworkIdentity,
   OpenSocialNetworkReaction,
 } from './protocol/types';
 import './styles.css';
+
+type MessageStatus =
+  | {
+      targetKey: string;
+      kind: 'sent';
+      text: string;
+    }
+  | {
+      targetKey: string;
+      kind: 'prepared';
+      text: string;
+      downloadHref: string;
+      downloadName: string;
+    };
 
 interface AppState {
   directoryProfiles: string[];
@@ -44,6 +64,8 @@ interface AppState {
   error: string | null;
   ownerError: string | null;
   commentTargetKey: string | null;
+  messageTargetKey: string | null;
+  messageStatus: MessageStatus | null;
 }
 
 const appRoot = document.querySelector<HTMLDivElement>('#app');
@@ -64,6 +86,8 @@ const state: AppState = {
   error: null,
   ownerError: null,
   commentTargetKey: null,
+  messageTargetKey: null,
+  messageStatus: null,
 };
 
 void boot();
@@ -222,6 +246,8 @@ function bindEvents(): void {
     state.owner = null;
     state.ownerError = null;
     state.commentTargetKey = null;
+    state.messageTargetKey = null;
+    state.messageStatus = null;
     render();
   });
 
@@ -246,6 +272,28 @@ function bindEvents(): void {
       }
 
       state.commentTargetKey = state.commentTargetKey === targetKey ? null : targetKey;
+      state.messageTargetKey = null;
+      state.ownerError = null;
+      render();
+    });
+  }
+
+  for (const button of app.querySelectorAll<HTMLButtonElement>('[data-action="toggle-message"]')) {
+    button.addEventListener('click', () => {
+      const targetKey = button.dataset.messageTargetKey;
+
+      if (!targetKey) {
+        return;
+      }
+
+      if (!state.owner) {
+        state.ownerError = 'Open your page to send a message.';
+        render();
+        return;
+      }
+
+      state.messageTargetKey = state.messageTargetKey === targetKey ? null : targetKey;
+      state.commentTargetKey = null;
       state.ownerError = null;
       render();
     });
@@ -255,6 +303,13 @@ function bindEvents(): void {
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       void commentOnPost(form);
+    });
+  }
+
+  for (const form of app.querySelectorAll<HTMLFormElement>('[data-form="direct-message"]')) {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      void sendDirectMessage(form);
     });
   }
 }
@@ -352,6 +407,7 @@ function renderTimeline(): string {
         const avatarUrl = profileAvatarUrl(post.profile, window.location.href);
         const target = postActionTarget(post);
         const targetKey = encodeActionTarget(target);
+        const messageTargetKey = encodeMessageTarget(post.profile, targetKey);
         const actionSummary = summarizePostActions(state.actions, target);
 
         return `
@@ -366,7 +422,7 @@ function renderTimeline(): string {
             </a>
           </header>
           <p class="post-content">${escapeHtml(post.content)}</p>
-          ${renderPostActions(target, targetKey, actionSummary)}
+          ${renderPostActions(target, targetKey, actionSummary, post.profile, messageTargetKey)}
           ${renderPostComments(actionSummary)}
           <details class="technical-details post-details">
             <summary>Technical details</summary>
@@ -384,12 +440,22 @@ function renderPostActions(
   target: OpenSocialNetworkActionTarget,
   targetKey: string,
   summary: OpenSocialNetworkPostActionSummary,
+  profile: OpenSocialNetworkIdentity,
+  messageTargetKey: string,
 ): string {
   const ownerHandle = state.owner?.profile.handle;
   const activeReaction = ownerHandle ? summary.reactionsByActor[ownerHandle] : null;
   const disabled = state.owner ? '' : 'disabled';
   const disabledTitle = state.owner ? '' : ' title="Open your page to interact"';
   const commentOpen = state.commentTargetKey === targetKey;
+  const canMessage =
+    Boolean(state.owner) &&
+    ownerHandle !== profile.handle &&
+    profile.messagePublicKey?.alg === 'ECDH-P256' &&
+    Boolean(profile.endpoints.messages);
+  const messageOpen = state.messageTargetKey === messageTargetKey;
+  const messageDisabled = canMessage ? '' : 'disabled';
+  const messageTitle = messageButtonTitle(profile, canMessage);
 
   return `
     <footer class="post-social-bar" aria-label="Post actions">
@@ -429,6 +495,17 @@ function renderPostActions(
         ${commentIcon()}
         <span>${summary.comments.length}</span>
       </button>
+      <button
+        class="post-action-button ${messageOpen ? 'post-action-active' : ''}"
+        type="button"
+        data-action="toggle-message"
+        data-message-target-key="${escapeAttribute(messageTargetKey)}"
+        aria-label="Message ${escapeAttribute(profile.name)}"
+        ${messageDisabled}
+        title="${escapeAttribute(messageTitle)}"
+      >
+        ${messageIcon()}
+      </button>
     </footer>
     ${
       commentOpen
@@ -442,6 +519,34 @@ function renderPostActions(
         `
         : ''
     }
+    ${messageOpen ? renderMessageComposer(profile, messageTargetKey) : ''}
+  `;
+}
+
+function renderMessageComposer(profile: OpenSocialNetworkIdentity, targetKey: string): string {
+  const status = state.messageStatus?.targetKey === targetKey ? state.messageStatus : null;
+
+  return `
+    <form class="post-message-form" data-form="direct-message">
+      <input type="hidden" name="targetKey" value="${escapeAttribute(targetKey)}" />
+      <label class="sr-only" for="message-${escapeAttribute(targetKey)}">Message ${escapeHtml(profile.name)}</label>
+      <textarea id="message-${escapeAttribute(targetKey)}" name="content" rows="3" maxlength="1200" placeholder="Write a private message..."></textarea>
+      <button class="button button-primary" type="submit">Send</button>
+    </form>
+    ${status ? renderMessageStatus(status) : ''}
+  `;
+}
+
+function renderMessageStatus(status: MessageStatus): string {
+  if (status.kind === 'sent') {
+    return `<p class="message-status message-status-sent">${escapeHtml(status.text)}</p>`;
+  }
+
+  return `
+    <p class="message-status message-status-prepared">
+      ${escapeHtml(status.text)}
+      <a href="${escapeAttribute(status.downloadHref)}" download="${escapeAttribute(status.downloadName)}">Download encrypted message</a>
+    </p>
   `;
 }
 
@@ -713,11 +818,51 @@ async function commentOnPost(form: HTMLFormElement): Promise<void> {
 
     state.actions = [signedAction, ...state.actions];
     state.commentTargetKey = null;
+    state.messageTargetKey = null;
     state.ownerError = null;
     saveStoredOwnerActions(state.actions);
     render();
   } catch (error) {
     state.ownerError = error instanceof Error ? error.message : 'Could not post this comment';
+    render();
+  }
+}
+
+async function sendDirectMessage(form: HTMLFormElement): Promise<void> {
+  if (!state.owner) {
+    state.ownerError = 'Open your page to send a message.';
+    render();
+    return;
+  }
+
+  try {
+    const targetKey = formValue(form, 'targetKey');
+    const profile = findMessageTargetProfile(targetKey);
+    const prepared = await createOwnerDirectMessage(state.owner, profile, formValue(form, 'content'), {
+      profileBaseUrl: new URL(profile.endpoints.profile, window.location.href).toString(),
+    });
+    const delivery = await deliverDirectMessage(prepared);
+
+    if (delivery.status === 'sent') {
+      state.messageStatus = {
+        targetKey,
+        kind: 'sent',
+        text: 'Encrypted message sent.',
+      };
+    } else {
+      state.messageStatus = {
+        targetKey,
+        kind: 'prepared',
+        text: 'Encrypted message ready. This host does not accept automatic delivery yet.',
+        downloadHref: directMessageDownloadHref(prepared),
+        downloadName: prepared.fileName,
+      };
+    }
+
+    state.ownerError = null;
+    render();
+  } catch (error) {
+    state.ownerError = error instanceof Error ? error.message : 'Could not send this message';
     render();
   }
 }
@@ -752,6 +897,38 @@ function decodeActionTarget(encoded: string): OpenSocialNetworkActionTarget {
     author: target.author,
     url: typeof target.url === 'string' ? target.url : undefined,
   };
+}
+
+function encodeMessageTarget(profile: OpenSocialNetworkIdentity, postTargetKey: string): string {
+  return encodeURIComponent(JSON.stringify({ handle: profile.handle, postTargetKey }));
+}
+
+function findMessageTargetProfile(targetKey: string): OpenSocialNetworkIdentity {
+  const target = JSON.parse(decodeURIComponent(targetKey)) as { handle?: unknown };
+  const handle = typeof target.handle === 'string' ? target.handle : '';
+  const profile = currentTimeline().profiles.find((item) => item.handle === handle);
+
+  if (!profile) {
+    throw new Error('Profile is no longer loaded');
+  }
+
+  return profile;
+}
+
+function messageButtonTitle(profile: OpenSocialNetworkIdentity, canMessage: boolean): string {
+  if (canMessage) {
+    return `Message ${profile.name}`;
+  }
+
+  if (!state.owner) {
+    return 'Open your page to send messages';
+  }
+
+  if (state.owner.profile.handle === profile.handle) {
+    return 'This is your page';
+  }
+
+  return 'This profile cannot receive encrypted messages yet';
 }
 
 function heartIcon(filled: boolean): string {
@@ -796,6 +973,21 @@ function commentIcon(): string {
   `;
 }
 
+function messageIcon(): string {
+  return `
+    <svg class="post-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M3.5 11.7 20.6 4.2c.8-.4 1.6.4 1.2 1.2l-7.5 17.1c-.3.8-1.5.7-1.7-.1l-1.7-7.2-7.2-1.7c-.8-.2-.9-1.4-.2-1.8Z"
+        fill="none"
+        stroke="currentColor"
+        stroke-linejoin="round"
+        stroke-width="1.8"
+      />
+      <path d="m10.9 15.2 4.4-4.5" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" />
+    </svg>
+  `;
+}
+
 function ownerPageUrl(session: OwnerSession): string {
   return session.pageUrl ?? session.profile.website ?? profilePageUrl(session.profile, window.location.href);
 }
@@ -818,6 +1010,12 @@ function downloadOwnerSite(includePrivate: boolean): void {
   link.download = includePrivate ? 'open-social-network-site.zip' : 'open-social-network-public-site.zip';
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function directMessageDownloadHref(prepared: PreparedDirectMessage): string {
+  return `data:application/json;charset=utf-8,${encodeURIComponent(
+    `${JSON.stringify(prepared.message, null, 2)}\n`,
+  )}`;
 }
 
 function formValue(form: HTMLFormElement, name: string): string {

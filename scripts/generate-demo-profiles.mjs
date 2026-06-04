@@ -76,7 +76,7 @@ const directory = {
   protocol: 'open-social-network',
   version: '0.1',
   profiles: [
-    'https://open-social-network.github.io/profile.json',
+    '/profiles/official/profile.json',
     ...demoProfiles.map((profile) => `/profiles/${profile.slug}/profile.json`),
   ],
 };
@@ -95,6 +95,15 @@ for (const demoProfile of demoProfiles) {
     ['sign', 'verify'],
   );
   const publicJwk = await webcrypto.subtle.exportKey('jwk', keyPair.publicKey);
+  const messageKeyPair = await webcrypto.subtle.generateKey(
+    {
+      name: 'ECDH',
+      namedCurve: 'P-256',
+    },
+    true,
+    ['deriveKey'],
+  );
+  const messagePublicJwk = await webcrypto.subtle.exportKey('jwk', messageKeyPair.publicKey);
   const profile = {
     protocol: 'open-social-network',
     version: '0.1',
@@ -107,10 +116,15 @@ for (const demoProfile of demoProfiles) {
       alg: 'ES256',
       jwk: publicJwk,
     },
+    messagePublicKey: {
+      alg: 'ECDH-P256',
+      jwk: messagePublicJwk,
+    },
     endpoints: {
       profile: `/profiles/${demoProfile.slug}/profile.json`,
       feed: `/profiles/${demoProfile.slug}/feed.json`,
       avatar: avatarPath,
+      messages: `/profiles/${demoProfile.slug}/opensocial/messages/inbox/index.json`,
     },
   };
   const posts = [];
@@ -135,12 +149,20 @@ for (const demoProfile of demoProfiles) {
     author: demoProfile.handle,
     posts,
   };
+  const messageLog = {
+    protocol: 'open-social-network',
+    version: '0.1',
+    owner: demoProfile.handle,
+    messages: [],
+  };
 
   await mkdir(profileDirectory, { recursive: true });
+  await mkdir(join(profileDirectory, 'opensocial', 'messages', 'inbox'), { recursive: true });
   await writeFile(join(profileDirectory, 'avatar.svg'), renderAvatarSvg(demoProfile), 'utf8');
   await writeFile(join(profileDirectory, 'index.html'), renderProfilePage(demoProfile), 'utf8');
   await writeJson(join(profileDirectory, 'profile.json'), profile);
   await writeJson(join(profileDirectory, 'feed.json'), feed);
+  await writeJson(join(profileDirectory, 'opensocial', 'messages', 'inbox', 'index.json'), messageLog);
 }
 
 async function signPost(post, privateKey) {
@@ -247,22 +269,22 @@ function renderProfilePage(profile) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(profile.name)} · Open Social Network</title>
     <style>
-      :root { color: #14242c; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f4f7f9; }
+      :root { color: #edf6ff; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #070a12; }
       * { box-sizing: border-box; }
-      body { margin: 0; min-width: 320px; background: linear-gradient(135deg, rgba(15, 118, 110, 0.1), transparent 38%), #f4f7f9; }
+      body { margin: 0; min-width: 320px; background: linear-gradient(180deg, rgba(77, 124, 255, 0.1), transparent 320px), linear-gradient(180deg, #060810 0%, #0b1020 58%, #070a12 100%); }
       main { width: min(760px, 100%); margin: 0 auto; padding: 42px 18px; }
-      header, article { border: 1px solid #d8e1e7; border-radius: 8px; background: rgba(255,255,255,0.94); box-shadow: 0 18px 55px rgba(20, 36, 44, 0.1); }
+      header, article { border: 1px solid #29364f; border-radius: 8px; background: rgba(16, 22, 36, 0.92); box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34); }
       header { display: grid; grid-template-columns: 92px 1fr; gap: 18px; align-items: center; padding: 24px; margin-bottom: 14px; }
       img { width: 92px; height: 92px; border-radius: 8px; object-fit: cover; }
       h1, p { margin: 0; }
       h1 { font-size: clamp(2rem, 6vw, 3.6rem); line-height: 1; }
-      header p { margin-top: 10px; color: #667883; line-height: 1.5; }
+      header p { margin-top: 10px; color: #9dacbf; line-height: 1.5; }
       nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-      a { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px; border-radius: 8px; background: #d9f0ee; color: #0b4f49; font-weight: 750; text-decoration: none; }
+      a { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px; border-radius: 8px; background: rgba(44, 231, 240, 0.12); color: #bffbff; font-weight: 750; text-decoration: none; }
       section { display: grid; gap: 12px; }
       article { padding: 18px; }
-      time { color: #667883; font-size: 0.84rem; }
-      article p { margin-top: 8px; font-size: 1.05rem; line-height: 1.58; }
+      time { color: #9dacbf; font-size: 0.84rem; }
+      article p { margin-top: 8px; color: #dce7f7; font-size: 1.05rem; line-height: 1.58; }
       @media (max-width: 580px) { header { grid-template-columns: 1fr; } }
     </style>
   </head>

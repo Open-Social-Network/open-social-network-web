@@ -14,14 +14,26 @@
       ],
       "ext": true,
       "kty": "EC",
-      "x": "6WUUx5BEiWsDTA_khaAYqclCTAxvrnvXEw3OHooEaus",
-      "y": "g8TmX5MUTgcLfEDVyccHa54sB9mE1Vs48NkzHuCFnTM",
+      "x": "qeWVmp_dkXWEbrKdAlREsefp4fCZRt_ipL35swINpwA",
+      "y": "FBxgXt7kPduLtrt0SaoHallPkfwIU1WGGkSYfslJBGk",
+      "crv": "P-256"
+    }
+  },
+  "messagePublicKey": {
+    "alg": "ECDH-P256",
+    "jwk": {
+      "key_ops": [],
+      "ext": true,
+      "kty": "EC",
+      "x": "M1MU1zdRzB7XXFVEkAoEzwaa1Xx0Zu-aWAp2o9ROCQY",
+      "y": "2ASIaxGxch9hMMDliLt9DYIBDPLUJ1p8J_TEl-wYOK4",
       "crv": "P-256"
     }
   },
   "endpoints": {
     "profile": "/profiles/ada/profile.json",
     "feed": "/profiles/ada/feed.json",
-    "avatar": "/profiles/ada/avatar.svg"
+    "avatar": "/profiles/ada/avatar.svg",
+    "messages": "/profiles/ada/opensocial/messages/inbox/index.json"
   }
 }

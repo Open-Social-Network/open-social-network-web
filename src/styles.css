@@ -608,14 +608,16 @@ button {
   flex: 0 0 18px;
 }
 
-.post-comment-form {
+.post-comment-form,
+.post-message-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
   margin-top: 12px;
 }
 
-.post-comment-form textarea {
+.post-comment-form textarea,
+.post-message-form textarea {
   width: 100%;
   min-width: 0;
   border: 1px solid var(--border);
@@ -627,9 +629,36 @@ button {
   resize: vertical;
 }
 
-.post-comment-form textarea:focus {
+.post-comment-form textarea:focus,
+.post-message-form textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(21, 87, 255, 0.14);
+}
+
+.message-status {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.message-status a {
+  color: var(--cyan);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.message-status-sent {
+  border: 1px solid rgba(44, 231, 240, 0.28);
+  background: rgba(44, 231, 240, 0.11);
+  color: #d6fbfd;
+}
+
+.message-status-prepared {
+  border: 1px solid rgba(252, 196, 83, 0.24);
+  background: rgba(252, 196, 83, 0.09);
+  color: #f8e7b2;
 }
 
 .post-comments {
@@ -808,7 +837,8 @@ button {
     flex-wrap: wrap;
   }
 
-  .post-comment-form {
+  .post-comment-form,
+  .post-message-form {
     grid-template-columns: 1fr;
   }
 }

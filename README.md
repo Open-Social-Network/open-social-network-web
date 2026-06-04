@@ -90,6 +90,8 @@ The aggregator is intentionally neutral. It reads the network, but it does not o
 - Creates a new page directly in the browser.
 - Logs in locally with a generated page folder.
 - Signs new posts in the browser and exports an updated `feed.json`.
+- Creates encrypted direct-message envelopes for profiles that advertise a message inbox.
+- Attempts automatic message delivery to compatible inbox endpoints and falls back to a downloadable encrypted message file on static-only hosts.
 - Exports public files that can be hosted anywhere static files are supported.
 
 ## What This MVP Does Not Do Yet
@@ -97,6 +99,7 @@ The aggregator is intentionally neutral. It reads the network, but it does not o
 - It does not create accounts.
 - It does not upload your private key to a server.
 - It does not deploy posts automatically.
+- It does not run a central message server.
 - It does not provide global search.
 - It does not implement moderation or ranking.
 - It does not store data on a server.

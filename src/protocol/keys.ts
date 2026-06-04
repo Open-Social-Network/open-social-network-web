@@ -43,3 +43,7 @@ export async function exportMessagePrivateKeyJwk(privateKey: CryptoKey): Promise
 export async function importMessagePrivateKeyJwk(jwk: JsonWebKey): Promise<CryptoKey> {
   return crypto.subtle.importKey('jwk', jwk, MESSAGE_KEY_ALGORITHM, true, ['deriveKey']);
 }
+
+export async function importMessagePublicKeyJwk(jwk: JsonWebKey): Promise<CryptoKey> {
+  return crypto.subtle.importKey('jwk', jwk, MESSAGE_KEY_ALGORITHM, true, []);
+}

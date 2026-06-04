@@ -1,0 +1,150 @@
+import { encryptDirectMessage } from '../protocol/direct-messages';
+import { importMessagePublicKeyJwk, importPrivateKeyJwk } from '../protocol/keys';
+import type { OpenSocialNetworkDirectMessage, OpenSocialNetworkIdentity } from '../protocol/types';
+import type { OwnerSession } from './owner-session';
+
+export interface OwnerDirectMessageOptions {
+  createdAt?: string;
+  id?: string;
+  profileBaseUrl?: string;
+}
+
+export interface PreparedDirectMessage {
+  message: OpenSocialNetworkDirectMessage;
+  inboxUrl: string;
+  fileName: string;
+}
+
+export interface DirectMessageDeliveryOptions {
+  fetcher?: typeof fetch;
+}
+
+export type DirectMessageDeliveryResult =
+  | {
+      status: 'sent';
+      inboxUrl: string;
+    }
+  | {
+      status: 'prepared';
+      inboxUrl: string;
+      reason: string;
+    };
+
+export async function createOwnerDirectMessage(
+  session: OwnerSession,
+  recipient: OpenSocialNetworkIdentity,
+  content: string,
+  options: OwnerDirectMessageOptions = {},
+): Promise<PreparedDirectMessage> {
+  const trimmedContent = content.trim();
+
+  if (!trimmedContent) {
+    throw new Error('Message is required');
+  }
+
+  if (recipient.handle === session.profile.handle) {
+    throw new Error('Choose another profile to message');
+  }
+
+  if (recipient.messagePublicKey?.alg !== 'ECDH-P256' || !recipient.messagePublicKey.jwk) {
+    throw new Error('This profile cannot receive encrypted messages yet');
+  }
+
+  const senderPrivateKey = await importPrivateKeyJwk(session.privateKeyJwk);
+  const recipientMessagePublicKey = await importMessagePublicKeyJwk(recipient.messagePublicKey.jwk);
+  const createdAt = options.createdAt ?? new Date().toISOString();
+  const message = await encryptDirectMessage(
+    {
+      id: options.id ?? createMessageId(createdAt),
+      sender: session.profile.handle,
+      recipient: recipient.handle,
+      createdAt,
+    },
+    trimmedContent,
+    senderPrivateKey,
+    recipientMessagePublicKey,
+  );
+
+  return {
+    message,
+    inboxUrl: resolveRecipientInboxUrl(recipient, options.profileBaseUrl),
+    fileName: `${message.id}.json`,
+  };
+}
+
+export async function deliverDirectMessage(
+  prepared: PreparedDirectMessage,
+  options: DirectMessageDeliveryOptions = {},
+): Promise<DirectMessageDeliveryResult> {
+  const fetcher = options.fetcher ?? fetch;
+
+  try {
+    const response = await fetcher(prepared.inboxUrl, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(prepared.message),
+    });
+
+    if (response.status === 201 || response.status === 202 || response.status === 204) {
+      return {
+        status: 'sent',
+        inboxUrl: prepared.inboxUrl,
+      };
+    }
+
+    return {
+      status: 'prepared',
+      inboxUrl: prepared.inboxUrl,
+      reason: `Inbox returned HTTP ${response.status}`,
+    };
+  } catch (error) {
+    return {
+      status: 'prepared',
+      inboxUrl: prepared.inboxUrl,
+      reason: error instanceof Error ? error.message : 'Inbox did not accept the message',
+    };
+  }
+}
+
+function resolveRecipientInboxUrl(
+  recipient: OpenSocialNetworkIdentity,
+  profileBaseUrl?: string,
+): string {
+  const endpoint = recipient.endpoints.messages;
+
+  if (!endpoint) {
+    throw new Error('This profile cannot receive encrypted messages yet');
+  }
+
+  if (isAbsoluteUrl(endpoint)) {
+    return endpoint;
+  }
+
+  const baseUrl = profileBaseUrl ?? recipient.endpoints.profile;
+
+  if (isAbsoluteUrl(baseUrl)) {
+    return new URL(endpoint, baseUrl).toString();
+  }
+
+  return endpoint;
+}
+
+function createMessageId(createdAt: string): string {
+  const entropy =
+    typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2);
+
+  return `message_${Date.parse(createdAt).toString(36)}_${entropy}`;
+}
+
+function isAbsoluteUrl(value: string): boolean {
+  try {
+    new URL(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
