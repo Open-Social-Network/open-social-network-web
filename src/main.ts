@@ -589,8 +589,9 @@ function renderTimeline(): string {
               class="button button-secondary post-view-page"
               href="${escapeAttribute(pageUrl)}"
               aria-label="${escapeAttribute(pageAction.ariaLabel)}"
+              title="${escapeAttribute(pageAction.title)}"
             >
-              ${escapeHtml(pageAction.label)}
+              ${profileIcon()}
             </a>
           </header>
           <p class="post-content">${escapeHtml(post.content)}</p>
@@ -1747,6 +1748,26 @@ function messageIcon(): string {
         stroke-width="1.8"
       />
       <path d="m10.9 15.2 4.4-4.5" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" />
+    </svg>
+  `;
+}
+
+function profileIcon(): string {
+  return `
+    <svg class="post-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M12 12.2a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+      />
+      <path
+        d="M4.8 20.2c.9-3.5 3.6-5.4 7.2-5.4s6.3 1.9 7.2 5.4"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-width="1.8"
+      />
     </svg>
   `;
 }

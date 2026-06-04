@@ -1,11 +1,11 @@
 export interface ProfilePageAction {
-  label: string;
+  title: string;
   ariaLabel: string;
 }
 
 export function profilePageAction(profileName: string): ProfilePageAction {
   return {
-    label: 'View page',
+    title: 'View page',
     ariaLabel: `View ${profileName} page`,
   };
 }
