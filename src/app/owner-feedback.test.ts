@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ownerCommentNotice,
+  ownerFollowNotice,
   ownerPostNotice,
   ownerReactionNotice,
 } from './owner-feedback';
@@ -61,5 +62,28 @@ describe('owner action feedback', () => {
         manualPublishNeeded: false,
       }),
     ).toBe('Comment posted.');
+  });
+
+  it('uses simple follow feedback before explaining publish state', () => {
+    expect(
+      ownerFollowNotice({
+        action: 'followed',
+        saveResult: 'saved',
+      }),
+    ).toBe('Followed. Saved to your page folder.');
+
+    expect(
+      ownerFollowNotice({
+        action: 'unfollowed',
+        saveResult: 'unavailable',
+      }),
+    ).toBe('Unfollowed. Saved in this browser. Download your public site to put it on your page.');
+
+    expect(
+      ownerFollowNotice({
+        action: 'followed',
+        saveResult: 'failed',
+      }),
+    ).toBeNull();
   });
 });

@@ -13,6 +13,11 @@ export interface OwnerCommentNoticeInput {
   manualPublishNeeded: boolean;
 }
 
+export interface OwnerFollowNoticeInput {
+  action: 'followed' | 'unfollowed';
+  saveResult: OwnerLocalSaveResult;
+}
+
 export function ownerPostNotice(saveResult: OwnerLocalSaveResult): string | null {
   if (saveResult === 'failed') {
     return null;
@@ -39,6 +44,20 @@ export function ownerCommentNotice(input: OwnerCommentNoticeInput): string | nul
   }
 
   return withSaveDetail('Comment posted.', input.saveResult, input.manualPublishNeeded);
+}
+
+export function ownerFollowNotice(input: OwnerFollowNoticeInput): string | null {
+  if (input.saveResult === 'failed') {
+    return null;
+  }
+
+  const baseCopy = input.action === 'followed' ? 'Followed.' : 'Unfollowed.';
+
+  if (input.saveResult === 'saved') {
+    return `${baseCopy} Saved to your page folder.`;
+  }
+
+  return `${baseCopy} Saved in this browser. Download your public site to put it on your page.`;
 }
 
 function withSaveDetail(

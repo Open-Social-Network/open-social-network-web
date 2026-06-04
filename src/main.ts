@@ -24,6 +24,7 @@ import {
 } from './app/follows';
 import {
   ownerCommentNotice,
+  ownerFollowNotice,
   ownerPostNotice,
   ownerReactionNotice,
   type OwnerLocalSaveResult,
@@ -275,7 +276,7 @@ function bindEvents(): void {
         state.follows = [...state.follows, profileUrl];
         state.directoryProfiles = [...new Set([...state.directoryProfiles, profileUrl])];
         saveStoredFollows(state.follows);
-        void saveOwnerFollowsAfterChange();
+        void saveOwnerFollowsAfterChange('followed');
       }
 
       input.value = '';
@@ -294,9 +295,10 @@ function bindEvents(): void {
         return;
       }
 
+      const wasFollowing = state.follows.includes(profileUrl);
       state.follows = toggleFollow(state.follows, profileUrl);
       saveStoredFollows(state.follows);
-      void saveOwnerFollowsAfterChange();
+      void saveOwnerFollowsAfterChange(wasFollowing ? 'unfollowed' : 'followed');
       void refreshTimeline();
     });
   }
@@ -1396,7 +1398,7 @@ async function saveOwnerFollowsToOpenedFolder(): Promise<OwnerFolderSaveResult> 
   }
 }
 
-async function saveOwnerFollowsAfterChange(): Promise<void> {
+async function saveOwnerFollowsAfterChange(action: 'followed' | 'unfollowed'): Promise<void> {
   if (!state.owner) {
     return;
   }
@@ -1412,8 +1414,11 @@ async function saveOwnerFollowsAfterChange(): Promise<void> {
 
   if (folderSaveResult !== 'failed') {
     state.ownerError = null;
-    state.ownerNotice =
-      folderSaveResult === 'saved' ? 'Saved follows to your page folder.' : null;
+    state.ownerNotice = ownerFollowNotice({
+      action,
+      saveResult: folderSaveResult,
+    });
+    render();
   }
 }
 
