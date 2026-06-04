@@ -176,7 +176,7 @@ When your page is open, likes, dislikes, and comments become signed public updat
 
 After you interact, Open Social Network Web tries to deliver the signed public action automatically when the target page advertises a compatible action inbox.
 
-If the host is static-only, the app keeps the action in your own public action log. When folder write access is available, it saves `public/opensocial/actions/index.json` automatically. Otherwise, you can download `public updates` and upload only that file to your page host. Aggregators can read that actor-owned action log from followed profiles, so your reactions and comments remain portable protocol records instead of private app state.
+If the host is static-only, the app keeps the action in your own public action log. When folder write access is available, it saves `public/opensocial/actions/index.json` automatically. Otherwise, you can download the activity update and upload only that update to your page host. Aggregators can read that actor-owned action log from followed profiles, so your reactions and comments remain portable protocol records instead of private app state.
 
 ### Read Messages
 
