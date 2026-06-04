@@ -720,6 +720,10 @@ function renderOwnerPanel(): string {
           <div>
             <strong>${disconnected.openExistingTitle}</strong>
             <p>${disconnected.openExistingHelp}</p>
+            <ol class="owner-access-steps">
+              ${disconnected.openExistingSteps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}
+            </ol>
+            <p>${disconnected.openExistingPrivateHelp}</p>
           </div>
           <label class="button button-secondary owner-folder-button" for="ownerFolder">${disconnected.openExistingLabel}</label>
           <input
