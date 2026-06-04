@@ -38,6 +38,9 @@ describe('owner session', () => {
 
     expect(session.profile.name).toBe('Ada Lovelace');
     expect(session.profile.handle).toBe('ada@example.test');
+    expect(session.profile.messagePublicKey?.alg).toBe('ECDH-P256');
+    expect(session.profile.endpoints.messages).toBe('/opensocial/messages/inbox/index.json');
+    expect(session.messagePrivateKeyJwk?.d).toBeTypeOf('string');
     expect(session.feed.posts).toHaveLength(1);
     expect(session.feed.posts[0]?.content).toBe('Hello from my page.');
     await expect(verifyPost(session.feed.posts[0]!, session.profile)).resolves.toBe(true);
@@ -101,6 +104,7 @@ describe('owner session', () => {
       'public/feed.json',
       'public/index.html',
       'public/opensocial/actions/index.json',
+      'public/opensocial/messages/inbox/index.json',
       'public/page.js',
       'public/profile.json',
       'public/styles.css',
@@ -113,6 +117,16 @@ describe('owner session', () => {
       actions: [],
     });
     expect(JSON.parse(fullFiles['private/identity.private.jwk.json']!)).toEqual(session.privateKeyJwk);
+    expect(publicFiles['private/messages.private.jwk.json']).toBeUndefined();
+    expect(JSON.parse(fullFiles['private/messages.private.jwk.json']!)).toEqual(
+      session.messagePrivateKeyJwk,
+    );
+    expect(JSON.parse(publicFiles['public/opensocial/messages/inbox/index.json']!)).toEqual({
+      protocol: 'open-social-network',
+      version: '0.1',
+      owner: session.profile.handle,
+      messages: [],
+    });
   });
 
   it('exports signed public actions into the portable action folder', async () => {

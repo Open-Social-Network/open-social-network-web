@@ -626,10 +626,17 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
     const profileFile = ownerProjectFile(projectFiles, 'public/profile.json');
     const feedFile = ownerProjectFile(projectFiles, 'public/feed.json');
     const privateKeyFile = ownerProjectFile(projectFiles, 'private/identity.private.jwk.json');
+    const messagePrivateKeyFile = optionalOwnerProjectFile(
+      projectFiles,
+      'private/messages.private.jwk.json',
+    );
     const owner = await connectOwnerPage({
       profile: (await readJsonFile(profileFile)) as OwnerSession['profile'],
       feed: (await readJsonFile(feedFile)) as OwnerSession['feed'],
       privateKeyJwk: (await readJsonFile(privateKeyFile)) as JsonWebKey,
+      messagePrivateKeyJwk: messagePrivateKeyFile
+        ? ((await readJsonFile(messagePrivateKeyFile)) as JsonWebKey)
+        : undefined,
     });
 
     state.owner = owner;
@@ -839,6 +846,10 @@ function ownerProjectFile(files: File[], path: string): File {
   }
 
   return file;
+}
+
+function optionalOwnerProjectFile(files: File[], path: string): File | null {
+  return files.find((candidate) => filePath(candidate).endsWith(path)) ?? null;
 }
 
 function filePath(file: File): string {

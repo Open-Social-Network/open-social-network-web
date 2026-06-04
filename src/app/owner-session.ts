@@ -1,8 +1,11 @@
 import { strToU8, zipSync } from 'fflate';
 import {
+  exportMessagePrivateKeyJwk,
+  exportMessagePublicKeyJwk,
   exportPrivateKeyJwk,
   exportPublicKeyJwk,
   generateIdentityKeyPair,
+  generateMessageKeyPair,
   importPrivateKeyJwk,
 } from '../protocol/keys';
 import { signPost, verifyPost } from '../protocol/signing';
@@ -11,6 +14,7 @@ import type {
   OpenSocialNetworkFeed,
   OpenSocialNetworkAction,
   OpenSocialNetworkActionLog,
+  OpenSocialNetworkDirectMessageLog,
   OpenSocialNetworkIdentity,
   OpenSocialNetworkPost,
   UnsignedOpenSocialNetworkPost,
@@ -22,6 +26,7 @@ export interface OwnerSession {
   profile: OpenSocialNetworkIdentity;
   feed: OpenSocialNetworkFeed;
   privateKeyJwk: JsonWebKey;
+  messagePrivateKeyJwk?: JsonWebKey;
   pageUrl?: string;
 }
 
@@ -63,8 +68,11 @@ export async function createOwnerPage(options: CreateOwnerPageOptions): Promise<
   }
 
   const keyPair = await generateIdentityKeyPair();
+  const messageKeyPair = await generateMessageKeyPair();
   const privateKeyJwk = await exportPrivateKeyJwk(keyPair.privateKey);
   const publicKeyJwk = await exportPublicKeyJwk(keyPair.publicKey);
+  const messagePrivateKeyJwk = await exportMessagePrivateKeyJwk(messageKeyPair.privateKey);
+  const messagePublicKeyJwk = await exportMessagePublicKeyJwk(messageKeyPair.publicKey);
   const profile: OpenSocialNetworkIdentity = {
     protocol: 'open-social-network',
     version: '0.1',
@@ -75,9 +83,14 @@ export async function createOwnerPage(options: CreateOwnerPageOptions): Promise<
       alg: 'ES256',
       jwk: publicKeyJwk,
     },
+    messagePublicKey: {
+      alg: 'ECDH-P256',
+      jwk: messagePublicKeyJwk,
+    },
     endpoints: {
       profile: '/profile.json',
       feed: '/feed.json',
+      messages: '/opensocial/messages/inbox/index.json',
     },
   };
   const feed: OpenSocialNetworkFeed = {
@@ -97,7 +110,7 @@ export async function createOwnerPage(options: CreateOwnerPageOptions): Promise<
     ],
   };
 
-  return connectOwnerPage({ profile, feed, privateKeyJwk });
+  return connectOwnerPage({ profile, feed, privateKeyJwk, messagePrivateKeyJwk });
 }
 
 export async function connectOwnerPage(input: OwnerSession): Promise<OwnerSession> {
@@ -129,11 +142,67 @@ export async function connectOwnerPage(input: OwnerSession): Promise<OwnerSessio
     }
   }
 
+  const messageKeyResult = await ensureOwnerMessageKey(input.profile, input.messagePrivateKeyJwk);
+
   return {
-    profile: input.profile,
+    profile: messageKeyResult.profile,
     feed: input.feed,
     privateKeyJwk: input.privateKeyJwk,
+    messagePrivateKeyJwk: messageKeyResult.messagePrivateKeyJwk,
     pageUrl: input.pageUrl,
+  };
+}
+
+async function ensureOwnerMessageKey(
+  profile: OpenSocialNetworkIdentity,
+  messagePrivateKeyJwk: JsonWebKey | undefined,
+): Promise<{ profile: OpenSocialNetworkIdentity; messagePrivateKeyJwk: JsonWebKey }> {
+  if (isRecord(messagePrivateKeyJwk) && hasPublicMessageCoordinates(messagePrivateKeyJwk)) {
+    return {
+      profile: withMessagePublicKey(profile, publicMessageJwkFromPrivate(messagePrivateKeyJwk)),
+      messagePrivateKeyJwk,
+    };
+  }
+
+  const messageKeyPair = await generateMessageKeyPair();
+  const generatedPrivateJwk = await exportMessagePrivateKeyJwk(messageKeyPair.privateKey);
+  const generatedPublicJwk = await exportMessagePublicKeyJwk(messageKeyPair.publicKey);
+
+  return {
+    profile: withMessagePublicKey(profile, generatedPublicJwk),
+    messagePrivateKeyJwk: generatedPrivateJwk,
+  };
+}
+
+function withMessagePublicKey(
+  profile: OpenSocialNetworkIdentity,
+  publicKeyJwk: JsonWebKey,
+): OpenSocialNetworkIdentity {
+  return {
+    ...profile,
+    messagePublicKey: {
+      alg: 'ECDH-P256',
+      jwk: publicKeyJwk,
+    },
+    endpoints: {
+      ...profile.endpoints,
+      messages: profile.endpoints.messages ?? '/opensocial/messages/inbox/index.json',
+    },
+  };
+}
+
+function hasPublicMessageCoordinates(jwk: JsonWebKey): boolean {
+  return typeof jwk.x === 'string' && typeof jwk.y === 'string';
+}
+
+function publicMessageJwkFromPrivate(jwk: JsonWebKey): JsonWebKey {
+  const { d: _d, key_ops: _keyOps, ...publicJwk } = jwk;
+
+  return {
+    ...publicJwk,
+    kty: publicJwk.kty ?? 'EC',
+    crv: publicJwk.crv ?? 'P-256',
+    ext: true,
   };
 }
 
@@ -185,11 +254,18 @@ export function exportOwnerSiteFiles(
     actor: session.profile.handle,
     actions: options.actions ?? [],
   };
+  const messageLog: OpenSocialNetworkDirectMessageLog = {
+    protocol: 'open-social-network',
+    version: '0.1',
+    owner: session.profile.handle,
+    messages: [],
+  };
   const files: OwnerSiteFiles = {
     'public/.well-known/open-social-network.json': jsonFile(session.profile),
     'public/feed.json': exportOwnerFeed(session),
     'public/index.html': pageHtml(session.profile),
     'public/opensocial/actions/index.json': jsonFile(actionLog),
+    'public/opensocial/messages/inbox/index.json': jsonFile(messageLog),
     'public/page.js': pageScript(),
     'public/profile.json': jsonFile(session.profile),
     'public/styles.css': pageStyles(),
@@ -197,6 +273,9 @@ export function exportOwnerSiteFiles(
 
   if (options.includePrivate) {
     files['private/identity.private.jwk.json'] = jsonFile(session.privateKeyJwk);
+    if (session.messagePrivateKeyJwk) {
+      files['private/messages.private.jwk.json'] = jsonFile(session.messagePrivateKeyJwk);
+    }
   }
 
   return files;
@@ -236,6 +315,9 @@ export function loadStoredOwnerSession(storage: Storage = window.localStorage): 
       profile: parsed.profile as OpenSocialNetworkIdentity,
       feed: parsed.feed as OpenSocialNetworkFeed,
       privateKeyJwk: parsed.privateKeyJwk,
+      messagePrivateKeyJwk: isRecord(parsed.messagePrivateKeyJwk)
+        ? parsed.messagePrivateKeyJwk
+        : undefined,
       pageUrl: typeof parsed.pageUrl === 'string' ? parsed.pageUrl : undefined,
     };
   } catch {
