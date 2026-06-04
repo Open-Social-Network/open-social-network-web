@@ -6,6 +6,7 @@ import {
   shouldShowFloatingComposeButton,
 } from './app/compose-shortcut';
 import { loadDirectory } from './app/directory';
+import { messageAccessState, type MessageAccessState } from './app/message-access';
 import {
   loadStoredFollows,
   normalizeProfileUrl,
@@ -514,16 +515,10 @@ function renderPostActions(
   const reactionTitle = state.owner ? '' : ` title="${signedOutSocialActionMessage('react')}"`;
   const commentTitle = state.owner ? '' : ` title="${signedOutSocialActionMessage('comment')}"`;
   const commentOpen = state.commentTargetKey === targetKey;
-  const canMessage =
-    Boolean(state.owner) &&
-    ownerHandle !== profile.handle &&
-    profile.messagePublicKey?.alg === 'ECDH-P256' &&
-    Boolean(profile.endpoints.messages);
+  const messageAccess = messageAccessState(profile, ownerHandle);
   const messageOpen = state.messageTargetKey === messageTargetKey;
-  const messageDisabled = state.owner && !canMessage ? 'disabled' : '';
-  const messageTitle = state.owner
-    ? messageButtonTitle(profile, canMessage)
-    : signedOutSocialActionMessage('message');
+  const messageDisabled = messageAccess.buttonDisabled ? 'disabled' : '';
+  const messageTitle = state.owner ? messageAccess.buttonTitle : signedOutSocialActionMessage('message');
 
   return `
     <footer class="post-social-bar" aria-label="Post actions">
@@ -584,12 +579,25 @@ function renderPostActions(
         `
         : ''
     }
-    ${messageOpen ? renderMessageComposer(profile, messageTargetKey) : ''}
+    ${messageOpen ? renderMessageComposer(profile, messageTargetKey, messageAccess) : ''}
   `;
 }
 
-function renderMessageComposer(profile: OpenSocialNetworkIdentity, targetKey: string): string {
+function renderMessageComposer(
+  profile: OpenSocialNetworkIdentity,
+  targetKey: string,
+  access: MessageAccessState,
+): string {
   const status = state.messageStatus?.targetKey === targetKey ? state.messageStatus : null;
+
+  if (!access.canSend) {
+    return `
+      <section class="post-message-form post-message-notice" aria-label="Message ${escapeAttribute(profile.name)}">
+        <strong>Messages unavailable</strong>
+        <p>${escapeHtml(access.notice ?? 'This profile cannot receive encrypted messages yet.')}</p>
+      </section>
+    `;
+  }
 
   return `
     <form class="post-message-form" data-form="direct-message">
@@ -1190,22 +1198,6 @@ function findMessageTargetProfile(targetKey: string): OpenSocialNetworkIdentity 
   }
 
   return profile;
-}
-
-function messageButtonTitle(profile: OpenSocialNetworkIdentity, canMessage: boolean): string {
-  if (canMessage) {
-    return `Message ${profile.name}`;
-  }
-
-  if (!state.owner) {
-    return 'Open your page to send messages';
-  }
-
-  if (state.owner.profile.handle === profile.handle) {
-    return 'This is your page';
-  }
-
-  return 'This profile cannot receive encrypted messages yet';
 }
 
 function heartIcon(filled: boolean): string {
