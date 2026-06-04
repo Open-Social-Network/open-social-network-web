@@ -18,6 +18,8 @@ export interface OwnerPublishReadyInput {
 export interface OwnerPublishReadySummary {
   title: string;
   detail: string;
+  downloadLabel: string;
+  downloadTarget: 'public-site' | 'public-updates';
 }
 
 export function emptyOwnerPublishChanges(): OwnerPublishChanges {
@@ -96,6 +98,8 @@ export function summarizeOwnerPublishReady(
     return {
       title: 'Page ready to publish',
       detail: 'Download your public site to publish this page.',
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
     };
   }
 
@@ -108,6 +112,8 @@ export function summarizeOwnerPublishReady(
       ? {
           title: input.publicUpdates.title,
           detail: input.publicUpdates.detail,
+          downloadLabel: 'Download public updates',
+          downloadTarget: 'public-updates',
         }
       : null;
   }
@@ -119,6 +125,8 @@ export function summarizeOwnerPublishReady(
           ? 'Post ready to publish'
           : `${input.postCount} posts ready to publish`,
       detail: `Download your public site to publish your latest ${postLabel(input.postCount)}.`,
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
     };
   }
 
@@ -127,6 +135,8 @@ export function summarizeOwnerPublishReady(
   return {
     title: `${totalUpdates} updates ready to publish`,
     detail: `Download your public site to publish your latest ${postLabel(input.postCount)} and ${publicUpdateLabel(input.publicUpdates.count)}.`,
+    downloadLabel: 'Download public site',
+    downloadTarget: 'public-site',
   };
 }
 

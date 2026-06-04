@@ -3,6 +3,7 @@ import { verifyAction } from '../protocol/public-actions';
 import type {
   OpenSocialNetworkAction,
   OpenSocialNetworkActionInbox,
+  OpenSocialNetworkActionLog,
   OpenSocialNetworkFeed,
   OpenSocialNetworkIdentity,
   OpenSocialNetworkPost,
@@ -72,7 +73,7 @@ export async function loadVerifiedTimeline(
       new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
   );
 
-  const actionResult = await loadProfileActionInboxes(timeline.profiles, fetcher);
+  const actionResult = await loadProfileActions(timeline.profiles, fetcher);
   timeline.actions = actionResult.actions;
   timeline.rejectedActions = actionResult.rejectedActions;
   timeline.failures.push(...actionResult.failures);
@@ -80,7 +81,7 @@ export async function loadVerifiedTimeline(
   return timeline;
 }
 
-async function loadProfileActionInboxes(
+async function loadProfileActions(
   profiles: OpenSocialNetworkIdentity[],
   fetcher: JsonFetcher,
 ): Promise<{
@@ -92,6 +93,68 @@ async function loadProfileActionInboxes(
   const actions: OpenSocialNetworkAction[] = [];
   const rejectedActions: RejectedAction[] = [];
   const failures: TimelineFailure[] = [];
+
+  for (const profile of profiles) {
+    const actionLogUrl = resolveEndpoint('/opensocial/actions/index.json', profile.endpoints.profile);
+    let actionLogValue: unknown;
+
+    try {
+      actionLogValue = await fetcher(actionLogUrl);
+    } catch {
+      continue;
+    }
+
+    if (actionLogValue === undefined || actionLogValue === null) {
+      continue;
+    }
+
+    try {
+      const actionLog = parseActionLog(actionLogValue);
+
+      if (actionLog.actor !== profile.handle) {
+        failures.push({
+          source: actionLogUrl,
+          reason: `Action log actor ${actionLog.actor} does not match profile ${profile.handle}`,
+        });
+        continue;
+      }
+
+      for (const action of actionLog.actions) {
+        if (action.actor !== actionLog.actor) {
+          rejectedActions.push({
+            actionId: action.id,
+            actor: action.actor,
+            reason: 'Action actor does not match action log actor',
+          });
+          continue;
+        }
+
+        if (!profilesByHandle.has(action.target.author)) {
+          rejectedActions.push({
+            actionId: action.id,
+            actor: action.actor,
+            reason: 'Target profile is not loaded',
+          });
+          continue;
+        }
+
+        if (await verifyAction(action, profile)) {
+          actions.push(action);
+        } else {
+          rejectedActions.push({
+            actionId: action.id,
+            actor: action.actor,
+            reason: 'Signature verification failed',
+          });
+        }
+      }
+    } catch (error) {
+      failures.push({
+        source: actionLogUrl,
+        reason: error instanceof Error ? error.message : 'Unknown action log loading error',
+      });
+    }
+  }
 
   for (const profile of profiles) {
     if (!profile.endpoints.actions) {
@@ -165,8 +228,8 @@ async function loadProfileFeed(
   | { failure: TimelineFailure }
 > {
   try {
-    const profile = parseIdentity(await fetcher(profileUrl));
-    const feedUrl = resolveEndpoint(profile.endpoints.feed, profileUrl);
+    const profile = normalizeProfileEndpoints(parseIdentity(await fetcher(profileUrl)), profileUrl);
+    const feedUrl = profile.endpoints.feed;
     const feed = parseFeed(await fetcher(feedUrl));
 
     if (feed.author !== profile.handle) {
@@ -216,6 +279,31 @@ async function fetchJson(url: string): Promise<unknown> {
 
 function resolveEndpoint(endpoint: string, profileUrl: string): string {
   return new URL(endpoint, profileUrl).toString();
+}
+
+function normalizeProfileEndpoints(
+  profile: OpenSocialNetworkIdentity,
+  profileUrl: string,
+): OpenSocialNetworkIdentity {
+  const profileEndpoint = resolveEndpoint(profile.endpoints.profile, profileUrl);
+  const endpoints: OpenSocialNetworkIdentity['endpoints'] = {
+    ...profile.endpoints,
+    profile: profileEndpoint,
+    feed: resolveEndpoint(profile.endpoints.feed, profileEndpoint),
+  };
+
+  if (profile.endpoints.actions) {
+    endpoints.actions = resolveEndpoint(profile.endpoints.actions, profileEndpoint);
+  }
+
+  if (profile.endpoints.messages) {
+    endpoints.messages = resolveEndpoint(profile.endpoints.messages, profileEndpoint);
+  }
+
+  return {
+    ...profile,
+    endpoints,
+  };
 }
 
 function parseIdentity(value: unknown): OpenSocialNetworkIdentity {
@@ -276,6 +364,28 @@ function parseActionInbox(value: unknown): OpenSocialNetworkActionInbox {
     protocol: 'open-social-network',
     version: '0.1',
     owner: value.owner,
+    actions: value.actions.filter(isSignedAction),
+  };
+}
+
+function parseActionLog(value: unknown): OpenSocialNetworkActionLog {
+  if (!isRecord(value)) {
+    throw new Error('Action log response is not an object');
+  }
+
+  if (
+    value.protocol !== 'open-social-network' ||
+    value.version !== '0.1' ||
+    typeof value.actor !== 'string' ||
+    !Array.isArray(value.actions)
+  ) {
+    throw new Error('Action log response is not a valid Open Social Network action log file');
+  }
+
+  return {
+    protocol: 'open-social-network',
+    version: '0.1',
+    actor: value.actor,
     actions: value.actions.filter(isSignedAction),
   };
 }

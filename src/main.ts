@@ -52,6 +52,7 @@ import {
   connectOwnerPage,
   createOwnerPage,
   exportOwnerFeed,
+  exportOwnerPublicUpdatesZip,
   exportOwnerSiteZip,
   loadStoredOwnerSession,
   mergeOwnerTimeline,
@@ -291,8 +292,14 @@ function bindEvents(): void {
 
   for (const button of app.querySelectorAll<HTMLButtonElement>('[data-owner-download]')) {
     button.addEventListener('click', () => {
-      const includePrivate = button.dataset.ownerDownload === 'full';
-      downloadOwnerSite(includePrivate);
+      const downloadKind = button.dataset.ownerDownload;
+
+      if (downloadKind === 'public-updates') {
+        downloadOwnerPublicUpdates();
+        return;
+      }
+
+      downloadOwnerSite(downloadKind === 'full');
     });
   }
 
@@ -1302,6 +1309,22 @@ function downloadOwnerSite(includePrivate: boolean): void {
   const link = document.createElement('a');
   link.href = url;
   link.download = includePrivate ? 'open-social-network-site.zip' : 'open-social-network-public-site.zip';
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadOwnerPublicUpdates(): void {
+  if (!state.owner) {
+    return;
+  }
+
+  const ownerActions = state.actions.filter((action) => action.actor === state.owner?.profile.handle);
+  const zip = exportOwnerPublicUpdatesZip(state.owner, { actions: ownerActions });
+  const blob = new Blob([zip as BlobPart], { type: 'application/zip' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'open-social-network-public-updates.zip';
   link.click();
   URL.revokeObjectURL(url);
 }

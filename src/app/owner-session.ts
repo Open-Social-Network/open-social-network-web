@@ -48,6 +48,10 @@ export interface OwnerSiteExportOptions {
   actions?: OpenSocialNetworkAction[];
 }
 
+export interface OwnerPublicUpdatesExportOptions {
+  actions?: OpenSocialNetworkAction[];
+}
+
 export type OwnerSiteFiles = Record<string, string>;
 
 export async function createOwnerPage(options: CreateOwnerPageOptions): Promise<OwnerSession> {
@@ -250,12 +254,7 @@ export function exportOwnerSiteFiles(
   session: OwnerSession,
   options: OwnerSiteExportOptions,
 ): OwnerSiteFiles {
-  const actionLog: OpenSocialNetworkActionLog = {
-    protocol: 'open-social-network',
-    version: '0.1',
-    actor: session.profile.handle,
-    actions: options.actions ?? [],
-  };
+  const actionLog = ownerActionLog(session, options.actions ?? []);
   const actionInbox: OpenSocialNetworkActionInbox = {
     protocol: 'open-social-network',
     version: '0.1',
@@ -304,6 +303,17 @@ export function exportOwnerSiteZip(
   );
 }
 
+export function exportOwnerPublicUpdatesZip(
+  session: OwnerSession,
+  options: OwnerPublicUpdatesExportOptions = {},
+): Uint8Array {
+  const actionLog = ownerActionLog(session, options.actions ?? []);
+
+  return zipSync({
+    'public/opensocial/actions/index.json': strToU8(jsonFile(actionLog)),
+  });
+}
+
 export function loadStoredOwnerSession(storage: Storage = window.localStorage): OwnerSession | null {
   try {
     const storedValue = storage.getItem(OWNER_STORAGE_KEY);
@@ -333,6 +343,18 @@ export function loadStoredOwnerSession(storage: Storage = window.localStorage): 
   } catch {
     return null;
   }
+}
+
+function ownerActionLog(
+  session: OwnerSession,
+  actions: OpenSocialNetworkAction[],
+): OpenSocialNetworkActionLog {
+  return {
+    protocol: 'open-social-network',
+    version: '0.1',
+    actor: session.profile.handle,
+    actions,
+  };
 }
 
 export function saveStoredOwnerSession(

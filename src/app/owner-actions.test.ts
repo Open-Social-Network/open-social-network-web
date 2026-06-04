@@ -106,7 +106,7 @@ describe('owner public actions', () => {
       reactions: 1,
       comments: 1,
       title: '2 public updates ready',
-      detail: 'Download your public site to publish your latest reaction and comment.',
+      detail: 'Download your public updates to publish your latest reaction and comment.',
     });
   });
 

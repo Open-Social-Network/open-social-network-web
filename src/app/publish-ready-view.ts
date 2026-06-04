@@ -7,11 +7,15 @@ export function renderPublishReady(summary: OwnerPublishReadySummary): string {
       <p>${escapeHtml(summary.detail)}</p>
       <p>Upload the public folder anywhere your page is hosted.</p>
       <div class="owner-publish-ready-actions">
-        <button class="button button-primary" type="button" data-owner-download="public">Download public site</button>
+        <button class="button button-primary" type="button" data-owner-download="${downloadTargetAttribute(summary.downloadTarget)}">${escapeHtml(summary.downloadLabel)}</button>
         <button class="button button-secondary" type="button" data-action="owner-published">I published this</button>
       </div>
     </section>
   `;
+}
+
+function downloadTargetAttribute(target: OwnerPublishReadySummary['downloadTarget']): string {
+  return target === 'public-updates' ? 'public-updates' : 'public';
 }
 
 function escapeHtml(value: string): string {

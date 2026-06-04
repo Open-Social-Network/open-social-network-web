@@ -138,7 +138,7 @@ export function summarizeOwnerPublicUpdates(
     reactions,
     comments,
     title: `${ownerActions.length} public ${ownerActions.length === 1 ? 'update' : 'updates'} ready`,
-    detail: `Download your public site to publish your latest ${publicUpdateKinds(reactions, comments)}.`,
+    detail: `Download your public updates to publish your latest ${publicUpdateKinds(reactions, comments)}.`,
   };
 }
 

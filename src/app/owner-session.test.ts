@@ -14,6 +14,7 @@ import {
   clearStoredOwnerSession,
   createOwnerPage,
   exportOwnerFeed,
+  exportOwnerPublicUpdatesZip,
   exportOwnerSiteFiles,
   exportOwnerSiteZip,
   loadStoredOwnerSession,
@@ -199,6 +200,40 @@ describe('owner session', () => {
     expect(Object.keys(publicZip).sort()).toEqual(Object.keys(exportOwnerSiteFiles(session, { includePrivate: false })).sort());
     expect(publicZip['private/identity.private.jwk.json']).toBeUndefined();
     expect(JSON.parse(strFromU8(fullZip['private/identity.private.jwk.json']!))).toEqual(session.privateKeyJwk);
+  });
+
+  it('exports a small public updates zip with only the portable action log', async () => {
+    const session = await createOwnerPage({
+      name: 'Ada Lovelace',
+      handle: 'ada@example.test',
+      bio: 'Building a social page.',
+      firstPost: 'Hello from my page.',
+    });
+    const action = await signOwnerReaction(
+      session,
+      {
+        type: 'post',
+        id: session.feed.posts[0]!.id,
+        author: session.feed.posts[0]!.author,
+      },
+      'like',
+      {
+        id: 'reaction_1',
+        createdAt: '2026-06-03T12:00:00.000Z',
+      },
+    );
+
+    const updatesZip = unzipSync(exportOwnerPublicUpdatesZip(session, { actions: [action] }));
+
+    expect(Object.keys(updatesZip).sort()).toEqual(['public/opensocial/actions/index.json']);
+    expect(updatesZip['private/identity.private.jwk.json']).toBeUndefined();
+    expect(updatesZip['public/feed.json']).toBeUndefined();
+    expect(JSON.parse(strFromU8(updatesZip['public/opensocial/actions/index.json']!))).toEqual({
+      protocol: 'open-social-network',
+      version: '0.1',
+      actor: session.profile.handle,
+      actions: [action],
+    });
   });
 
   it('restores a locally saved owner session', async () => {

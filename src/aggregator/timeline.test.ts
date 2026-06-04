@@ -5,6 +5,7 @@ import { signAction } from '../protocol/public-actions';
 import { signPost } from '../protocol/signing';
 import type {
   OpenSocialNetworkAction,
+  OpenSocialNetworkActionLog,
   OpenSocialNetworkFeed,
   OpenSocialNetworkIdentity,
   UnsignedOpenSocialNetworkPost,
@@ -199,6 +200,187 @@ describe('loadVerifiedTimeline', () => {
         reason: 'Actor profile is not loaded',
       },
     ]);
+    expect(result.failures).toEqual([]);
+  });
+
+  it('loads public action logs from followed profiles without requiring target inbox delivery', async () => {
+    const adaKeys = await generateIdentityKeyPair();
+    const tommyKeys = await generateIdentityKeyPair();
+    const ada: OpenSocialNetworkIdentity = {
+      protocol: 'open-social-network',
+      version: '0.1',
+      handle: 'ada@example.test',
+      name: 'Ada',
+      publicKey: { alg: 'ES256', jwk: await exportPublicKeyJwk(adaKeys.publicKey) },
+      endpoints: {
+        profile: 'https://ada.example.test/profile.json',
+        feed: 'https://ada.example.test/feed.json',
+      },
+    };
+    const tommy: OpenSocialNetworkIdentity = {
+      protocol: 'open-social-network',
+      version: '0.1',
+      handle: 'tommy@example.test',
+      name: 'Tommy',
+      publicKey: { alg: 'ES256', jwk: await exportPublicKeyJwk(tommyKeys.publicKey) },
+      endpoints: {
+        profile: 'https://tommy.example.test/profile.json',
+        feed: 'https://tommy.example.test/feed.json',
+      },
+    };
+    const tommyPost = await signPost(
+      {
+        id: 'post_1',
+        author: tommy.handle,
+        createdAt: '2026-06-03T13:00:00.000Z',
+        content: 'A public post.',
+      },
+      tommyKeys.privateKey,
+    );
+    const adaLike = await signAction(
+      {
+        id: 'ada_like',
+        kind: 'reaction',
+        actor: ada.handle,
+        createdAt: '2026-06-03T13:01:00.000Z',
+        target: {
+          type: 'post',
+          id: tommyPost.id,
+          author: tommy.handle,
+        },
+        reaction: 'like',
+      },
+      adaKeys.privateKey,
+    );
+    const adaActionLog: OpenSocialNetworkActionLog = {
+      protocol: 'open-social-network',
+      version: '0.1',
+      actor: ada.handle,
+      actions: [adaLike],
+    };
+    const fixtures: Record<string, unknown> = {
+      'https://ada.example.test/profile.json': ada,
+      'https://ada.example.test/feed.json': {
+        protocol: 'open-social-network',
+        version: '0.1',
+        author: ada.handle,
+        posts: [],
+      },
+      'https://ada.example.test/opensocial/actions/index.json': adaActionLog,
+      'https://tommy.example.test/profile.json': tommy,
+      'https://tommy.example.test/feed.json': {
+        protocol: 'open-social-network',
+        version: '0.1',
+        author: tommy.handle,
+        posts: [tommyPost],
+      },
+    };
+
+    const result = await loadVerifiedTimeline(
+      ['https://ada.example.test/profile.json', 'https://tommy.example.test/profile.json'],
+      async (url) => {
+        const value = fixtures[url];
+
+        if (value === undefined) {
+          throw new Error(`Missing fixture for ${url}`);
+        }
+
+        return value;
+      },
+    );
+
+    expect(result.actions).toEqual([adaLike]);
+    expect(result.rejectedActions).toEqual([]);
+    expect(result.failures).toEqual([]);
+  });
+
+  it('resolves public action logs from the fetched profile URL when profile endpoints are relative', async () => {
+    const adaKeys = await generateIdentityKeyPair();
+    const tommyKeys = await generateIdentityKeyPair();
+    const ada: OpenSocialNetworkIdentity = {
+      protocol: 'open-social-network',
+      version: '0.1',
+      handle: 'ada@example.test',
+      name: 'Ada',
+      publicKey: { alg: 'ES256', jwk: await exportPublicKeyJwk(adaKeys.publicKey) },
+      endpoints: {
+        profile: './profile.json',
+        feed: './feed.json',
+      },
+    };
+    const tommy: OpenSocialNetworkIdentity = {
+      protocol: 'open-social-network',
+      version: '0.1',
+      handle: 'tommy@example.test',
+      name: 'Tommy',
+      publicKey: { alg: 'ES256', jwk: await exportPublicKeyJwk(tommyKeys.publicKey) },
+      endpoints: {
+        profile: './profile.json',
+        feed: './feed.json',
+      },
+    };
+    const tommyPost = await signPost(
+      {
+        id: 'post_1',
+        author: tommy.handle,
+        createdAt: '2026-06-03T13:00:00.000Z',
+        content: 'A public post.',
+      },
+      tommyKeys.privateKey,
+    );
+    const adaLike = await signAction(
+      {
+        id: 'ada_like',
+        kind: 'reaction',
+        actor: ada.handle,
+        createdAt: '2026-06-03T13:01:00.000Z',
+        target: {
+          type: 'post',
+          id: tommyPost.id,
+          author: tommy.handle,
+        },
+        reaction: 'like',
+      },
+      adaKeys.privateKey,
+    );
+    const adaActionLog: OpenSocialNetworkActionLog = {
+      protocol: 'open-social-network',
+      version: '0.1',
+      actor: ada.handle,
+      actions: [adaLike],
+    };
+    const fixtures: Record<string, unknown> = {
+      'https://ada.example.test/profile.json': ada,
+      'https://ada.example.test/feed.json': {
+        protocol: 'open-social-network',
+        version: '0.1',
+        author: ada.handle,
+        posts: [],
+      },
+      'https://ada.example.test/opensocial/actions/index.json': adaActionLog,
+      'https://tommy.example.test/profile.json': tommy,
+      'https://tommy.example.test/feed.json': {
+        protocol: 'open-social-network',
+        version: '0.1',
+        author: tommy.handle,
+        posts: [tommyPost],
+      },
+    };
+
+    const result = await loadVerifiedTimeline(
+      ['https://ada.example.test/profile.json', 'https://tommy.example.test/profile.json'],
+      async (url) => {
+        const value = fixtures[url];
+
+        if (value === undefined) {
+          throw new Error(`Missing fixture for ${url}`);
+        }
+
+        return value;
+      },
+    );
+
+    expect(result.actions).toEqual([adaLike]);
     expect(result.failures).toEqual([]);
   });
 });

@@ -29,6 +29,8 @@ describe('owner publish reminder', () => {
     ).toEqual({
       title: 'Page ready to publish',
       detail: 'Download your public site to publish this page.',
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
     });
   });
 
@@ -42,6 +44,8 @@ describe('owner publish reminder', () => {
     ).toEqual({
       title: '2 posts ready to publish',
       detail: 'Download your public site to publish your latest posts.',
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
     });
   });
 
@@ -55,12 +59,14 @@ describe('owner publish reminder', () => {
           reactions: 1,
           comments: 0,
           title: '1 public update ready',
-          detail: 'Download your public site to publish your latest reaction.',
+          detail: 'Download your public updates to publish your latest reaction.',
         },
       }),
     ).toEqual({
       title: '1 public update ready',
-      detail: 'Download your public site to publish your latest reaction.',
+      detail: 'Download your public updates to publish your latest reaction.',
+      downloadLabel: 'Download public updates',
+      downloadTarget: 'public-updates',
     });
   });
 
@@ -80,6 +86,8 @@ describe('owner publish reminder', () => {
     ).toEqual({
       title: '3 updates ready to publish',
       detail: 'Download your public site to publish your latest post and public updates.',
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
     });
   });
 

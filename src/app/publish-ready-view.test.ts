@@ -6,6 +6,8 @@ describe('publish ready view', () => {
     const html = renderPublishReady({
       title: '2 posts ready to publish',
       detail: 'Download your public site to publish your latest posts.',
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
     });
 
     expect(html).toContain('2 posts ready to publish');
@@ -15,10 +17,24 @@ describe('publish ready view', () => {
     expect(html).toContain('data-action="owner-published"');
   });
 
+  it('can point the reminder at the smaller public updates download', () => {
+    const html = renderPublishReady({
+      title: '1 public update ready',
+      detail: 'Download your public updates to publish your latest reaction.',
+      downloadLabel: 'Download public updates',
+      downloadTarget: 'public-updates',
+    });
+
+    expect(html).toContain('data-owner-download="public-updates"');
+    expect(html).toContain('Download public updates');
+  });
+
   it('escapes summary copy before rendering it', () => {
     const html = renderPublishReady({
       title: '<script>alert("bad")</script>',
       detail: 'Publish <strong>now</strong>',
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
     });
 
     expect(html).not.toContain('<script>');

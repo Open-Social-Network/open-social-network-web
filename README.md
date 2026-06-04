@@ -86,14 +86,14 @@ The aggregator is intentionally neutral. It reads the network, but it does not o
 - Verifies ES256 signatures on every post.
 - Rejects posts that fail signature verification.
 - Merges verified posts chronologically.
-- Loads verified public action inboxes for portable likes, dislikes, and comments.
+- Loads verified public action logs and public action inboxes for portable likes, dislikes, and comments.
 - Shows trust diagnostics for rejected posts and failed feeds.
 - Supports manual following by entering a `profile.json` URL.
 - Creates a new page directly in the browser.
 - Logs in locally with a generated page folder.
 - Signs new posts in the browser and exports an updated `feed.json`.
 - Signs likes, dislikes, and comments as public portable updates.
-- Attempts automatic public action delivery to compatible action inbox endpoints and falls back to manual public-site export on static-only hosts.
+- Attempts automatic public action delivery to compatible action inbox endpoints and falls back to a small public-updates export on static-only hosts.
 - Creates encrypted direct-message envelopes for profiles that advertise a message inbox.
 - Attempts automatic message delivery to compatible inbox endpoints and falls back to a downloadable encrypted message file on static-only hosts.
 - Opens encrypted message files locally when the current page owns the matching message key and the sender profile is loaded.
@@ -169,7 +169,9 @@ Open Social Network Web validates that the private key owns the profile. After t
 
 When your page is open, likes, dislikes, and comments become signed public updates.
 
-After you interact, Open Social Network Web tries to deliver the signed public action automatically when the target page advertises a compatible action inbox. If the host is static-only, the app shows when public updates are ready so you can download the public site and upload the public folder wherever your page is hosted.
+After you interact, Open Social Network Web tries to deliver the signed public action automatically when the target page advertises a compatible action inbox.
+
+If the host is static-only, the app keeps the action in your own public action log. You can download `public updates` and upload only the `public/opensocial/actions/index.json` file to your page host. Aggregators can read that actor-owned action log from followed profiles, so your reactions and comments remain portable protocol records instead of private app state.
 
 ### Read Messages
 
