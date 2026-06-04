@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { createOwnerPage, signOwnerPost } from './owner-session';
 import { signOwnerReaction } from './owner-actions';
+import { createOwnerDirectMessage } from './owner-messages';
 import {
   ownerProjectWriterFromDirectoryHandle,
   readOwnerProjectJsonFromDirectoryHandle,
   saveOwnerActionsToProjectFolder,
   saveOwnerFeedToProjectFolder,
   saveOwnerFollowsToProjectFolder,
+  saveOwnerMessagesToProjectFolder,
   type WritableOwnerProject,
 } from './owner-folder-writer';
 
@@ -84,6 +86,39 @@ describe('owner folder writer', () => {
       owner: session.profile.handle,
       follows: [{ profile: 'https://tommy.example.test/profile.json' }],
     });
+    expect([...writer.files.keys()].some((path) => path.startsWith('private/'))).toBe(false);
+  });
+
+  it('saves encrypted message inbox envelopes without writing private files', async () => {
+    const writer = new MemoryOwnerProjectWriter();
+    const sender = await createOwnerPage({
+      name: 'Sender',
+      handle: 'sender@example.test',
+      bio: '',
+      firstPost: 'Sender page',
+    });
+    const recipient = await createOwnerPage({
+      name: 'Recipient',
+      handle: 'recipient@example.test',
+      bio: '',
+      firstPost: 'Recipient page',
+    });
+    const prepared = await createOwnerDirectMessage(sender, recipient.profile, 'Private inbox text', {
+      id: 'message_saved_to_folder',
+      createdAt: '2026-06-04T10:02:00.000Z',
+    });
+
+    await saveOwnerMessagesToProjectFolder(writer, recipient, [prepared.message]);
+
+    const saved = writer.files.get('public/opensocial/messages/inbox/index.json') ?? '';
+
+    expect(JSON.parse(saved)).toEqual({
+      protocol: 'open-social-network',
+      version: '0.1',
+      owner: recipient.profile.handle,
+      messages: [prepared.message],
+    });
+    expect(saved).not.toContain('Private inbox text');
     expect([...writer.files.keys()].some((path) => path.startsWith('private/'))).toBe(false);
   });
 

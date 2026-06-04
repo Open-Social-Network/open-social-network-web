@@ -1,15 +1,17 @@
-import type { OpenSocialNetworkAction } from '../protocol/types';
+import type { OpenSocialNetworkAction, OpenSocialNetworkDirectMessage } from '../protocol/types';
 import type { OpenSocialNetworkFollowInput } from '../protocol/follows';
 import {
   exportOwnerActionLog,
   exportOwnerFeed,
   exportOwnerFollowList,
+  exportOwnerMessageInbox,
   type OwnerSession,
 } from './owner-session';
 
 const OWNER_FEED_PATH = 'public/feed.json';
 const OWNER_ACTION_LOG_PATH = 'public/opensocial/actions/index.json';
 const OWNER_FOLLOW_LIST_PATH = 'public/opensocial/follows/index.json';
+const OWNER_MESSAGE_INBOX_PATH = 'public/opensocial/messages/inbox/index.json';
 
 export interface WritableOwnerProject {
   writeText(path: string, content: string): Promise<void>;
@@ -68,6 +70,14 @@ export async function saveOwnerFollowsToProjectFolder(
   follows: OpenSocialNetworkFollowInput[],
 ): Promise<void> {
   await writer.writeText(OWNER_FOLLOW_LIST_PATH, exportOwnerFollowList(session, follows));
+}
+
+export async function saveOwnerMessagesToProjectFolder(
+  writer: WritableOwnerProject,
+  session: OwnerSession,
+  messages: OpenSocialNetworkDirectMessage[],
+): Promise<void> {
+  await writer.writeText(OWNER_MESSAGE_INBOX_PATH, exportOwnerMessageInbox(session, messages));
 }
 
 export function ownerProjectWriterFromDirectoryHandle(

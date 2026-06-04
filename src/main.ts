@@ -49,6 +49,7 @@ import {
   saveOwnerActionsToProjectFolder,
   saveOwnerFeedToProjectFolder,
   saveOwnerFollowsToProjectFolder,
+  saveOwnerMessagesToProjectFolder,
   type BrowserDirectoryHandle,
   type WritableOwnerProject,
 } from './app/owner-folder-writer';
@@ -118,6 +119,7 @@ type OwnerFolderSaveResult = OwnerLocalSaveResult;
 
 type ImportedOwnerInbox = {
   messages: OwnerInboxMessage[];
+  envelopes: OpenSocialNetworkDirectMessage[];
   failures: string[];
 };
 
@@ -137,6 +139,7 @@ interface AppState {
   messageTargetKey: string | null;
   messageStatus: MessageStatus | null;
   inboxMessages: OwnerInboxMessage[];
+  inboxEnvelopes: OpenSocialNetworkDirectMessage[];
   inboxError: string | null;
 }
 
@@ -164,6 +167,7 @@ const state: AppState = {
   messageTargetKey: null,
   messageStatus: null,
   inboxMessages: [],
+  inboxEnvelopes: [],
   inboxError: null,
 };
 
@@ -358,6 +362,7 @@ function bindEvents(): void {
     state.messageTargetKey = null;
     state.messageStatus = null;
     state.inboxMessages = [];
+    state.inboxEnvelopes = [];
     state.inboxError = null;
     state.pendingPublish = emptyOwnerPublishChanges();
     clearStoredOwnerPublishChanges();
@@ -979,6 +984,7 @@ async function createOwnerFromForm(form: HTMLFormElement): Promise<void> {
     state.ownerError = null;
     state.ownerNotice = null;
     state.inboxMessages = [];
+    state.inboxEnvelopes = [];
     state.inboxError = null;
     savePendingPublishChanges({
       pageCreated: true,
@@ -1042,6 +1048,7 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
     state.ownerError = null;
     state.ownerNotice = 'Opened in this browser. Download the public site when you want to publish changes.';
     state.inboxMessages = mergeInboxMessages(importedInbox.messages, []);
+    state.inboxEnvelopes = mergeDirectMessageEnvelopes(importedInbox.envelopes, []);
     state.inboxError = inboxFailureMessage(importedInbox.failures);
     state.pendingPublish = emptyOwnerPublishChanges();
     clearStoredOwnerPublishChanges();
@@ -1120,6 +1127,7 @@ async function connectOwnerFromDirectoryHandle(directoryHandle: BrowserDirectory
         ? 'Opened your page folder. Messages in your inbox opened automatically.'
         : 'Opened your page folder. New posts and public actions save there automatically.';
     state.inboxMessages = mergeInboxMessages(importedInbox.messages, []);
+    state.inboxEnvelopes = mergeDirectMessageEnvelopes(importedInbox.envelopes, []);
     state.inboxError = inboxFailureMessage(importedInbox.failures);
     state.pendingPublish = emptyOwnerPublishChanges();
     clearStoredOwnerPublishChanges();
@@ -1307,21 +1315,31 @@ async function openOwnerMessageFiles(files: FileList | null): Promise<void> {
 
   try {
     const openedMessages: OwnerInboxMessage[] = [];
+    const openedEnvelopes: OpenSocialNetworkDirectMessage[] = [];
     const senderProfiles = currentTimeline().profiles;
 
     for (const file of selectedFiles) {
       const message = assertDirectMessageFile(await readJsonFile(file));
-      openedMessages.push(
-        await readOwnerDirectMessage(state.owner, message, {
-          senderProfiles,
-        }),
-      );
+      const openedMessage = await readOwnerDirectMessage(state.owner, message, {
+        senderProfiles,
+      });
+
+      openedMessages.push(openedMessage);
+      openedEnvelopes.push(message);
     }
 
     state.inboxMessages = mergeInboxMessages(openedMessages, state.inboxMessages);
+    state.inboxEnvelopes = mergeDirectMessageEnvelopes(openedEnvelopes, state.inboxEnvelopes);
+    const folderSaveResult = await saveOwnerMessagesToOpenedFolder();
+
     state.inboxError = null;
-    state.ownerError = null;
-    state.ownerNotice = null;
+    if (folderSaveResult !== 'failed') {
+      state.ownerError = null;
+      state.ownerNotice =
+        folderSaveResult === 'saved'
+          ? 'Message saved to your page folder.'
+          : 'Message opened. Download the public site to keep it in your inbox.';
+    }
     render();
   } catch (error) {
     state.inboxError = error instanceof Error ? error.message : 'Could not open this message';
@@ -1351,17 +1369,24 @@ async function importOwnerInboxMessages(
   if (!messageLogJson) {
     return {
       messages: [],
+      envelopes: [],
       failures: [],
     };
   }
 
   try {
-    return await readOwnerDirectMessageInbox(owner, messageLogJson, {
+    const result = await readOwnerDirectMessageInbox(owner, messageLogJson, {
       senderProfiles: currentTimeline().profiles,
     });
+
+    return {
+      ...result,
+      envelopes: directMessageEnvelopesFromInbox(owner, messageLogJson),
+    };
   } catch (error) {
     return {
       messages: [],
+      envelopes: [],
       failures: [error instanceof Error ? error.message : 'Could not open the message inbox.'],
     };
   }
@@ -1382,6 +1407,54 @@ function mergeInboxMessages(
   return [...messagesById.values()].sort(
     (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
   );
+}
+
+function mergeDirectMessageEnvelopes(
+  preferredMessages: OpenSocialNetworkDirectMessage[],
+  fallbackMessages: OpenSocialNetworkDirectMessage[],
+): OpenSocialNetworkDirectMessage[] {
+  const messagesById = new Map<string, OpenSocialNetworkDirectMessage>();
+
+  for (const message of [...preferredMessages, ...fallbackMessages]) {
+    if (!messagesById.has(message.id)) {
+      messagesById.set(message.id, message);
+    }
+  }
+
+  return [...messagesById.values()].sort(
+    (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+  );
+}
+
+function directMessageEnvelopesFromInbox(
+  owner: OwnerSession,
+  messageLogJson: unknown,
+): OpenSocialNetworkDirectMessage[] {
+  if (!isRecord(messageLogJson) || !Array.isArray(messageLogJson.messages)) {
+    return [];
+  }
+
+  const ownerHandle = typeof messageLogJson.owner === 'string' ? messageLogJson.owner : '';
+
+  if (ownerHandle !== owner.profile.handle) {
+    return [];
+  }
+
+  const messages: OpenSocialNetworkDirectMessage[] = [];
+
+  for (const value of messageLogJson.messages) {
+    try {
+      const message = assertDirectMessageFile(value);
+
+      if (message.recipient === owner.profile.handle) {
+        messages.push(message);
+      }
+    } catch {
+      // Invalid encrypted envelopes are reported by readOwnerDirectMessageInbox.
+    }
+  }
+
+  return messages;
 }
 
 function inboxFailureMessage(failures: string[]): string | null {
@@ -1459,6 +1532,26 @@ async function saveOwnerFollowsToOpenedFolder(): Promise<OwnerFolderSaveResult> 
     state.ownerProjectWriter = null;
     state.ownerError =
       'Could not save follows to your page folder. Download the public site to keep this change.';
+    return 'failed';
+  }
+}
+
+async function saveOwnerMessagesToOpenedFolder(): Promise<OwnerFolderSaveResult> {
+  if (!state.owner || !state.ownerProjectWriter) {
+    return 'unavailable';
+  }
+
+  try {
+    await saveOwnerMessagesToProjectFolder(
+      state.ownerProjectWriter,
+      state.owner,
+      state.inboxEnvelopes,
+    );
+    return 'saved';
+  } catch {
+    state.ownerProjectWriter = null;
+    state.ownerError =
+      'Could not save messages to your page folder. Download the public site to keep them in your inbox.';
     return 'failed';
   }
 }
@@ -1703,6 +1796,7 @@ function downloadOwnerSite(includePrivate: boolean): void {
     includePrivate,
     actions: ownerActions,
     follows: state.follows,
+    messages: state.inboxEnvelopes,
   });
   const blob = new Blob([zip as BlobPart], { type: 'application/zip' });
   const url = URL.createObjectURL(blob);

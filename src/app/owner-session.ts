@@ -15,6 +15,7 @@ import type {
   OpenSocialNetworkAction,
   OpenSocialNetworkActionInbox,
   OpenSocialNetworkActionLog,
+  OpenSocialNetworkDirectMessage,
   OpenSocialNetworkDirectMessageLog,
   OpenSocialNetworkIdentity,
   OpenSocialNetworkPost,
@@ -48,6 +49,7 @@ export interface OwnerSiteExportOptions {
   includePrivate: boolean;
   actions?: OpenSocialNetworkAction[];
   follows?: OpenSocialNetworkFollowInput[];
+  messages?: OpenSocialNetworkDirectMessage[];
 }
 
 export interface OwnerPublicUpdatesExportOptions {
@@ -266,6 +268,13 @@ export function exportOwnerActionLog(
   return jsonFile(ownerActionLog(session, actions));
 }
 
+export function exportOwnerMessageInbox(
+  session: OwnerSession,
+  messages: OpenSocialNetworkDirectMessage[] = [],
+): string {
+  return jsonFile(ownerMessageInbox(session, messages));
+}
+
 export function exportOwnerSiteFiles(
   session: OwnerSession,
   options: OwnerSiteExportOptions,
@@ -277,12 +286,7 @@ export function exportOwnerSiteFiles(
     owner: session.profile.handle,
     actions: [],
   };
-  const messageLog: OpenSocialNetworkDirectMessageLog = {
-    protocol: 'open-social-network',
-    version: '0.1',
-    owner: session.profile.handle,
-    messages: [],
-  };
+  const messageLog = ownerMessageInbox(session, options.messages ?? []);
   const files: OwnerSiteFiles = {
     'public/.well-known/open-social-network.json': jsonFile(session.profile),
     'public/feed.json': exportOwnerFeed(session),
@@ -374,6 +378,18 @@ function ownerActionLog(
     version: '0.1',
     actor: session.profile.handle,
     actions,
+  };
+}
+
+function ownerMessageInbox(
+  session: OwnerSession,
+  messages: OpenSocialNetworkDirectMessage[],
+): OpenSocialNetworkDirectMessageLog {
+  return {
+    protocol: 'open-social-network',
+    version: '0.1',
+    owner: session.profile.handle,
+    messages,
   };
 }
 
