@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { summarizeOwnerPublishReady } from './owner-publish';
+import type { OpenSocialNetworkAction } from '../protocol/types';
+import {
+  clearStoredOwnerPublishChanges,
+  loadStoredOwnerPublishChanges,
+  saveStoredOwnerPublishChanges,
+  summarizeOwnerPublishReady,
+} from './owner-publish';
 
 describe('owner publish reminder', () => {
   it('does not show a reminder when nothing changed in this session', () => {
@@ -75,4 +81,113 @@ describe('owner publish reminder', () => {
       detail: 'Download your public site to publish your latest post and public updates.',
     });
   });
+
+  it('restores pending publish changes for the same page identity', () => {
+    const storage = new MemoryStorage();
+    const pendingAction = actionFor('action_1', 'owner@example.test');
+
+    saveStoredOwnerPublishChanges(
+      'owner@example.test',
+      {
+        pageCreated: false,
+        postCount: 1,
+        actions: [pendingAction],
+      },
+      storage,
+    );
+
+    expect(loadStoredOwnerPublishChanges('owner@example.test', storage)).toEqual({
+      pageCreated: false,
+      postCount: 1,
+      actions: [pendingAction],
+    });
+  });
+
+  it('does not restore pending publish changes for a different page identity', () => {
+    const storage = new MemoryStorage();
+
+    saveStoredOwnerPublishChanges(
+      'owner@example.test',
+      {
+        pageCreated: true,
+        postCount: 0,
+        actions: [],
+      },
+      storage,
+    );
+
+    expect(loadStoredOwnerPublishChanges('other@example.test', storage)).toEqual({
+      pageCreated: false,
+      postCount: 0,
+      actions: [],
+    });
+  });
+
+  it('clears stored pending publish changes on logout or folder login', () => {
+    const storage = new MemoryStorage();
+
+    saveStoredOwnerPublishChanges(
+      'owner@example.test',
+      {
+        pageCreated: true,
+        postCount: 0,
+        actions: [],
+      },
+      storage,
+    );
+    clearStoredOwnerPublishChanges(storage);
+
+    expect(loadStoredOwnerPublishChanges('owner@example.test', storage)).toEqual({
+      pageCreated: false,
+      postCount: 0,
+      actions: [],
+    });
+  });
 });
+
+function actionFor(id: string, actor: string): OpenSocialNetworkAction {
+  return {
+    id,
+    kind: 'reaction',
+    actor,
+    createdAt: '2026-06-03T12:00:00.000Z',
+    target: {
+      type: 'post',
+      id: 'post_1',
+      author: 'author@example.test',
+    },
+    reaction: 'like',
+    signature: {
+      alg: 'ES256',
+      value: 'signature',
+    },
+  };
+}
+
+class MemoryStorage implements Storage {
+  private readonly values = new Map<string, string>();
+
+  get length(): number {
+    return this.values.size;
+  }
+
+  clear(): void {
+    this.values.clear();
+  }
+
+  getItem(key: string): string | null {
+    return this.values.get(key) ?? null;
+  }
+
+  key(index: number): string | null {
+    return [...this.values.keys()][index] ?? null;
+  }
+
+  removeItem(key: string): void {
+    this.values.delete(key);
+  }
+
+  setItem(key: string, value: string): void {
+    this.values.set(key, value);
+  }
+}

@@ -21,7 +21,12 @@ import {
   readOwnerDirectMessage,
 } from './app/owner-messages';
 import {
+  clearStoredOwnerPublishChanges,
+  emptyOwnerPublishChanges,
+  loadStoredOwnerPublishChanges,
+  saveStoredOwnerPublishChanges,
   summarizeOwnerPublishReady,
+  type OwnerPublishChanges,
   type OwnerPublishReadySummary,
 } from './app/owner-publish';
 import type {
@@ -65,19 +70,13 @@ type MessageStatus =
       downloadName: string;
     };
 
-interface PendingPublishChanges {
-  pageCreated: boolean;
-  postCount: number;
-  actions: OpenSocialNetworkAction[];
-}
-
 interface AppState {
   directoryProfiles: string[];
   follows: string[];
   timeline: TimelineResult | null;
   owner: OwnerSession | null;
   actions: OpenSocialNetworkAction[];
-  pendingPublish: PendingPublishChanges;
+  pendingPublish: OwnerPublishChanges;
   loading: boolean;
   error: string | null;
   ownerError: string | null;
@@ -102,7 +101,7 @@ const state: AppState = {
   timeline: null,
   owner: null,
   actions: [],
-  pendingPublish: emptyPendingPublishChanges(),
+  pendingPublish: emptyOwnerPublishChanges(),
   loading: true,
   error: null,
   ownerError: null,
@@ -121,6 +120,15 @@ async function boot(): Promise<void> {
   try {
     state.owner = loadStoredOwnerSession();
     state.actions = loadStoredOwnerActions();
+    state.pendingPublish = state.owner
+      ? loadStoredOwnerPublishChanges(state.owner.profile.handle)
+      : emptyOwnerPublishChanges();
+
+    if (state.pendingPublish.actions.length > 0) {
+      state.actions = mergeActionsById(state.pendingPublish.actions, state.actions);
+      saveStoredOwnerActions(state.actions);
+    }
+
     state.directoryProfiles = await loadDirectory();
     state.follows = loadStoredFollows(state.directoryProfiles);
     await refreshTimeline();
@@ -278,7 +286,8 @@ function bindEvents(): void {
     state.messageStatus = null;
     state.inboxMessages = [];
     state.inboxError = null;
-    state.pendingPublish = emptyPendingPublishChanges();
+    state.pendingPublish = emptyOwnerPublishChanges();
+    clearStoredOwnerPublishChanges();
     render();
   });
 
@@ -815,11 +824,11 @@ async function createOwnerFromForm(form: HTMLFormElement): Promise<void> {
     state.ownerError = null;
     state.inboxMessages = [];
     state.inboxError = null;
-    state.pendingPublish = {
+    savePendingPublishChanges({
       pageCreated: true,
       postCount: 0,
       actions: [],
-    };
+    });
     saveStoredOwnerSession(owner);
     render();
   } catch (error) {
@@ -859,7 +868,8 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
     state.ownerError = null;
     state.inboxMessages = [];
     state.inboxError = null;
-    state.pendingPublish = emptyPendingPublishChanges();
+    state.pendingPublish = emptyOwnerPublishChanges();
+    clearStoredOwnerPublishChanges();
     saveStoredOwnerSession(owner);
     saveStoredOwnerActions(state.actions);
     render();
@@ -878,10 +888,10 @@ async function publishOwnerPost(form: HTMLFormElement): Promise<void> {
     const content = (form.elements.namedItem('content') as HTMLTextAreaElement | null)?.value ?? '';
     state.owner = await signOwnerPost(state.owner, content);
     state.ownerError = null;
-    state.pendingPublish = {
+    savePendingPublishChanges({
       ...state.pendingPublish,
       postCount: state.pendingPublish.postCount + 1,
-    };
+    });
     saveStoredOwnerSession(state.owner);
     render();
   } catch (error) {
@@ -914,10 +924,10 @@ async function reactToPost(button: HTMLButtonElement): Promise<void> {
     const signedAction = await signOwnerReaction(state.owner, target, nextReaction);
 
     state.actions = [signedAction, ...state.actions];
-    state.pendingPublish = {
+    savePendingPublishChanges({
       ...state.pendingPublish,
       actions: [signedAction, ...state.pendingPublish.actions],
-    };
+    });
     state.ownerError = null;
     saveStoredOwnerActions(state.actions);
     render();
@@ -940,10 +950,10 @@ async function commentOnPost(form: HTMLFormElement): Promise<void> {
     const signedAction = await signOwnerComment(state.owner, decodeActionTarget(targetKey), content);
 
     state.actions = [signedAction, ...state.actions];
-    state.pendingPublish = {
+    savePendingPublishChanges({
       ...state.pendingPublish,
       actions: [signedAction, ...state.pendingPublish.actions],
-    };
+    });
     state.commentTargetKey = null;
     state.messageTargetKey = null;
     state.ownerError = null;
@@ -1058,12 +1068,12 @@ function currentTimeline(): TimelineResult {
   return mergeOwnerTimeline(state.timeline, state.owner);
 }
 
-function emptyPendingPublishChanges(): PendingPublishChanges {
-  return {
-    pageCreated: false,
-    postCount: 0,
-    actions: [],
-  };
+function savePendingPublishChanges(changes: OwnerPublishChanges): void {
+  state.pendingPublish = changes;
+
+  if (state.owner) {
+    saveStoredOwnerPublishChanges(state.owner.profile.handle, changes);
+  }
 }
 
 function postActionTarget(post: TimelineResult['posts'][number]): OpenSocialNetworkActionTarget {
