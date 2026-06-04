@@ -61,6 +61,8 @@ import { profilePageAction } from './app/profile-actions';
 import { profileAvatarUrl, profilePageUrl } from './app/profile-links';
 import {
   focusMyPageAccess,
+  focusOpenCommentComposer,
+  focusOpenMessageComposer,
   socialInteractionCopy,
   signedOutSocialActionMessage,
   type SignedOutSocialAction,
@@ -350,6 +352,7 @@ function bindEvents(): void {
       state.messageTargetKey = null;
       state.ownerError = null;
       render();
+      focusOpenCommentComposer(app);
     });
   }
 
@@ -370,6 +373,7 @@ function bindEvents(): void {
       state.commentTargetKey = null;
       state.ownerError = null;
       render();
+      focusOpenMessageComposer(app);
     });
   }
 

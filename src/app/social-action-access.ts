@@ -38,3 +38,23 @@ export function focusMyPageAccess(root: ParentNode = document): boolean {
 
   return true;
 }
+
+export function focusOpenCommentComposer(root: ParentNode = document): boolean {
+  return focusFirst(root, '[data-form="post-comment"] textarea');
+}
+
+export function focusOpenMessageComposer(root: ParentNode = document): boolean {
+  return focusFirst(root, '[data-form="direct-message"] textarea');
+}
+
+function focusFirst(root: ParentNode, selector: string): boolean {
+  const element = root.querySelector<HTMLElement>(selector);
+
+  if (!element) {
+    return false;
+  }
+
+  element.focus();
+
+  return true;
+}

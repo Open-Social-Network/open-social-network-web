@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   focusMyPageAccess,
+  focusOpenCommentComposer,
+  focusOpenMessageComposer,
   socialInteractionCopy,
   signedOutSocialActionMessage,
 } from './social-action-access';
@@ -50,6 +52,28 @@ describe('signed-out social action access', () => {
     expect(panel.scrolledIntoView).toBe(true);
     expect(folderControl.focused).toBe(true);
     expect(hiddenInput.focused).toBe(false);
+  });
+
+  it('focuses the open comment composer', () => {
+    const textarea = new FakeFocusableElement();
+    const root = {
+      querySelector: (selector: string) =>
+        selector === '[data-form="post-comment"] textarea' ? textarea : null,
+    } as ParentNode;
+
+    expect(focusOpenCommentComposer(root)).toBe(true);
+    expect(textarea.focused).toBe(true);
+  });
+
+  it('focuses the open message composer', () => {
+    const textarea = new FakeFocusableElement();
+    const root = {
+      querySelector: (selector: string) =>
+        selector === '[data-form="direct-message"] textarea' ? textarea : null,
+    } as ParentNode;
+
+    expect(focusOpenMessageComposer(root)).toBe(true);
+    expect(textarea.focused).toBe(true);
   });
 
   it('returns false when the page access panel is unavailable', () => {
