@@ -12,6 +12,7 @@ import {
   saveStoredOwnerActions,
   signOwnerComment,
   signOwnerReaction,
+  summarizeOwnerPublicUpdates,
 } from './app/owner-actions';
 import {
   createOwnerDirectMessage,
@@ -680,6 +681,7 @@ function renderOwnerPanel(): string {
 
   const pageUrl = ownerPageUrl(state.owner);
   const avatarUrl = profileAvatarUrl(state.owner.profile, state.owner.pageUrl ?? window.location.href);
+  const publicUpdates = summarizeOwnerPublicUpdates(state.owner, state.actions);
 
   return `
     <section class="owner-panel" aria-label="My Page">
@@ -707,6 +709,7 @@ function renderOwnerPanel(): string {
         <button class="button button-secondary" type="button" data-owner-download="public">Download public site</button>
         <button class="button button-secondary owner-logout-button" type="button" data-action="owner-disconnect" aria-label="Log out of this page">${connected.logoutLabel}</button>
       </div>
+      ${publicUpdates ? renderPublicUpdatesReady(publicUpdates) : ''}
       ${renderOwnerInbox()}
       <p class="owner-session-note">${connected.logoutHelp}</p>
       <section class="publish-anywhere">
@@ -719,6 +722,18 @@ function renderOwnerPanel(): string {
         <p>The private folder must never be hosted publicly.</p>
         <a href="${escapeAttribute(ownerFeedDownloadHref(state.owner))}" download="feed.json">Download feed only</a>
       </details>
+    </section>
+  `;
+}
+
+function renderPublicUpdatesReady(
+  summary: NonNullable<ReturnType<typeof summarizeOwnerPublicUpdates>>,
+): string {
+  return `
+    <section class="owner-publish-ready" aria-label="Public updates ready">
+      <strong>${escapeHtml(summary.title)}</strong>
+      <p>${escapeHtml(summary.detail)}</p>
+      <p>Upload the public folder anywhere your page is hosted.</p>
     </section>
   `;
 }

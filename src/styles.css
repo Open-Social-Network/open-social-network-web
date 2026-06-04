@@ -340,6 +340,7 @@ button {
 
 .publish-anywhere,
 .owner-inbox,
+.owner-publish-ready,
 .technical-details {
   color: var(--muted);
   font-size: 0.82rem;
@@ -347,6 +348,7 @@ button {
 }
 
 .owner-inbox,
+.owner-publish-ready,
 .publish-anywhere {
   display: grid;
   gap: 4px;
@@ -360,12 +362,18 @@ button {
   gap: 10px;
 }
 
+.owner-publish-ready {
+  border-color: rgba(44, 231, 240, 0.24);
+  background: rgba(44, 231, 240, 0.08);
+}
+
 .owner-inbox-header {
   display: grid;
   gap: 10px;
 }
 
 .owner-inbox-header strong,
+.owner-publish-ready strong,
 .publish-anywhere strong,
 .technical-details summary {
   color: var(--ink);
@@ -373,6 +381,7 @@ button {
 }
 
 .owner-inbox-header p,
+.owner-publish-ready p,
 .publish-anywhere p,
 .technical-details p {
   margin: 0;

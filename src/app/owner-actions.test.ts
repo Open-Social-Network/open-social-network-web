@@ -7,6 +7,7 @@ import {
   saveStoredOwnerActions,
   signOwnerComment,
   signOwnerReaction,
+  summarizeOwnerPublicUpdates,
 } from './owner-actions';
 
 describe('owner public actions', () => {
@@ -70,6 +71,64 @@ describe('owner public actions', () => {
     saveStoredOwnerActions([action], storage);
 
     expect(loadStoredOwnerActions(storage)).toEqual([action]);
+  });
+
+  it('summarizes only the current owner public updates for publishing', async () => {
+    const owner = await createOwnerPage({
+      name: 'Owner',
+      handle: 'owner@example.test',
+      bio: '',
+      firstPost: 'First post',
+    });
+    const otherOwner = await createOwnerPage({
+      name: 'Other',
+      handle: 'other@example.test',
+      bio: '',
+      firstPost: 'Other post',
+    });
+    const target = targetFor(owner.feed.posts[0]!.id, owner.feed.posts[0]!.author);
+    const reaction = await signOwnerReaction(owner, target, 'like', {
+      id: 'reaction_1',
+      createdAt: '2026-06-03T12:00:00.000Z',
+    });
+    const comment = await signOwnerComment(owner, target, 'Portable comment', {
+      id: 'comment_1',
+      createdAt: '2026-06-03T12:01:00.000Z',
+    });
+    const otherReaction = await signOwnerReaction(otherOwner, target, 'dislike', {
+      id: 'reaction_2',
+      createdAt: '2026-06-03T12:02:00.000Z',
+    });
+
+    expect(summarizeOwnerPublicUpdates(owner, [otherReaction, reaction, comment])).toEqual({
+      count: 2,
+      reactions: 1,
+      comments: 1,
+      title: '2 public updates ready',
+      detail: 'Download your public site to publish your latest reaction and comment.',
+    });
+  });
+
+  it('returns no publish summary when the owner has no public updates', async () => {
+    const owner = await createOwnerPage({
+      name: 'Owner',
+      handle: 'owner@example.test',
+      bio: '',
+      firstPost: 'First post',
+    });
+    const otherOwner = await createOwnerPage({
+      name: 'Other',
+      handle: 'other@example.test',
+      bio: '',
+      firstPost: 'Other post',
+    });
+    const target = targetFor(owner.feed.posts[0]!.id, owner.feed.posts[0]!.author);
+    const otherReaction = await signOwnerReaction(otherOwner, target, 'dislike', {
+      id: 'reaction_2',
+      createdAt: '2026-06-03T12:02:00.000Z',
+    });
+
+    expect(summarizeOwnerPublicUpdates(owner, [otherReaction])).toBeNull();
   });
 });
 

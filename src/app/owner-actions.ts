@@ -15,6 +15,14 @@ export interface OwnerActionOptions {
   id?: string;
 }
 
+export interface OwnerPublicUpdatesSummary {
+  count: number;
+  reactions: number;
+  comments: number;
+  title: string;
+  detail: string;
+}
+
 export async function signOwnerReaction(
   session: OwnerSession,
   target: OpenSocialNetworkActionTarget,
@@ -88,6 +96,28 @@ export function saveStoredOwnerActions(
   storage.setItem(OWNER_ACTIONS_STORAGE_KEY, JSON.stringify(actions));
 }
 
+export function summarizeOwnerPublicUpdates(
+  session: OwnerSession,
+  actions: OpenSocialNetworkAction[],
+): OwnerPublicUpdatesSummary | null {
+  const ownerActions = actions.filter((action) => action.actor === session.profile.handle);
+
+  if (ownerActions.length === 0) {
+    return null;
+  }
+
+  const reactions = ownerActions.filter((action) => action.kind === 'reaction').length;
+  const comments = ownerActions.filter((action) => action.kind === 'comment').length;
+
+  return {
+    count: ownerActions.length,
+    reactions,
+    comments,
+    title: `${ownerActions.length} public ${ownerActions.length === 1 ? 'update' : 'updates'} ready`,
+    detail: `Download your public site to publish your latest ${publicUpdateKinds(reactions, comments)}.`,
+  };
+}
+
 async function signOwnerAction(
   session: OwnerSession,
   action: UnsignedOpenSocialNetworkAction,
@@ -100,6 +130,18 @@ async function signOwnerAction(
   }
 
   return signedAction;
+}
+
+function publicUpdateKinds(reactions: number, comments: number): string {
+  if (reactions > 0 && comments > 0) {
+    return 'reaction and comment';
+  }
+
+  if (comments > 0) {
+    return comments === 1 ? 'comment' : 'comments';
+  }
+
+  return reactions === 1 ? 'reaction' : 'reactions';
 }
 
 function createActionId(kind: 'reaction' | 'comment', createdAt?: string): string {

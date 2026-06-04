@@ -91,6 +91,7 @@ The aggregator is intentionally neutral. It reads the network, but it does not o
 - Creates a new page directly in the browser.
 - Logs in locally with a generated page folder.
 - Signs new posts in the browser and exports an updated `feed.json`.
+- Signs likes, dislikes, and comments as public portable updates.
 - Creates encrypted direct-message envelopes for profiles that advertise a message inbox.
 - Attempts automatic message delivery to compatible inbox endpoints and falls back to a downloadable encrypted message file on static-only hosts.
 - Opens encrypted message files locally when the current page owns the matching message key and the sender profile is loaded.
@@ -158,6 +159,12 @@ private/messages.private.jwk.json
 ```
 
 Open Social Network Web validates that the private key owns the profile. After that, it remembers the session in local browser storage, shows your page as logged in, lets you sign a new post, and lets you download the updated `feed.json`.
+
+### React And Comment
+
+When your page is open, likes, dislikes, and comments become signed public updates.
+
+After you interact, Open Social Network Web shows when public updates are ready. Download the public site and upload the public folder wherever your page is hosted.
 
 ### Read Messages
 
