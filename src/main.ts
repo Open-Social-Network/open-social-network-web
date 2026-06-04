@@ -1,6 +1,6 @@
 import { loadVerifiedTimeline, type TimelineResult } from './aggregator/timeline';
 import { accountAccessCopy } from './app/account-access';
-import { commentAuthorDisplay } from './app/comment-display';
+import { commentAuthorDisplay, commentAuthorPageLink } from './app/comment-display';
 import { renderPostCommentComposer } from './app/comment-composer';
 import {
   focusOwnerPostComposer,
@@ -729,16 +729,22 @@ function renderPostComments(
         .map((comment) => {
           const author = commentAuthorDisplay(comment.actor, profiles);
           const avatarUrl = author.profile ? profileAvatarUrl(author.profile, window.location.href) : null;
+          const authorLink = commentAuthorPageLink(author, window.location.href);
+          const authorContent = `
+            ${renderAvatar(author.name, avatarUrl, 'comment-avatar')}
+            <span>
+              <strong>${escapeHtml(author.name)}</strong>
+              ${author.handle ? `<span>${escapeHtml(author.handle)}</span>` : ''}
+            </span>
+          `;
 
           return `
             <article class="post-comment">
-              <div class="post-comment-author">
-                ${renderAvatar(author.name, avatarUrl, 'comment-avatar')}
-                <span>
-                  <strong>${escapeHtml(author.name)}</strong>
-                  ${author.handle ? `<span>${escapeHtml(author.handle)}</span>` : ''}
-                </span>
-              </div>
+              ${
+                authorLink
+                  ? `<a class="post-comment-author" href="${escapeAttribute(authorLink.href)}" aria-label="${escapeAttribute(authorLink.ariaLabel)}">${authorContent}</a>`
+                  : `<div class="post-comment-author">${authorContent}</div>`
+              }
               <p>${escapeHtml(comment.content)}</p>
             </article>
           `;

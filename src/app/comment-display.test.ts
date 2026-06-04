@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { commentAuthorDisplay } from './comment-display';
+import { commentAuthorDisplay, commentAuthorPageLink } from './comment-display';
 import type { OpenSocialNetworkIdentity } from '../protocol/types';
 
 describe('comment display', () => {
@@ -17,6 +17,27 @@ describe('comment display', () => {
       handle: null,
       profile: null,
     });
+  });
+
+  it('links known comment authors to their human profile page', () => {
+    expect(
+      commentAuthorPageLink(
+        commentAuthorDisplay('ada@example.test', [profile('ada@example.test', 'Ada Lovelace')]),
+        'http://127.0.0.1:5173/',
+      ),
+    ).toEqual({
+      href: 'https://ada@example.test/',
+      ariaLabel: 'View Ada Lovelace page',
+    });
+  });
+
+  it('does not link unknown comment authors', () => {
+    expect(
+      commentAuthorPageLink(
+        commentAuthorDisplay('unknown@example.test', []),
+        'http://127.0.0.1:5173/',
+      ),
+    ).toBeNull();
   });
 });
 
