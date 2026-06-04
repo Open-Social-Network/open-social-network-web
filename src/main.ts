@@ -727,6 +727,29 @@ function renderOwnerPanel(): string {
         </div>
         <p class="owner-copy">Create a page, write posts, and host it anywhere.</p>
         ${state.ownerError ? `<p class="app-error">${escapeHtml(state.ownerError)}</p>` : ''}
+        <section class="owner-access-card owner-access-primary" aria-label="Open existing page">
+          <div>
+            <strong>${disconnected.openExistingTitle}</strong>
+            <p>${disconnected.openExistingHelp}</p>
+            <ol class="owner-access-steps">
+              ${disconnected.openExistingSteps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}
+            </ol>
+            <p>${disconnected.openExistingPrivateHelp}</p>
+          </div>
+          <label class="button button-primary owner-folder-button" for="ownerFolder">${disconnected.openExistingLabel}</label>
+          <input
+            class="sr-only"
+            id="ownerFolder"
+            type="file"
+            data-owner-folder
+            webkitdirectory
+            multiple
+          />
+        </section>
+        <div class="owner-create-heading">
+          <strong>New here?</strong>
+          <span>Create a page in this browser.</span>
+        </div>
         <form class="owner-create-form" data-form="owner-create">
           <label class="sr-only" for="ownerName">Name</label>
           <input id="ownerName" name="name" type="text" autocomplete="name" placeholder="Your name or project" required />
@@ -738,25 +761,6 @@ function renderOwnerPanel(): string {
           <textarea id="ownerFirstPost" name="firstPost" rows="3" maxlength="1000" placeholder="Write your first post..." required></textarea>
           <button class="button button-primary" type="submit">Create my page</button>
         </form>
-        <section class="owner-access-card" aria-label="Open existing page">
-          <div>
-            <strong>${disconnected.openExistingTitle}</strong>
-            <p>${disconnected.openExistingHelp}</p>
-            <ol class="owner-access-steps">
-              ${disconnected.openExistingSteps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}
-            </ol>
-            <p>${disconnected.openExistingPrivateHelp}</p>
-          </div>
-          <label class="button button-secondary owner-folder-button" for="ownerFolder">${disconnected.openExistingLabel}</label>
-          <input
-            class="sr-only"
-            id="ownerFolder"
-            type="file"
-            data-owner-folder
-            webkitdirectory
-            multiple
-          />
-        </section>
         <details class="technical-details">
           <summary>${disconnected.technicalSummary}</summary>
           <p>${disconnected.technicalHelp}</p>

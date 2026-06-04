@@ -4,19 +4,19 @@ import { accountAccessCopy } from './account-access';
 
 describe('account access copy', () => {
   it('presents page access with simple user-facing language', () => {
-    expect(accountAccessCopy.disconnected.status).toBe('Create');
-    expect(accountAccessCopy.disconnected.openExistingTitle).toBe('Open your page');
-    expect(accountAccessCopy.disconnected.openExistingLabel).toBe('Open my page');
+    expect(accountAccessCopy.disconnected.status).toBe('Not logged in');
+    expect(accountAccessCopy.disconnected.openExistingTitle).toBe('Already have a page?');
+    expect(accountAccessCopy.disconnected.openExistingLabel).toBe('Open my page folder');
     expect(accountAccessCopy.disconnected.openExistingHelp).toBe(
-      'Choose your Open Social Network page folder. Nothing is uploaded.',
+      'Choose the folder for your Open Social Network page. Nothing is uploaded.',
     );
     expect(accountAccessCopy.disconnected.openExistingSteps).toEqual([
-      'Click Open my page.',
-      'Choose the whole folder that contains your page.',
+      'Click Open my page folder.',
+      'Choose the whole page folder.',
       'You will be logged in only in this browser.',
     ]);
     expect(accountAccessCopy.disconnected.openExistingPrivateHelp).toBe(
-      'The folder includes private files that prove the page is yours. They stay on your device.',
+      'Private files prove the page is yours. They stay on your device.',
     );
     expect(accountAccessCopy.disconnected.technicalSummary).toBe('Technical details');
   });

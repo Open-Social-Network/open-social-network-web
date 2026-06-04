@@ -309,6 +309,10 @@ button {
   background: rgba(77, 124, 255, 0.11);
 }
 
+.owner-access-primary {
+  background: linear-gradient(135deg, rgba(77, 124, 255, 0.24), rgba(44, 231, 240, 0.12));
+}
+
 .owner-access-card strong {
   display: block;
   margin-bottom: 3px;
@@ -317,7 +321,8 @@ button {
 }
 
 .owner-access-card p,
-.owner-session-note {
+.owner-session-note,
+.owner-create-heading span {
   margin: 0;
   color: var(--muted);
   font-size: 0.82rem;
@@ -336,6 +341,16 @@ button {
 
 .owner-folder-button {
   width: 100%;
+}
+
+.owner-create-heading {
+  display: grid;
+  gap: 3px;
+}
+
+.owner-create-heading strong {
+  color: var(--ink);
+  font-size: 0.9rem;
 }
 
 .owner-identity {
