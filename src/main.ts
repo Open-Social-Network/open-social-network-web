@@ -70,7 +70,7 @@ import {
   type OwnerSession,
 } from './app/owner-session';
 import { profilePageAction } from './app/profile-actions';
-import { renderProfileMessageAction } from './app/profile-card';
+import { renderProfileFollowAction, renderProfileMessageAction } from './app/profile-card';
 import { profileAvatarUrl, profilePageUrl } from './app/profile-links';
 import { followsFromFollowList } from './protocol/follows';
 import {
@@ -487,15 +487,12 @@ function renderProfiles(): string {
                     })
                   : ''
               }
-              <button
-                class="icon-button ${followed ? 'icon-button-active' : ''}"
-                type="button"
-                data-profile-url="${escapeAttribute(profileUrl)}"
-                aria-label="${followed ? 'Unfollow' : 'Follow'} ${escapeAttribute(name)}"
-                title="${followed ? 'Unfollow' : 'Follow'}"
-              >
-                ${followed ? 'On' : 'Off'}
-              </button>
+              ${renderProfileFollowAction({
+                name,
+                profileUrl,
+                followed,
+                iconHtml: followIcon(followed),
+              })}
             </div>
           </div>
           ${
@@ -1548,6 +1545,29 @@ function messageIcon(): string {
         stroke-width="1.8"
       />
       <path d="m10.9 15.2 4.4-4.5" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" />
+    </svg>
+  `;
+}
+
+function followIcon(followed: boolean): string {
+  if (followed) {
+    return `
+      <svg class="post-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="m5 12.4 4.4 4.3L19.5 6.7"
+          fill="none"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+        />
+      </svg>
+    `;
+  }
+
+  return `
+    <svg class="post-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-linecap="round" stroke-width="2" />
     </svg>
   `;
 }

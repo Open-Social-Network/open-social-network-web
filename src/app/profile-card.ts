@@ -9,6 +9,13 @@ export interface ProfileMessageActionInput {
   iconHtml?: string;
 }
 
+export interface ProfileFollowActionInput {
+  name: string;
+  profileUrl: string;
+  followed: boolean;
+  iconHtml?: string;
+}
+
 export function renderProfileMessageAction(input: ProfileMessageActionInput): string {
   const access = messageAccessState(input.profile, input.ownerHandle);
   const title = input.ownerHandle ? access.buttonTitle : signedOutSocialActionMessage('message');
@@ -24,6 +31,23 @@ export function renderProfileMessageAction(input: ProfileMessageActionInput): st
       title="${escapeAttribute(title)}"${disabled}
     >
       ${input.iconHtml ?? 'Message'}
+    </button>
+  `;
+}
+
+export function renderProfileFollowAction(input: ProfileFollowActionInput): string {
+  const action = input.followed ? 'Unfollow' : 'Follow';
+  const activeClass = input.followed ? ' icon-button-active' : '';
+
+  return `
+    <button
+      class="icon-button profile-follow-button${activeClass}"
+      type="button"
+      data-profile-url="${escapeAttribute(input.profileUrl)}"
+      aria-label="${action} ${escapeAttribute(input.name)}"
+      title="${action}"
+    >
+      ${input.iconHtml ?? action}
     </button>
   `;
 }

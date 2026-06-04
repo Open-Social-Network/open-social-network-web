@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderProfileMessageAction } from './profile-card';
+import { renderProfileFollowAction, renderProfileMessageAction } from './profile-card';
 import type { OpenSocialNetworkIdentity } from '../protocol/types';
 
 const profile: OpenSocialNetworkIdentity = {
@@ -61,5 +61,37 @@ describe('renderProfileMessageAction', () => {
     expect(html).toContain('aria-label="Message Ada Lovelace"');
     expect(html).toContain('title="Create or open your page to send messages."');
     expect(html).not.toContain('disabled');
+  });
+});
+
+describe('renderProfileFollowAction', () => {
+  it('renders a familiar follow icon button', () => {
+    const html = renderProfileFollowAction({
+      name: 'Ada Lovelace',
+      profileUrl: 'https://ada.example.test/profile.json',
+      followed: false,
+      iconHtml: '<svg aria-hidden="true"></svg>',
+    });
+
+    expect(html).toContain('class="icon-button profile-follow-button"');
+    expect(html).toContain('data-profile-url="https://ada.example.test/profile.json"');
+    expect(html).toContain('aria-label="Follow Ada Lovelace"');
+    expect(html).toContain('title="Follow"');
+    expect(html).toContain('<svg aria-hidden="true"></svg>');
+    expect(html).not.toContain('>Off<');
+  });
+
+  it('renders a familiar active unfollow icon button', () => {
+    const html = renderProfileFollowAction({
+      name: 'Ada Lovelace',
+      profileUrl: 'https://ada.example.test/profile.json',
+      followed: true,
+      iconHtml: '<svg aria-hidden="true"></svg>',
+    });
+
+    expect(html).toContain('class="icon-button profile-follow-button icon-button-active"');
+    expect(html).toContain('aria-label="Unfollow Ada Lovelace"');
+    expect(html).toContain('title="Unfollow"');
+    expect(html).not.toContain('>On<');
   });
 });
