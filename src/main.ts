@@ -771,11 +771,17 @@ function renderOwnerPanel(): string {
         <a class="button button-secondary owner-link" href="${escapeAttribute(pageUrl)}" target="_blank" rel="noreferrer">My page</a>
         <button class="button button-secondary" type="button" data-owner-download="full">Download my site</button>
         <button class="button button-secondary" type="button" data-owner-download="public">Download public site</button>
-        <button class="button button-secondary owner-logout-button" type="button" data-action="owner-disconnect" aria-label="Log out of this page">${connected.logoutLabel}</button>
       </div>
       ${publishReady ? renderPublishReady(publishReady) : ''}
       ${renderOwnerInbox()}
-      <p class="owner-session-note">${connected.logoutHelp}</p>
+      <section class="owner-logout-card" aria-label="Log out">
+        <div>
+          <strong>${connected.logoutTitle}</strong>
+          <p>${connected.logoutHelp}</p>
+          <p>${connected.logoutReturnHelp}</p>
+        </div>
+        <button class="button button-secondary owner-logout-button" type="button" data-action="owner-disconnect" aria-label="Log out of this page">${connected.logoutLabel}</button>
+      </section>
       <section class="publish-anywhere">
         <strong>Publish anywhere</strong>
         <p>Upload the public folder to any static host.</p>

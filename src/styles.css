@@ -317,7 +317,8 @@ button {
 }
 
 .owner-access-card p,
-.owner-session-note {
+.owner-session-note,
+.owner-logout-card p {
   margin: 0;
   color: var(--muted);
   font-size: 0.82rem;
@@ -351,6 +352,28 @@ button {
 .owner-actions {
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.owner-logout-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(255, 138, 128, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 138, 128, 0.08);
+}
+
+.owner-logout-card strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #ffe1de;
+  font-size: 0.9rem;
+}
+
+.owner-logout-card p + p {
+  margin-top: 4px;
 }
 
 .owner-logout-button {

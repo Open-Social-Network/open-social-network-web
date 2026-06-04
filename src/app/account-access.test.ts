@@ -14,9 +14,13 @@ describe('account access copy', () => {
 
   it('makes logout obvious and explains that it is local only', () => {
     expect(accountAccessCopy.connected.status).toBe('Logged in');
+    expect(accountAccessCopy.connected.logoutTitle).toBe('Finished here?');
     expect(accountAccessCopy.connected.logoutLabel).toBe('Log out');
     expect(accountAccessCopy.connected.logoutHelp).toBe(
-      'This only removes the page from this browser. Your public page stays online.',
+      'Log out only disconnects this browser. Your public page stays online.',
+    );
+    expect(accountAccessCopy.connected.logoutReturnHelp).toBe(
+      'You can open the same page folder again whenever you want.',
     );
   });
 });
