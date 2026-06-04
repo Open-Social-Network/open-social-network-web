@@ -1,5 +1,9 @@
 import { loadVerifiedTimeline, type TimelineResult } from './aggregator/timeline';
 import { accountAccessCopy } from './app/account-access';
+import {
+  focusOwnerPostComposer,
+  shouldShowFloatingComposeButton,
+} from './app/compose-shortcut';
 import { loadDirectory } from './app/directory';
 import {
   loadStoredFollows,
@@ -200,6 +204,7 @@ function render(): void {
           ${renderDiagnostics()}
         </aside>
       </section>
+      ${renderFloatingComposeButton()}
     </main>
   `;
 
@@ -295,6 +300,16 @@ function bindEvents(): void {
   app.querySelector<HTMLButtonElement>('[data-action="owner-published"]')?.addEventListener('click', () => {
     state.pendingPublish = markOwnerPublishChangesPublished();
     state.ownerError = null;
+    render();
+  });
+
+  app.querySelector<HTMLButtonElement>('[data-action="focus-owner-post"]')?.addEventListener('click', () => {
+    if (focusOwnerPostComposer(app)) {
+      state.ownerError = null;
+      return;
+    }
+
+    state.ownerError = 'Open your page to post.';
     render();
   });
 
@@ -734,7 +749,7 @@ function renderOwnerPanel(): string {
       </div>
       <form class="owner-post-form" data-form="owner-post">
         <label class="sr-only" for="ownerPostContent">New signed post</label>
-        <textarea id="ownerPostContent" name="content" rows="4" maxlength="1000" placeholder="What do you want to post?"></textarea>
+        <textarea id="ownerPostContent" name="content" rows="4" maxlength="1000" placeholder="What do you want to post?" data-owner-post-content></textarea>
         <button class="button button-primary" type="submit">Post</button>
       </form>
       <div class="owner-actions">
@@ -757,6 +772,25 @@ function renderOwnerPanel(): string {
         <a href="${escapeAttribute(ownerFeedDownloadHref(state.owner))}" download="feed.json">Download feed only</a>
       </details>
     </section>
+  `;
+}
+
+function renderFloatingComposeButton(): string {
+  if (!shouldShowFloatingComposeButton(Boolean(state.owner))) {
+    return '';
+  }
+
+  return `
+    <button
+      class="floating-compose-button"
+      type="button"
+      data-action="focus-owner-post"
+      aria-label="Write a post"
+      title="Write a post"
+    >
+      ${composeIcon()}
+      <span>Post</span>
+    </button>
   `;
 }
 
@@ -1197,6 +1231,21 @@ function messageIcon(): string {
         stroke-width="1.8"
       />
       <path d="m10.9 15.2 4.4-4.5" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" />
+    </svg>
+  `;
+}
+
+function composeIcon(): string {
+  return `
+    <svg class="floating-compose-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M4.5 19.5h4.1L19.2 8.9c1.1-1.1 1.1-2.8 0-3.9s-2.8-1.1-3.9 0L4.5 15.8v3.7Z"
+        fill="none"
+        stroke="currentColor"
+        stroke-linejoin="round"
+        stroke-width="1.9"
+      />
+      <path d="m13.7 6.6 3.7 3.7" stroke="currentColor" stroke-linecap="round" stroke-width="1.9" />
     </svg>
   `;
 }
