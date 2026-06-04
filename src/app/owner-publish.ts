@@ -7,6 +7,7 @@ export interface OwnerPublishChanges {
   pageCreated: boolean;
   postCount: number;
   followCount: number;
+  messageCount: number;
   actions: OpenSocialNetworkAction[];
 }
 
@@ -14,6 +15,7 @@ export interface OwnerPublishReadyInput {
   pageCreated: boolean;
   postCount: number;
   followCount?: number;
+  messageCount?: number;
   publicUpdates: OwnerPublicUpdatesSummary | null;
 }
 
@@ -29,6 +31,7 @@ export function emptyOwnerPublishChanges(): OwnerPublishChanges {
     pageCreated: false,
     postCount: 0,
     followCount: 0,
+    messageCount: 0,
     actions: [],
   };
 }
@@ -66,6 +69,12 @@ export function loadStoredOwnerPublishChanges(
         parsed.followCount > 0
           ? parsed.followCount
           : 0,
+      messageCount:
+        typeof parsed.messageCount === 'number' &&
+        Number.isInteger(parsed.messageCount) &&
+        parsed.messageCount > 0
+          ? parsed.messageCount
+          : 0,
       actions: Array.isArray(parsed.actions) ? parsed.actions.filter(isStoredAction) : [],
     };
   } catch {
@@ -85,6 +94,7 @@ export function saveStoredOwnerPublishChanges(
       pageCreated: changes.pageCreated,
       postCount: Math.max(0, Math.trunc(changes.postCount)),
       followCount: Math.max(0, Math.trunc(changes.followCount)),
+      messageCount: Math.max(0, Math.trunc(changes.messageCount)),
       actions: changes.actions.filter(isStoredAction),
     }),
   );
@@ -105,6 +115,7 @@ export function summarizeOwnerPublishReady(
   input: OwnerPublishReadyInput,
 ): OwnerPublishReadySummary | null {
   const followCount = Math.max(0, Math.trunc(input.followCount ?? 0));
+  const messageCount = Math.max(0, Math.trunc(input.messageCount ?? 0));
 
   if (input.pageCreated) {
     return {
@@ -115,11 +126,11 @@ export function summarizeOwnerPublishReady(
     };
   }
 
-  if (input.postCount === 0 && followCount === 0 && !input.publicUpdates) {
+  if (input.postCount === 0 && followCount === 0 && messageCount === 0 && !input.publicUpdates) {
     return null;
   }
 
-  if (input.postCount === 0 && followCount === 0) {
+  if (input.postCount === 0 && followCount === 0 && messageCount === 0) {
     return input.publicUpdates
       ? {
           title: input.publicUpdates.title,
@@ -130,7 +141,46 @@ export function summarizeOwnerPublishReady(
       : null;
   }
 
-  if (input.postCount === 0 && !input.publicUpdates) {
+  if (!input.publicUpdates) {
+    return summarizePublicSiteUpdates({
+      postCount: input.postCount,
+      followCount,
+      messageCount,
+    });
+  }
+
+  const totalUpdates = input.postCount + input.publicUpdates.count + followCount + messageCount;
+  const updateLabels = [
+    input.postCount > 0 ? postLabel(input.postCount) : null,
+    input.publicUpdates.count > 0 ? publicUpdateLabel(input.publicUpdates.count) : null,
+    followCount > 0 ? followLabel(followCount) : null,
+    messageCount > 0 ? messageLabel(messageCount) : null,
+  ].filter((label): label is string => Boolean(label));
+
+  return {
+    title: `${totalUpdates} updates ready to publish`,
+    detail: `Download your public site to publish your latest ${joinReadableList(updateLabels)}.`,
+    downloadLabel: 'Download public site',
+    downloadTarget: 'public-site',
+  };
+}
+
+function summarizePublicSiteUpdates(input: {
+  postCount: number;
+  followCount: number;
+  messageCount: number;
+}): OwnerPublishReadySummary {
+  if (input.postCount > 0 && input.followCount === 0 && input.messageCount === 0) {
+    return {
+      title:
+        input.postCount === 1 ? 'Post ready to publish' : `${input.postCount} posts ready to publish`,
+      detail: `Download your public site to publish your latest ${postLabel(input.postCount)}.`,
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
+    };
+  }
+
+  if (input.postCount === 0 && input.followCount > 0 && input.messageCount === 0) {
     return {
       title: 'Follow list ready to publish',
       detail: 'Download your public site to publish your updated follows.',
@@ -139,23 +189,26 @@ export function summarizeOwnerPublishReady(
     };
   }
 
-  if (!input.publicUpdates) {
+  if (input.postCount === 0 && input.followCount === 0 && input.messageCount > 0) {
     return {
       title:
-        input.postCount === 1
-          ? 'Post ready to publish'
-          : `${input.postCount} posts ready to publish`,
-      detail: `Download your public site to publish your latest ${postLabel(input.postCount)}.`,
+        input.messageCount === 1
+          ? 'Message ready to publish'
+          : `${input.messageCount} messages ready to publish`,
+      detail:
+        input.messageCount === 1
+          ? 'Download your public site to keep this message in your page inbox.'
+          : 'Download your public site to keep these messages in your page inbox.',
       downloadLabel: 'Download public site',
       downloadTarget: 'public-site',
     };
   }
 
-  const totalUpdates = input.postCount + input.publicUpdates.count + followCount;
+  const totalUpdates = input.postCount + input.followCount + input.messageCount;
   const updateLabels = [
     input.postCount > 0 ? postLabel(input.postCount) : null,
-    input.publicUpdates.count > 0 ? publicUpdateLabel(input.publicUpdates.count) : null,
-    followCount > 0 ? followLabel(followCount) : null,
+    input.followCount > 0 ? followLabel(input.followCount) : null,
+    input.messageCount > 0 ? messageLabel(input.messageCount) : null,
   ].filter((label): label is string => Boolean(label));
 
   return {
@@ -176,6 +229,10 @@ function publicUpdateLabel(count: number): string {
 
 function followLabel(count: number): string {
   return count === 1 ? 'follow change' : 'follow changes';
+}
+
+function messageLabel(count: number): string {
+  return count === 1 ? 'message' : 'messages';
 }
 
 function joinReadableList(items: string[]): string {

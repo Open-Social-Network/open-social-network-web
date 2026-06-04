@@ -830,6 +830,7 @@ function renderOwnerPanel(): string {
     pageCreated: state.pendingPublish.pageCreated,
     postCount: state.pendingPublish.postCount,
     followCount: state.pendingPublish.followCount,
+    messageCount: state.pendingPublish.messageCount,
     publicUpdates: summarizeOwnerPublicUpdates(state.owner, state.pendingPublish.actions),
   });
 
@@ -990,6 +991,7 @@ async function createOwnerFromForm(form: HTMLFormElement): Promise<void> {
       pageCreated: true,
       postCount: 0,
       followCount: 0,
+      messageCount: 0,
       actions: [],
     });
     saveStoredOwnerSession(owner);
@@ -1317,6 +1319,7 @@ async function openOwnerMessageFiles(files: FileList | null): Promise<void> {
     const openedMessages: OwnerInboxMessage[] = [];
     const openedEnvelopes: OpenSocialNetworkDirectMessage[] = [];
     const senderProfiles = currentTimeline().profiles;
+    const envelopeCountBeforeOpen = state.inboxEnvelopes.length;
 
     for (const file of selectedFiles) {
       const message = assertDirectMessageFile(await readJsonFile(file));
@@ -1331,6 +1334,14 @@ async function openOwnerMessageFiles(files: FileList | null): Promise<void> {
     state.inboxMessages = mergeInboxMessages(openedMessages, state.inboxMessages);
     state.inboxEnvelopes = mergeDirectMessageEnvelopes(openedEnvelopes, state.inboxEnvelopes);
     const folderSaveResult = await saveOwnerMessagesToOpenedFolder();
+    const newEnvelopeCount = Math.max(0, state.inboxEnvelopes.length - envelopeCountBeforeOpen);
+
+    if (folderSaveResult !== 'saved' && newEnvelopeCount > 0) {
+      savePendingPublishChanges({
+        ...state.pendingPublish,
+        messageCount: state.pendingPublish.messageCount + newEnvelopeCount,
+      });
+    }
 
     state.inboxError = null;
     if (folderSaveResult !== 'failed') {

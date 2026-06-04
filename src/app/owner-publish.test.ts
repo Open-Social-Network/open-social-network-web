@@ -102,11 +102,46 @@ describe('owner publish reminder', () => {
         pageCreated: false,
         postCount: 0,
         followCount: 1,
+        messageCount: 0,
         publicUpdates: null,
       }),
     ).toEqual({
       title: 'Follow list ready to publish',
       detail: 'Download your public site to publish your updated follows.',
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
+    });
+  });
+
+  it('shows a simple reminder after receiving messages', () => {
+    expect(
+      summarizeOwnerPublishReady({
+        pageCreated: false,
+        postCount: 0,
+        followCount: 0,
+        messageCount: 1,
+        publicUpdates: null,
+      }),
+    ).toEqual({
+      title: 'Message ready to publish',
+      detail: 'Download your public site to keep this message in your page inbox.',
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
+    });
+  });
+
+  it('combines posts, follows, and messages into a public site reminder', () => {
+    expect(
+      summarizeOwnerPublishReady({
+        pageCreated: false,
+        postCount: 1,
+        followCount: 1,
+        messageCount: 1,
+        publicUpdates: null,
+      }),
+    ).toEqual({
+      title: '3 updates ready to publish',
+      detail: 'Download your public site to publish your latest post, follow change, and message.',
       downloadLabel: 'Download public site',
       downloadTarget: 'public-site',
     });
@@ -118,6 +153,7 @@ describe('owner publish reminder', () => {
         pageCreated: false,
         postCount: 0,
         followCount: 1,
+        messageCount: 1,
         publicUpdates: {
           count: 1,
           reactions: 1,
@@ -127,8 +163,9 @@ describe('owner publish reminder', () => {
         },
       }),
     ).toEqual({
-      title: '2 updates ready to publish',
-      detail: 'Download your public site to publish your latest activity update and follow change.',
+      title: '3 updates ready to publish',
+      detail:
+        'Download your public site to publish your latest activity update, follow change, and message.',
       downloadLabel: 'Download public site',
       downloadTarget: 'public-site',
     });
@@ -144,6 +181,7 @@ describe('owner publish reminder', () => {
         pageCreated: false,
         postCount: 1,
         followCount: 1,
+        messageCount: 1,
         actions: [pendingAction],
       },
       storage,
@@ -153,6 +191,7 @@ describe('owner publish reminder', () => {
       pageCreated: false,
       postCount: 1,
       followCount: 1,
+      messageCount: 1,
       actions: [pendingAction],
     });
   });
@@ -166,6 +205,7 @@ describe('owner publish reminder', () => {
         pageCreated: true,
         postCount: 0,
         followCount: 0,
+        messageCount: 0,
         actions: [],
       },
       storage,
@@ -175,6 +215,7 @@ describe('owner publish reminder', () => {
       pageCreated: false,
       postCount: 0,
       followCount: 0,
+      messageCount: 0,
       actions: [],
     });
   });
@@ -188,6 +229,7 @@ describe('owner publish reminder', () => {
         pageCreated: true,
         postCount: 0,
         followCount: 0,
+        messageCount: 0,
         actions: [],
       },
       storage,
@@ -198,6 +240,7 @@ describe('owner publish reminder', () => {
       pageCreated: false,
       postCount: 0,
       followCount: 0,
+      messageCount: 0,
       actions: [],
     });
   });
@@ -211,6 +254,7 @@ describe('owner publish reminder', () => {
         pageCreated: true,
         postCount: 1,
         followCount: 1,
+        messageCount: 0,
         actions: [actionFor('action_1', 'owner@example.test')],
       },
       storage,
@@ -220,12 +264,14 @@ describe('owner publish reminder', () => {
       pageCreated: false,
       postCount: 0,
       followCount: 0,
+      messageCount: 0,
       actions: [],
     });
     expect(loadStoredOwnerPublishChanges('owner@example.test', storage)).toEqual({
       pageCreated: false,
       postCount: 0,
       followCount: 0,
+      messageCount: 0,
       actions: [],
     });
   });
