@@ -16,7 +16,11 @@ import {
 import {
   createOwnerDirectMessage,
   deliverDirectMessage,
-  type PreparedDirectMessage,
+  readOwnerDirectMessage,
+} from './app/owner-messages';
+import type {
+  PreparedDirectMessage,
+  ReadOwnerDirectMessage as OwnerInboxMessage,
 } from './app/owner-messages';
 import {
   clearStoredOwnerSession,
@@ -35,6 +39,7 @@ import { summarizePostActions, type OpenSocialNetworkPostActionSummary } from '.
 import type {
   OpenSocialNetworkAction,
   OpenSocialNetworkActionTarget,
+  OpenSocialNetworkDirectMessage,
   OpenSocialNetworkIdentity,
   OpenSocialNetworkReaction,
 } from './protocol/types';
@@ -66,6 +71,8 @@ interface AppState {
   commentTargetKey: string | null;
   messageTargetKey: string | null;
   messageStatus: MessageStatus | null;
+  inboxMessages: OwnerInboxMessage[];
+  inboxError: string | null;
 }
 
 const appRoot = document.querySelector<HTMLDivElement>('#app');
@@ -88,6 +95,8 @@ const state: AppState = {
   commentTargetKey: null,
   messageTargetKey: null,
   messageStatus: null,
+  inboxMessages: [],
+  inboxError: null,
 };
 
 void boot();
@@ -241,6 +250,11 @@ function bindEvents(): void {
     });
   }
 
+  const ownerMessageInput = app.querySelector<HTMLInputElement>('[data-owner-message-file]');
+  ownerMessageInput?.addEventListener('change', () => {
+    void openOwnerMessageFiles(ownerMessageInput.files);
+  });
+
   app.querySelector<HTMLButtonElement>('[data-action="owner-disconnect"]')?.addEventListener('click', () => {
     clearStoredOwnerSession();
     state.owner = null;
@@ -248,6 +262,8 @@ function bindEvents(): void {
     state.commentTargetKey = null;
     state.messageTargetKey = null;
     state.messageStatus = null;
+    state.inboxMessages = [];
+    state.inboxError = null;
     render();
   });
 
@@ -691,6 +707,7 @@ function renderOwnerPanel(): string {
         <button class="button button-secondary" type="button" data-owner-download="public">Download public site</button>
         <button class="button button-secondary owner-logout-button" type="button" data-action="owner-disconnect" aria-label="Log out of this page">${connected.logoutLabel}</button>
       </div>
+      ${renderOwnerInbox()}
       <p class="owner-session-note">${connected.logoutHelp}</p>
       <section class="publish-anywhere">
         <strong>Publish anywhere</strong>
@@ -706,6 +723,54 @@ function renderOwnerPanel(): string {
   `;
 }
 
+function renderOwnerInbox(): string {
+  return `
+    <section class="owner-inbox" aria-label="Messages">
+      <div class="owner-inbox-header">
+        <div>
+          <strong>Messages</strong>
+          <p>Open encrypted message files. They are read only in this browser.</p>
+        </div>
+        <label class="button button-secondary owner-message-button" for="ownerMessageFile">Open message</label>
+        <input
+          class="sr-only"
+          id="ownerMessageFile"
+          type="file"
+          data-owner-message-file
+          accept="application/json,.json"
+          multiple
+        />
+      </div>
+      ${state.inboxError ? `<p class="message-status message-status-prepared">${escapeHtml(state.inboxError)}</p>` : ''}
+      ${renderOwnerInboxMessages()}
+    </section>
+  `;
+}
+
+function renderOwnerInboxMessages(): string {
+  if (state.inboxMessages.length === 0) {
+    return '<p class="owner-inbox-empty">No messages opened yet.</p>';
+  }
+
+  return `
+    <div class="owner-message-list">
+      ${state.inboxMessages
+        .map(
+          (message) => `
+            <article class="owner-message-row">
+              <header>
+                <strong>${escapeHtml(message.senderName)}</strong>
+                <span>${escapeHtml(formatDate(message.createdAt))}</span>
+              </header>
+              <p>${escapeHtml(message.content)}</p>
+            </article>
+          `,
+        )
+        .join('')}
+    </div>
+  `;
+}
+
 async function createOwnerFromForm(form: HTMLFormElement): Promise<void> {
   try {
     const owner = await createOwnerPage({
@@ -717,6 +782,8 @@ async function createOwnerFromForm(form: HTMLFormElement): Promise<void> {
 
     state.owner = owner;
     state.ownerError = null;
+    state.inboxMessages = [];
+    state.inboxError = null;
     saveStoredOwnerSession(owner);
     render();
   } catch (error) {
@@ -746,6 +813,8 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
 
     state.owner = owner;
     state.ownerError = null;
+    state.inboxMessages = [];
+    state.inboxError = null;
     saveStoredOwnerSession(owner);
     render();
   } catch (error) {
@@ -863,6 +932,51 @@ async function sendDirectMessage(form: HTMLFormElement): Promise<void> {
     render();
   } catch (error) {
     state.ownerError = error instanceof Error ? error.message : 'Could not send this message';
+    render();
+  }
+}
+
+async function openOwnerMessageFiles(files: FileList | null): Promise<void> {
+  if (!state.owner) {
+    state.ownerError = 'Open your page to read messages.';
+    render();
+    return;
+  }
+
+  const selectedFiles = Array.from(files ?? []);
+
+  if (selectedFiles.length === 0) {
+    return;
+  }
+
+  try {
+    const openedMessages: OwnerInboxMessage[] = [];
+    const senderProfiles = currentTimeline().profiles;
+
+    for (const file of selectedFiles) {
+      const message = assertDirectMessageFile(await readJsonFile(file));
+      openedMessages.push(
+        await readOwnerDirectMessage(state.owner, message, {
+          senderProfiles,
+        }),
+      );
+    }
+
+    const messagesById = new Map<string, OwnerInboxMessage>();
+
+    for (const message of [...openedMessages, ...state.inboxMessages]) {
+      messagesById.set(message.id, message);
+    }
+
+    state.inboxMessages = [...messagesById.values()].sort(
+      (left, right) =>
+        new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    );
+    state.inboxError = null;
+    state.ownerError = null;
+    render();
+  } catch (error) {
+    state.inboxError = error instanceof Error ? error.message : 'Could not open this message';
     render();
   }
 }
@@ -1036,6 +1150,34 @@ async function readJsonFile(file: File): Promise<unknown> {
   return JSON.parse(await file.text());
 }
 
+function assertDirectMessageFile(value: unknown): OpenSocialNetworkDirectMessage {
+  if (!isRecord(value)) {
+    throw new Error('Choose an encrypted message file');
+  }
+
+  const message = value as Partial<OpenSocialNetworkDirectMessage>;
+
+  if (
+    message.protocol !== 'open-social-network' ||
+    message.version !== '0.1' ||
+    message.kind !== 'direct-message' ||
+    typeof message.id !== 'string' ||
+    typeof message.sender !== 'string' ||
+    typeof message.recipient !== 'string' ||
+    typeof message.createdAt !== 'string' ||
+    message.encryption?.alg !== 'ECDH-P256-A256GCM' ||
+    typeof message.encryption.iv !== 'string' ||
+    typeof message.encryption.ciphertext !== 'string' ||
+    !isRecord(message.encryption.epk) ||
+    message.signature?.alg !== 'ES256' ||
+    typeof message.signature.value !== 'string'
+  ) {
+    throw new Error('Choose an encrypted message file');
+  }
+
+  return message as OpenSocialNetworkDirectMessage;
+}
+
 function ownerProjectFile(files: File[], path: string): File {
   const file = files.find((candidate) => filePath(candidate).endsWith(path));
 
@@ -1052,6 +1194,10 @@ function optionalOwnerProjectFile(files: File[], path: string): File | null {
 
 function filePath(file: File): string {
   return file.webkitRelativePath || file.name;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function renderSkeletonPosts(): string {

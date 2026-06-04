@@ -19,7 +19,8 @@ It keeps the main flow simple:
 1. read signed posts from people you follow
 2. create your own page
 3. write posts
-4. download your site and host it anywhere
+4. open encrypted messages locally
+5. download your site and host it anywhere
 
 There is no account system in this MVP. Follows are stored locally in your browser.
 
@@ -92,6 +93,7 @@ The aggregator is intentionally neutral. It reads the network, but it does not o
 - Signs new posts in the browser and exports an updated `feed.json`.
 - Creates encrypted direct-message envelopes for profiles that advertise a message inbox.
 - Attempts automatic message delivery to compatible inbox endpoints and falls back to a downloadable encrypted message file on static-only hosts.
+- Opens encrypted message files locally when the current page owns the matching message key and the sender profile is loaded.
 - Exports public files that can be hosted anywhere static files are supported.
 
 ## What This MVP Does Not Do Yet
@@ -144,7 +146,7 @@ The profile must expose:
 
 ### Log In With Your Page
 
-If you created a page with the CLI, select `Log in with page folder` and choose the generated project folder.
+If you created a page with the CLI, select `Open my page folder` and choose the generated project folder.
 
 The folder must contain:
 
@@ -152,9 +154,16 @@ The folder must contain:
 public/profile.json
 public/feed.json
 private/identity.private.jwk.json
+private/messages.private.jwk.json
 ```
 
 Open Social Network Web validates that the private key owns the profile. After that, it remembers the session in local browser storage, shows your page as logged in, lets you sign a new post, and lets you download the updated `feed.json`.
+
+### Read Messages
+
+When your page is open, use `Messages` -> `Open message` to choose encrypted message files.
+
+Messages are decrypted only in this browser. The app verifies that the message was sent to your page and that the sender profile is loaded before showing the text.
 
 ### Host It Anywhere
 
@@ -171,9 +180,9 @@ Download the public site and upload it to any static host:
 
 Only publish the public files. Never publish the private folder.
 
-### Read Trust Diagnostics
+### Read Verification Diagnostics
 
-The `Trust` panel tells you whether posts were rejected or feeds failed to load. Rejected posts are not rendered in the timeline.
+The `Verification` panel tells you whether posts were rejected or feeds failed to load. Rejected posts are not rendered in the timeline.
 
 ## Run Locally
 

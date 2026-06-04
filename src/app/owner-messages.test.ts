@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { importMessagePrivateKeyJwk } from '../protocol/keys';
 import { decryptDirectMessage, verifyDirectMessage } from '../protocol/direct-messages';
 import { createOwnerPage } from './owner-session';
-import { createOwnerDirectMessage, deliverDirectMessage } from './owner-messages';
+import { createOwnerDirectMessage, deliverDirectMessage, readOwnerDirectMessage } from './owner-messages';
 
 describe('owner direct messages', () => {
   it('creates an encrypted signed message for a recipient inbox', async () => {
@@ -130,5 +130,93 @@ describe('owner direct messages', () => {
       status: 'prepared',
       inboxUrl: prepared.inboxUrl,
     });
+  });
+
+  it('opens an encrypted message sent to the owner page', async () => {
+    const sender = await createOwnerPage({
+      name: 'Sender',
+      handle: 'sender@example.test',
+      bio: '',
+      firstPost: 'Sender page',
+    });
+    const recipient = await createOwnerPage({
+      name: 'Recipient',
+      handle: 'recipient@example.test',
+      bio: '',
+      firstPost: 'Recipient page',
+    });
+    const prepared = await createOwnerDirectMessage(sender, recipient.profile, 'Private hello', {
+      id: 'message_1',
+      createdAt: '2026-06-04T12:00:00.000Z',
+    });
+
+    await expect(
+      readOwnerDirectMessage(recipient, prepared.message, {
+        senderProfiles: [sender.profile],
+      }),
+    ).resolves.toEqual({
+      id: 'message_1',
+      sender: 'sender@example.test',
+      senderName: 'Sender',
+      recipient: 'recipient@example.test',
+      createdAt: '2026-06-04T12:00:00.000Z',
+      content: 'Private hello',
+    });
+  });
+
+  it('rejects encrypted messages when the sender profile is not loaded', async () => {
+    const sender = await createOwnerPage({
+      name: 'Sender',
+      handle: 'sender@example.test',
+      bio: '',
+      firstPost: 'Sender page',
+    });
+    const recipient = await createOwnerPage({
+      name: 'Recipient',
+      handle: 'recipient@example.test',
+      bio: '',
+      firstPost: 'Recipient page',
+    });
+    const prepared = await createOwnerDirectMessage(sender, recipient.profile, 'Private hello', {
+      id: 'message_1',
+      createdAt: '2026-06-04T12:00:00.000Z',
+    });
+
+    await expect(
+      readOwnerDirectMessage(recipient, prepared.message, {
+        senderProfiles: [],
+      }),
+    ).rejects.toThrow('Follow or load the sender profile before opening this message');
+  });
+
+  it('rejects encrypted messages sent to another page', async () => {
+    const sender = await createOwnerPage({
+      name: 'Sender',
+      handle: 'sender@example.test',
+      bio: '',
+      firstPost: 'Sender page',
+    });
+    const recipient = await createOwnerPage({
+      name: 'Recipient',
+      handle: 'recipient@example.test',
+      bio: '',
+      firstPost: 'Recipient page',
+    });
+    const otherRecipient = await createOwnerPage({
+      name: 'Other Recipient',
+      handle: 'other@example.test',
+      bio: '',
+      firstPost: 'Other page',
+    });
+    const prepared = await createOwnerDirectMessage(sender, recipient.profile, 'Private hello', {
+      id: 'message_1',
+      createdAt: '2026-06-04T12:00:00.000Z',
+    });
+
+    await expect(
+      readOwnerDirectMessage(otherRecipient, prepared.message, {
+        senderProfiles: [sender.profile],
+      }),
+    ).rejects.toThrow('This message was not sent to your page');
   });
 });

@@ -1,5 +1,9 @@
-import { encryptDirectMessage } from '../protocol/direct-messages';
-import { importMessagePublicKeyJwk, importPrivateKeyJwk } from '../protocol/keys';
+import { decryptDirectMessage, encryptDirectMessage } from '../protocol/direct-messages';
+import {
+  importMessagePrivateKeyJwk,
+  importMessagePublicKeyJwk,
+  importPrivateKeyJwk,
+} from '../protocol/keys';
 import type { OpenSocialNetworkDirectMessage, OpenSocialNetworkIdentity } from '../protocol/types';
 import type { OwnerSession } from './owner-session';
 
@@ -17,6 +21,19 @@ export interface PreparedDirectMessage {
 
 export interface DirectMessageDeliveryOptions {
   fetcher?: typeof fetch;
+}
+
+export interface ReadOwnerDirectMessageOptions {
+  senderProfiles: OpenSocialNetworkIdentity[];
+}
+
+export interface ReadOwnerDirectMessage {
+  id: string;
+  sender: string;
+  senderName: string;
+  recipient: string;
+  createdAt: string;
+  content: string;
 }
 
 export type DirectMessageDeliveryResult =
@@ -106,6 +123,38 @@ export async function deliverDirectMessage(
       reason: error instanceof Error ? error.message : 'Inbox did not accept the message',
     };
   }
+}
+
+export async function readOwnerDirectMessage(
+  session: OwnerSession,
+  message: OpenSocialNetworkDirectMessage,
+  options: ReadOwnerDirectMessageOptions,
+): Promise<ReadOwnerDirectMessage> {
+  if (message.recipient !== session.profile.handle) {
+    throw new Error('This message was not sent to your page');
+  }
+
+  if (!session.messagePrivateKeyJwk) {
+    throw new Error('Open your page folder with private/messages.private.jwk.json to read messages');
+  }
+
+  const senderProfile = options.senderProfiles.find((profile) => profile.handle === message.sender);
+
+  if (!senderProfile) {
+    throw new Error('Follow or load the sender profile before opening this message');
+  }
+
+  const recipientMessagePrivateKey = await importMessagePrivateKeyJwk(session.messagePrivateKeyJwk);
+  const content = await decryptDirectMessage(message, recipientMessagePrivateKey, senderProfile);
+
+  return {
+    id: message.id,
+    sender: message.sender,
+    senderName: senderProfile.name,
+    recipient: message.recipient,
+    createdAt: message.createdAt,
+    content,
+  };
 }
 
 function resolveRecipientInboxUrl(

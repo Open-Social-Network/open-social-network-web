@@ -339,12 +339,14 @@ button {
 }
 
 .publish-anywhere,
+.owner-inbox,
 .technical-details {
   color: var(--muted);
   font-size: 0.82rem;
   line-height: 1.45;
 }
 
+.owner-inbox,
 .publish-anywhere {
   display: grid;
   gap: 4px;
@@ -354,15 +356,74 @@ button {
   background: rgba(17, 24, 39, 0.58);
 }
 
+.owner-inbox {
+  gap: 10px;
+}
+
+.owner-inbox-header {
+  display: grid;
+  gap: 10px;
+}
+
+.owner-inbox-header strong,
 .publish-anywhere strong,
 .technical-details summary {
   color: var(--ink);
   font-weight: 800;
 }
 
+.owner-inbox-header p,
 .publish-anywhere p,
 .technical-details p {
   margin: 0;
+}
+
+.owner-message-button {
+  width: 100%;
+}
+
+.owner-inbox-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.owner-message-list {
+  display: grid;
+  gap: 8px;
+}
+
+.owner-message-row {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid rgba(77, 124, 255, 0.22);
+  border-radius: 8px;
+  background: rgba(11, 17, 32, 0.72);
+}
+
+.owner-message-row header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.owner-message-row strong {
+  color: var(--accent-strong);
+  overflow-wrap: anywhere;
+}
+
+.owner-message-row span {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.owner-message-row p {
+  margin: 0;
+  color: #dce7f7;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .technical-details {
