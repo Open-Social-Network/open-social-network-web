@@ -248,7 +248,7 @@ Open Social Network Web is early alpha. The current priority is correctness, cla
 
 The long-term goal is not to create another social platform. The goal is to make platforms optional.
 
-## Relationship To Existing Decentralized Social Platforms
+## How Open Social Network Differs From Existing Decentralized Social Platforms
 
 Open Social Network does not claim that decentralized social media starts here.
 
