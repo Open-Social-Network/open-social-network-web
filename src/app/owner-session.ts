@@ -90,6 +90,7 @@ export async function createOwnerPage(options: CreateOwnerPageOptions): Promise<
     endpoints: {
       profile: '/profile.json',
       feed: '/feed.json',
+      actions: '/opensocial/actions/inbox/index.json',
       messages: '/opensocial/messages/inbox/index.json',
     },
   };

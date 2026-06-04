@@ -8,6 +8,11 @@ import {
 import { loadDirectory } from './app/directory';
 import { messageAccessState, type MessageAccessState } from './app/message-access';
 import {
+  deliverOwnerAction,
+  needsManualActionPublish,
+  prepareOwnerActionDelivery,
+} from './app/owner-action-delivery';
+import {
   loadStoredFollows,
   normalizeProfileUrl,
   saveStoredFollows,
@@ -1005,12 +1010,15 @@ async function reactToPost(button: HTMLButtonElement): Promise<void> {
     const nextReaction: OpenSocialNetworkReaction =
       currentReaction === requestedReaction ? 'none' : requestedReaction;
     const signedAction = await signOwnerReaction(state.owner, target, nextReaction);
+    const manualPublishNeeded = await shouldManuallyPublishOwnerAction(signedAction, target);
 
     state.actions = [signedAction, ...state.actions];
-    savePendingPublishChanges({
-      ...state.pendingPublish,
-      actions: [signedAction, ...state.pendingPublish.actions],
-    });
+    if (manualPublishNeeded) {
+      savePendingPublishChanges({
+        ...state.pendingPublish,
+        actions: [signedAction, ...state.pendingPublish.actions],
+      });
+    }
     state.ownerError = null;
     saveStoredOwnerActions(state.actions);
     render();
@@ -1029,13 +1037,17 @@ async function commentOnPost(form: HTMLFormElement): Promise<void> {
   try {
     const targetKey = formValue(form, 'targetKey');
     const content = formValue(form, 'content');
-    const signedAction = await signOwnerComment(state.owner, decodeActionTarget(targetKey), content);
+    const target = decodeActionTarget(targetKey);
+    const signedAction = await signOwnerComment(state.owner, target, content);
+    const manualPublishNeeded = await shouldManuallyPublishOwnerAction(signedAction, target);
 
     state.actions = [signedAction, ...state.actions];
-    savePendingPublishChanges({
-      ...state.pendingPublish,
-      actions: [signedAction, ...state.pendingPublish.actions],
-    });
+    if (manualPublishNeeded) {
+      savePendingPublishChanges({
+        ...state.pendingPublish,
+        actions: [signedAction, ...state.pendingPublish.actions],
+      });
+    }
     state.commentTargetKey = null;
     state.messageTargetKey = null;
     state.ownerError = null;
@@ -1154,6 +1166,28 @@ function savePendingPublishChanges(changes: OwnerPublishChanges): void {
 
   if (state.owner) {
     saveStoredOwnerPublishChanges(state.owner.profile.handle, changes);
+  }
+}
+
+async function shouldManuallyPublishOwnerAction(
+  action: OpenSocialNetworkAction,
+  target: OpenSocialNetworkActionTarget,
+): Promise<boolean> {
+  const recipient = currentTimeline().profiles.find((profile) => profile.handle === target.author);
+
+  if (!recipient) {
+    return true;
+  }
+
+  try {
+    const prepared = prepareOwnerActionDelivery(action, recipient, {
+      profileBaseUrl: new URL(recipient.endpoints.profile, window.location.href).toString(),
+    });
+    const delivery = await deliverOwnerAction(prepared);
+
+    return needsManualActionPublish(delivery);
+  } catch {
+    return true;
   }
 }
 

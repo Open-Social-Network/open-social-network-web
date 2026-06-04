@@ -30,6 +30,7 @@ export interface OpenSocialNetworkIdentity {
     profile: string;
     feed: string;
     avatar?: string;
+    actions?: string;
     messages?: string;
   };
 }
