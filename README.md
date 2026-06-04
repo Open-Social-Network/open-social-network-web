@@ -228,39 +228,43 @@ The long-term goal is not to create another social platform. The goal is to make
 
 ## How Open Social Network Differs From Existing Decentralized Social Platforms
 
-Open Social Network is not based on the idea that decentralized social media is new. Projects such as Mastodon, ActivityPub, Nostr, Bluesky, Diaspora, Matrix, and the broader fediverse have already made important contributions to open social systems, decentralized identity, federation, and protocol-based communication.
+Open Social Network does not start from the claim that decentralized social media is new.
 
-This project exists because we believe there is still room to explore a different direction.
+Mastodon, ActivityPub, Nostr, Bluesky, Diaspora, Matrix, and the broader fediverse have already proven that open social systems matter. They have advanced federation, decentralized identity, relays, public protocols, community governance, and user choice.
 
-The goal is not to dismiss previous work. The goal is to learn from it, keep the core smaller, and make social identity feel more like open internet infrastructure than an account inside a platform.
+Open Social Network exists because we think some problems still deserve a simpler protocol-first experiment: ownership that starts at the user's page, an experience that feels familiar to nontechnical people, and social records that remain portable across clients, hosts, and aggregators.
 
-### Where Existing Systems Still Struggle
+The goal is to learn from prior work, not to erase it.
 
-Many decentralized systems still depend heavily on servers, relays, instances, or providers. Even when the network is federated, identity can remain tied to infrastructure that users do not fully control. Open Social Network aims for profiles that feel closer to a website, a domain, or an email identity than an account rented from a server.
+### The Different Bet
 
-Many systems also ask mainstream users to understand federation, relays, instances, self-hosting, keys, or protocol internals. Most people simply want a profile, posts, followers, discovery, portability, and a familiar way to interact. Open Social Network treats decentralization as an infrastructure property, not as a burden users should have to understand before they can participate.
+Open Social Network treats a profile as a sovereign web object. It should feel closer to a website, a domain, or an email identity than to an account rented from one instance, relay, provider, or app.
 
-Creator ownership is another unresolved problem. Visibility, reputation, ranking, recommendations, and social graphs can still become dependent on a specific platform, app, host, or algorithm. Open Social Network is designed around portable identity, portable followers, portable reputation, and replaceable aggregators.
+The protocol keeps the first layer small: profiles, feeds, signed posts, signed public actions, and encrypted message envelopes. Everything else - ranking, moderation, search, media hosting, notifications, recommendation systems, and managed hosting - can be built as replaceable layers around that foundation.
 
-Finally, decentralized social systems can become architecturally complex. Federation rules, relay ecosystems, moderation boundaries, incompatible implementations, and difficult onboarding can make the user experience feel fragmented. Open Social Network intentionally starts with a small protocol surface: identity, profiles, feeds, follows, signed posts, and portable signed actions.
+### Problems We Are Designing Around
 
-### Core Direction
+Identity should not be trapped in infrastructure users do not control. A person should be able to move hosts, change apps, use mirrors, or self-host without restarting their social existence.
 
-Open Social Network is built around a few principles:
+Decentralization should not become homework for everyday users. People should not need to understand federation, relays, instances, key formats, or static hosting before they can create a page and post.
 
-- Profiles belong to their creators, not to a platform.
-- Aggregators display the network; they do not own the network.
-- Followers and audiences should move with creators across apps, hosts, and interfaces.
-- The protocol itself should not contain a central authority that can remove an identity globally, while hosts, apps, and aggregators remain free to moderate what they store, index, or display.
-- Algorithms should compete. No single company should control visibility for the whole network.
-- Simplicity matters. If open social identity requires technical expertise, it cannot become normal social infrastructure.
+Creators should keep their audience and reputation. Followers, visibility, comments, reactions, and trust signals should be portable protocol data, not private database rows that disappear when a user changes clients.
 
-### How We Hope To Move The Space Forward
+Aggregators should be replaceable. They should read, verify, rank, moderate, and display the network, but they should not own the identities or the graph. Different aggregators and algorithms should be able to compete.
 
-Open Social Network starts with the smallest useful foundation and grows through optional, interoperable layers. Users should be able to create a page, write posts, react, comment, follow, move hosts, change aggregators, or self-host without losing identity or audience.
+The protocol should stay small enough to inspect. Open Social Network should feel more like a set of web conventions for social identity than a distributed operating system.
 
-Not every user needs to self-host. A healthy Open Social Network ecosystem should support hosted providers, local folders, personal domains, managed hosting, mirrors, and self-managed infrastructure. The experience should feel familiar to users while preserving protocol-level portability underneath.
+### What This Means In Practice
 
-The long-term goal is not to create a dominant social media company. The goal is to define open social infrastructure that anyone can implement, inspect, host, aggregate, or replace.
+- A page can be hosted anywhere static files work.
+- The public folder is safe to publish; private keys are never published.
+- Posts and public actions are signed so any client can verify them.
+- Direct messages are stored as encrypted envelopes so hosts can carry them without reading them.
+- Official tools are reference implementations, not the network itself.
+- Moderation remains possible at the host, app, aggregator, community, and user layer without creating one global protocol owner.
 
-Open Social Network does not claim to have solved decentralized social media. Moderation, spam, discovery, scaling, onboarding, incentives, and safety remain difficult problems. This project is an attempt to explore a simpler, more user-centric, and more sovereign direction for social identity on the internet.
+### Final Note
+
+Open Social Network does not claim to have solved decentralized social media. Moderation, spam, abuse handling, discovery, scaling, onboarding, incentives, and safety are hard problems.
+
+This project is an attempt to explore a smaller and more user-centered path: social identity as open internet infrastructure, where platforms become interfaces and users keep the underlying identity, audience, and content.
