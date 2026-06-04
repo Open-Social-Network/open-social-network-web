@@ -167,6 +167,8 @@ describe('owner session', () => {
     expect(publicFiles['public/page.js']).toContain('mergeActionsById');
     expect(publicFiles['public/page-social.js']).toContain('export function summarizePostActions');
     expect(publicFiles['public/page-social.js']).toContain('export function renderProfileFollows');
+    expect(publicFiles['public/page-social.js']).toContain('aria-label="Public activity"');
+    expect(publicFiles['public/page-social.js']).toContain('<strong>Activity</strong>');
     expect(publicFiles['public/page-social.js']).toContain('aria-label="Likes"');
     expect(publicFiles['public/page-social.js']).toContain('class="social-icon social-icon-like"');
     expect(publicFiles['public/page-social.js']).toContain('formatSocialDate(comment.createdAt)');
@@ -178,6 +180,7 @@ describe('owner session', () => {
     expect(publicFiles['public/index.html']).toContain('data-follows');
     expect(publicFiles['public/styles.css']).toContain('.profile-avatar');
     expect(publicFiles['public/styles.css']).toContain('.follow-card');
+    expect(publicFiles['public/styles.css']).toContain('.post-social-summary > strong');
     expect(publicFiles['public/styles.css']).toContain('.verified-badge');
     expect(publicFiles['public/styles.css']).toContain('.profile-website[hidden]');
     expect(publicFiles['public/styles.css']).toContain('.post-social-summary');

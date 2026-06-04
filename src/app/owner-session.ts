@@ -832,7 +832,8 @@ export function renderPostSocialSummary(summary) {
       : '';
 
   return \`
-    <section class="post-social-summary" aria-label="Public reactions">
+    <section class="post-social-summary" aria-label="Public activity">
+      <strong>Activity</strong>
       <span aria-label="Likes"><span class="social-icon social-icon-like">\${likeIcon()}</span>\${formatCount(summary.likes, 'like')}</span>
       <span aria-label="Dislikes"><span class="social-icon social-icon-dislike">\${dislikeIcon()}</span>\${formatCount(summary.dislikes, 'dislike')}</span>
       <span aria-label="Comments"><span class="social-icon social-icon-comment">\${commentIcon()}</span>\${formatCount(summary.comments.length, 'comment')}</span>
@@ -1065,7 +1066,8 @@ h1 { margin-top: 8px; font-size: clamp(2rem, 7vw, 4rem); line-height: 1; }
 .post-author-avatar { width: 40px; height: 40px; font-size: 0.84rem; }
 .post-verified { margin-left: auto; }
 .post-content { margin-top: 14px; color: #dce7f7; font-size: 1.05rem; line-height: 1.58; }
-.post-social-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.post-social-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+.post-social-summary > strong { margin-right: 2px; color: var(--ink); font-size: 0.82rem; }
 .post-social-summary > span {
   display: inline-flex;
   align-items: center;
