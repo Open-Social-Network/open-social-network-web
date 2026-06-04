@@ -35,6 +35,14 @@ import {
   readOwnerDirectMessage,
 } from './app/owner-messages';
 import {
+  ownerProjectWriterFromDirectoryHandle,
+  readOwnerProjectJsonFromDirectoryHandle,
+  saveOwnerActionsToProjectFolder,
+  saveOwnerFeedToProjectFolder,
+  type BrowserDirectoryHandle,
+  type WritableOwnerProject,
+} from './app/owner-folder-writer';
+import {
   clearStoredOwnerPublishChanges,
   emptyOwnerPublishChanges,
   loadStoredOwnerPublishChanges,
@@ -94,11 +102,14 @@ type MessageStatus =
       downloadName: string;
     };
 
+type OwnerFolderSaveResult = 'saved' | 'unavailable' | 'failed';
+
 interface AppState {
   directoryProfiles: string[];
   follows: string[];
   timeline: TimelineResult | null;
   owner: OwnerSession | null;
+  ownerProjectWriter: WritableOwnerProject | null;
   actions: OpenSocialNetworkAction[];
   pendingPublish: OwnerPublishChanges;
   loading: boolean;
@@ -125,6 +136,7 @@ const state: AppState = {
   follows: [],
   timeline: null,
   owner: null,
+  ownerProjectWriter: null,
   actions: [],
   pendingPublish: emptyOwnerPublishChanges(),
   loading: true,
@@ -282,6 +294,13 @@ function bindEvents(): void {
     void connectOwnerFromFolder(ownerFolderInput.files);
   });
 
+  app.querySelector<HTMLButtonElement>('[data-action="open-owner-directory"]')?.addEventListener(
+    'click',
+    () => {
+      void connectOwnerFromDirectoryPicker();
+    },
+  );
+
   app.querySelector<HTMLFormElement>('[data-form="owner-create"]')?.addEventListener('submit', (event) => {
     event.preventDefault();
     void createOwnerFromForm(event.currentTarget as HTMLFormElement);
@@ -313,6 +332,7 @@ function bindEvents(): void {
   app.querySelector<HTMLButtonElement>('[data-action="owner-disconnect"]')?.addEventListener('click', () => {
     clearStoredOwnerSession();
     state.owner = null;
+    state.ownerProjectWriter = null;
     state.ownerError = null;
     state.commentTargetKey = null;
     state.messageTargetKey = null;
@@ -719,15 +739,7 @@ function renderOwnerPanel(): string {
             </ol>
             <p>${disconnected.openExistingPrivateHelp}</p>
           </div>
-          <label class="button button-primary owner-folder-button" for="ownerFolder" tabindex="0" data-owner-folder-button>${disconnected.openExistingLabel}</label>
-          <input
-            class="sr-only"
-            id="ownerFolder"
-            type="file"
-            data-owner-folder
-            webkitdirectory
-            multiple
-          />
+          ${renderOwnerFolderPicker(disconnected.openExistingLabel)}
         </section>
         <div class="owner-create-heading">
           <strong>New here?</strong>
@@ -770,6 +782,7 @@ function renderOwnerPanel(): string {
         </div>
       </div>
       ${state.ownerError ? `<p class="app-error">${escapeHtml(state.ownerError)}</p>` : ''}
+      ${state.ownerNotice ? `<p class="owner-notice">${escapeHtml(state.ownerNotice)}</p>` : ''}
       <p class="owner-warning">This file proves this page is yours. Back it up.</p>
       <div class="owner-identity">
         ${renderAvatar(state.owner.profile.name, avatarUrl, 'profile-picture')}
@@ -803,6 +816,30 @@ function renderOwnerPanel(): string {
       </details>
     </section>
   `;
+}
+
+function renderOwnerFolderPicker(label: string): string {
+  if (supportsOwnerDirectoryPicker()) {
+    return `
+      <button class="button button-primary owner-folder-button" type="button" data-action="open-owner-directory" data-owner-folder-button>${escapeHtml(label)}</button>
+    `;
+  }
+
+  return `
+    <label class="button button-primary owner-folder-button" for="ownerFolder" tabindex="0" data-owner-folder-button>${escapeHtml(label)}</label>
+    <input
+      class="sr-only"
+      id="ownerFolder"
+      type="file"
+      data-owner-folder
+      webkitdirectory
+      multiple
+    />
+  `;
+}
+
+function supportsOwnerDirectoryPicker(): boolean {
+  return typeof ownerDirectoryPicker() === 'function';
 }
 
 function renderFloatingComposeButton(): string {
@@ -882,6 +919,7 @@ async function createOwnerFromForm(form: HTMLFormElement): Promise<void> {
     });
 
     state.owner = owner;
+    state.ownerProjectWriter = null;
     state.ownerError = null;
     state.ownerNotice = null;
     state.inboxMessages = [];
@@ -926,9 +964,74 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
       : [];
 
     state.owner = owner;
+    state.ownerProjectWriter = null;
     state.actions = mergeActionsById(importedActions, state.actions);
     state.ownerError = null;
-    state.ownerNotice = null;
+    state.ownerNotice = 'Opened in this browser. Download the public site when you want to publish changes.';
+    state.inboxMessages = [];
+    state.inboxError = null;
+    state.pendingPublish = emptyOwnerPublishChanges();
+    clearStoredOwnerPublishChanges();
+    saveStoredOwnerSession(owner);
+    saveStoredOwnerActions(state.actions);
+    render();
+  } catch (error) {
+    state.ownerError = error instanceof Error ? error.message : 'Could not log in with this folder';
+    render();
+  }
+}
+
+async function connectOwnerFromDirectoryPicker(): Promise<void> {
+  try {
+    const picker = ownerDirectoryPicker();
+
+    if (!picker) {
+      throw new Error('This browser can open the page folder, but cannot save changes to it.');
+    }
+
+    await connectOwnerFromDirectoryHandle(await picker());
+  } catch (error) {
+    state.ownerError = error instanceof Error ? error.message : 'Could not open this page folder';
+    render();
+  }
+}
+
+async function connectOwnerFromDirectoryHandle(directoryHandle: BrowserDirectoryHandle): Promise<void> {
+  try {
+    const messagePrivateKeyJson = await optionalOwnerDirectoryJson(
+      directoryHandle,
+      'private/messages.private.jwk.json',
+    );
+    const actionLogJson = await optionalOwnerDirectoryJson(
+      directoryHandle,
+      'public/opensocial/actions/index.json',
+    );
+    const owner = await connectOwnerPage({
+      profile: (await readOwnerProjectJsonFromDirectoryHandle(
+        directoryHandle,
+        'public/profile.json',
+      )) as OwnerSession['profile'],
+      feed: (await readOwnerProjectJsonFromDirectoryHandle(
+        directoryHandle,
+        'public/feed.json',
+      )) as OwnerSession['feed'],
+      privateKeyJwk: (await readOwnerProjectJsonFromDirectoryHandle(
+        directoryHandle,
+        'private/identity.private.jwk.json',
+      )) as JsonWebKey,
+      messagePrivateKeyJwk: messagePrivateKeyJson
+        ? (messagePrivateKeyJson as JsonWebKey)
+        : undefined,
+    });
+    const importedActions = actionLogJson
+      ? await loadOwnerActionsFromActionLog(owner, actionLogJson)
+      : [];
+
+    state.owner = owner;
+    state.ownerProjectWriter = ownerProjectWriterFromDirectoryHandle(directoryHandle);
+    state.actions = mergeActionsById(importedActions, state.actions);
+    state.ownerError = null;
+    state.ownerNotice = 'Opened your page folder. New posts and public actions save there automatically.';
     state.inboxMessages = [];
     state.inboxError = null;
     state.pendingPublish = emptyOwnerPublishChanges();
@@ -950,12 +1053,20 @@ async function publishOwnerPost(form: HTMLFormElement): Promise<void> {
   try {
     const content = (form.elements.namedItem('content') as HTMLTextAreaElement | null)?.value ?? '';
     state.owner = await signOwnerPost(state.owner, content);
-    state.ownerError = null;
-    state.ownerNotice = null;
-    savePendingPublishChanges({
-      ...state.pendingPublish,
-      postCount: state.pendingPublish.postCount + 1,
-    });
+    const folderSaveResult = await saveOwnerFeedToOpenedFolder();
+
+    if (folderSaveResult !== 'saved') {
+      savePendingPublishChanges({
+        ...state.pendingPublish,
+        postCount: state.pendingPublish.postCount + 1,
+      });
+    }
+
+    if (folderSaveResult !== 'failed') {
+      state.ownerError = null;
+      state.ownerNotice = folderSaveResult === 'saved' ? 'Saved to your page folder.' : null;
+    }
+
     saveStoredOwnerSession(state.owner);
     render();
   } catch (error) {
@@ -988,14 +1099,20 @@ async function reactToPost(button: HTMLButtonElement): Promise<void> {
     const manualPublishNeeded = await shouldManuallyPublishOwnerAction(signedAction, target);
 
     state.actions = [signedAction, ...state.actions];
-    if (manualPublishNeeded) {
+    const folderSaveResult = await saveOwnerActionsToOpenedFolder();
+
+    if (folderSaveResult !== 'saved' && manualPublishNeeded) {
       savePendingPublishChanges({
         ...state.pendingPublish,
         actions: [signedAction, ...state.pendingPublish.actions],
       });
     }
-    state.ownerError = null;
-    state.ownerNotice = null;
+
+    if (folderSaveResult !== 'failed') {
+      state.ownerError = null;
+      state.ownerNotice = folderSaveResult === 'saved' ? 'Saved to your page folder.' : null;
+    }
+
     saveStoredOwnerActions(state.actions);
     render();
   } catch (error) {
@@ -1018,7 +1135,9 @@ async function commentOnPost(form: HTMLFormElement): Promise<void> {
     const manualPublishNeeded = await shouldManuallyPublishOwnerAction(signedAction, target);
 
     state.actions = [signedAction, ...state.actions];
-    if (manualPublishNeeded) {
+    const folderSaveResult = await saveOwnerActionsToOpenedFolder();
+
+    if (folderSaveResult !== 'saved' && manualPublishNeeded) {
       savePendingPublishChanges({
         ...state.pendingPublish,
         actions: [signedAction, ...state.pendingPublish.actions],
@@ -1026,8 +1145,12 @@ async function commentOnPost(form: HTMLFormElement): Promise<void> {
     }
     state.commentTargetKey = null;
     state.messageTargetKey = null;
-    state.ownerError = null;
-    state.ownerNotice = null;
+
+    if (folderSaveResult !== 'failed') {
+      state.ownerError = null;
+      state.ownerNotice = folderSaveResult === 'saved' ? 'Saved to your page folder.' : null;
+    }
+
     saveStoredOwnerActions(state.actions);
     render();
   } catch (error) {
@@ -1154,6 +1277,39 @@ function savePendingPublishChanges(changes: OwnerPublishChanges): void {
   }
 }
 
+async function saveOwnerFeedToOpenedFolder(): Promise<OwnerFolderSaveResult> {
+  if (!state.owner || !state.ownerProjectWriter) {
+    return 'unavailable';
+  }
+
+  try {
+    await saveOwnerFeedToProjectFolder(state.ownerProjectWriter, state.owner);
+    return 'saved';
+  } catch {
+    state.ownerProjectWriter = null;
+    state.ownerError =
+      'Could not save to your page folder. Download the public site to keep this change.';
+    return 'failed';
+  }
+}
+
+async function saveOwnerActionsToOpenedFolder(): Promise<OwnerFolderSaveResult> {
+  if (!state.owner || !state.ownerProjectWriter) {
+    return 'unavailable';
+  }
+
+  try {
+    const ownerActions = state.actions.filter((action) => action.actor === state.owner?.profile.handle);
+    await saveOwnerActionsToProjectFolder(state.ownerProjectWriter, state.owner, ownerActions);
+    return 'saved';
+  } catch {
+    state.ownerProjectWriter = null;
+    state.ownerError =
+      'Could not save to your page folder. Download the public updates to keep this action.';
+    return 'failed';
+  }
+}
+
 async function shouldManuallyPublishOwnerAction(
   action: OpenSocialNetworkAction,
   target: OpenSocialNetworkActionTarget,
@@ -1182,6 +1338,25 @@ function showSignedOutSocialPrompt(action: SignedOutSocialAction): void {
   state.messageTargetKey = null;
   render();
   focusMyPageAccess(app);
+}
+
+async function optionalOwnerDirectoryJson(
+  directoryHandle: BrowserDirectoryHandle,
+  path: string,
+): Promise<unknown | undefined> {
+  try {
+    return await readOwnerProjectJsonFromDirectoryHandle(directoryHandle, path);
+  } catch {
+    return undefined;
+  }
+}
+
+function ownerDirectoryPicker(): (() => Promise<BrowserDirectoryHandle>) | null {
+  const candidate = (window as Window & {
+    showDirectoryPicker?: () => Promise<BrowserDirectoryHandle>;
+  }).showDirectoryPicker;
+
+  return typeof candidate === 'function' ? candidate.bind(window) : null;
 }
 
 function postActionTarget(post: TimelineResult['posts'][number]): OpenSocialNetworkActionTarget {

@@ -163,7 +163,9 @@ private/messages.private.jwk.json
 public/opensocial/actions/index.json
 ```
 
-Open Social Network Web validates that the private key owns the profile. After that, it remembers the session in local browser storage, shows your page as logged in, loads your published public reactions and comments, lets you sign a new post, and lets you download the updated `feed.json`.
+Open Social Network Web validates that the private key owns the profile. After that, it remembers the session in local browser storage, shows your page as logged in, loads your published public reactions and comments, and lets you sign new posts.
+
+In browsers that support folder write access, new posts and public actions are saved back into the opened page folder automatically. In read-only browsers, the app keeps the same download flow as a fallback so you can still publish the updated public files anywhere.
 
 ### React And Comment
 
@@ -171,7 +173,7 @@ When your page is open, likes, dislikes, and comments become signed public updat
 
 After you interact, Open Social Network Web tries to deliver the signed public action automatically when the target page advertises a compatible action inbox.
 
-If the host is static-only, the app keeps the action in your own public action log. You can download `public updates` and upload only the `public/opensocial/actions/index.json` file to your page host. Aggregators can read that actor-owned action log from followed profiles, so your reactions and comments remain portable protocol records instead of private app state.
+If the host is static-only, the app keeps the action in your own public action log. When folder write access is available, it saves `public/opensocial/actions/index.json` automatically. Otherwise, you can download `public updates` and upload only that file to your page host. Aggregators can read that actor-owned action log from followed profiles, so your reactions and comments remain portable protocol records instead of private app state.
 
 ### Read Messages
 

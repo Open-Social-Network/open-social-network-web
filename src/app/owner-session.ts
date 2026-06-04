@@ -250,6 +250,13 @@ export function exportOwnerFeed(session: OwnerSession): string {
   return `${JSON.stringify(session.feed, null, 2)}\n`;
 }
 
+export function exportOwnerActionLog(
+  session: OwnerSession,
+  actions: OpenSocialNetworkAction[],
+): string {
+  return jsonFile(ownerActionLog(session, actions));
+}
+
 export function exportOwnerSiteFiles(
   session: OwnerSession,
   options: OwnerSiteExportOptions,
@@ -307,10 +314,10 @@ export function exportOwnerPublicUpdatesZip(
   session: OwnerSession,
   options: OwnerPublicUpdatesExportOptions = {},
 ): Uint8Array {
-  const actionLog = ownerActionLog(session, options.actions ?? []);
-
   return zipSync({
-    'public/opensocial/actions/index.json': strToU8(jsonFile(actionLog)),
+    'public/opensocial/actions/index.json': strToU8(
+      exportOwnerActionLog(session, options.actions ?? []),
+    ),
   });
 }
 
