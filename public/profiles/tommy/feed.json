@@ -7,20 +7,20 @@
       "id": "tommy_001",
       "author": "tommy@tommy.page",
       "createdAt": "2026-06-03T13:15:00.000Z",
-      "content": "MVP target: identity file, signed posts, static feeds, and one aggregator that merges follows chronologically.",
+      "content": "The goal is simple: create a page, write posts, follow people, and keep the audience portable.",
       "signature": {
         "alg": "ES256",
-        "value": "bGRoUwYmH991HDWIQRPfwLf09RQd-O1Y2YgVoXAT6T6eeQSayvCq2WtJVt3K84fXamHAKw92iAhmMTFXd95JkA"
+        "value": "MIS2LEUQo57dD49Pd20X1zQZnrJ1WekVT_RKhXS-BbKa4e5tv2Wu8IKkzuLFCUUs_s4ejphTGWYzGw2XjFOzYg"
       }
     },
     {
       "id": "tommy_002",
       "author": "tommy@tommy.page",
       "createdAt": "2026-06-01T09:00:00.000Z",
-      "content": "No blockchain, no token, no central account. HTTP and signed JSON are enough for the first proof.",
+      "content": "A social profile should feel like a website you own, not an account rented from one app.",
       "signature": {
         "alg": "ES256",
-        "value": "V50Gvii_8pExcWmgMRZI25uMmgwZ6JqBXrK0m3vx68uyQv72ThNSgAgXd9AdV3ODIwwzHygOjF6qpo-6U0MKmQ"
+        "value": "0f7yd3TsFMjXNfwXm5p0gAhHZlVxtAU5TwZNXXidMSrjl8BcD2KwDDWtBlJ6FYQOsj8VIbLqLF5ndgh7KkF8Aw"
       }
     }
   ]

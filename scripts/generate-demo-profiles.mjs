@@ -12,7 +12,7 @@ const demoProfiles = [
     slug: 'ada',
     handle: 'ada@open-social-network.local',
     name: 'Ada Lovelace',
-    bio: 'Protocol designer testing sovereign pages.',
+    bio: 'Exploring portable social pages.',
     website: 'https://example.com/ada',
     colors: ['#5338f2', '#00c7d9'],
     posts: [
@@ -20,13 +20,13 @@ const demoProfiles = [
         id: 'ada_001',
         createdAt: '2026-06-03T12:10:00.000Z',
         content:
-          'Published my identity file and feed as static JSON. The aggregator can verify this post without an account.',
+          'Published a page I can carry between apps. Any compatible aggregator can read it without owning my account.',
       },
       {
         id: 'ada_002',
         createdAt: '2026-06-02T18:25:00.000Z',
         content:
-          'The important invariant: followers should track public keys and handles, not platforms.',
+          'Followers should stay with people when they change apps, hosts, or interfaces.',
       },
     ],
   },
@@ -34,7 +34,7 @@ const demoProfiles = [
     slug: 'tommy',
     handle: 'tommy@tommy.page',
     name: 'Tommy',
-    bio: 'Building an open social layer on plain web infrastructure.',
+    bio: 'Building an open social layer on the web.',
     website: 'https://tommy.page',
     colors: ['#102a43', '#12b886'],
     posts: [
@@ -42,13 +42,13 @@ const demoProfiles = [
         id: 'tommy_001',
         createdAt: '2026-06-03T13:15:00.000Z',
         content:
-          'MVP target: identity file, signed posts, static feeds, and one aggregator that merges follows chronologically.',
+          'The goal is simple: create a page, write posts, follow people, and keep the audience portable.',
       },
       {
         id: 'tommy_002',
         createdAt: '2026-06-01T09:00:00.000Z',
         content:
-          'No blockchain, no token, no central account. HTTP and signed JSON are enough for the first proof.',
+          'A social profile should feel like a website you own, not an account rented from one app.',
       },
     ],
   },
@@ -64,7 +64,7 @@ const demoProfiles = [
         id: 'relay_001',
         createdAt: '2026-06-03T10:45:00.000Z',
         content:
-          'Aggregators are social browsers. They can index, rank, and display, but they do not own the graph.',
+          'Aggregators are social browsers. They can help people discover each other without owning the graph.',
       },
     ],
   },

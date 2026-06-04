@@ -7,20 +7,20 @@
       "id": "ada_001",
       "author": "ada@open-social-network.local",
       "createdAt": "2026-06-03T12:10:00.000Z",
-      "content": "Published my identity file and feed as static JSON. The aggregator can verify this post without an account.",
+      "content": "Published a page I can carry between apps. Any compatible aggregator can read it without owning my account.",
       "signature": {
         "alg": "ES256",
-        "value": "j1xlXScvB1wC_EIiSEUiJJEtCO2K_wZy3-DE1bjSDAjcpE_9_VOuktIqc-cbocLPYmhNPrKuqbYbnG3i5edtWw"
+        "value": "dYl3aoh_5oGQ2msTM5BOcb15_QEisOCtR5l_UboCrJq0bKG48OfkKh8-ybpEFOmWJvGkuIs6RaKg_KpJXHhkRA"
       }
     },
     {
       "id": "ada_002",
       "author": "ada@open-social-network.local",
       "createdAt": "2026-06-02T18:25:00.000Z",
-      "content": "The important invariant: followers should track public keys and handles, not platforms.",
+      "content": "Followers should stay with people when they change apps, hosts, or interfaces.",
       "signature": {
         "alg": "ES256",
-        "value": "2XiC0d0ybDfApOjL9xZXAoSo98w1wZkHkGr0-0qT-_ZgZTz_qchq_6qKQnsWG6DmCp4gYMUYxmsCv7ff1jOhDA"
+        "value": "xVMtSmXutqypWoc-Yy3_ytTU8cmBj3tl8hPReL_k2m-7P0WvjrR2yW_o_g3UT37DvOGSEWGPGtcRJSn8yaTDcw"
       }
     }
   ]

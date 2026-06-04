@@ -3,7 +3,7 @@
   "version": "0.1",
   "handle": "ada@open-social-network.local",
   "name": "Ada Lovelace",
-  "bio": "Protocol designer testing sovereign pages.",
+  "bio": "Exploring portable social pages.",
   "avatar": "/profiles/ada/avatar.svg",
   "website": "https://example.com/ada",
   "publicKey": {
@@ -14,8 +14,8 @@
       ],
       "ext": true,
       "kty": "EC",
-      "x": "qeWVmp_dkXWEbrKdAlREsefp4fCZRt_ipL35swINpwA",
-      "y": "FBxgXt7kPduLtrt0SaoHallPkfwIU1WGGkSYfslJBGk",
+      "x": "jUzjxYbvZyXCr1pZaVjf4NcRQ7_R_PvuO4caiA2R3Ak",
+      "y": "btEpiLbYdKfXwo07dm8tTLXagkMbM2HnMqLrq4iautY",
       "crv": "P-256"
     }
   },
@@ -25,8 +25,8 @@
       "key_ops": [],
       "ext": true,
       "kty": "EC",
-      "x": "M1MU1zdRzB7XXFVEkAoEzwaa1Xx0Zu-aWAp2o9ROCQY",
-      "y": "2ASIaxGxch9hMMDliLt9DYIBDPLUJ1p8J_TEl-wYOK4",
+      "x": "PsqV3Ac5CHfFSUANoWL31jHPQuWwiZ8CX0iYtQyG8WY",
+      "y": "yPkdIN8BNdie3XUd9aYiB-QizzE_jm-tXB_re_j-HrI",
       "crv": "P-256"
     }
   },

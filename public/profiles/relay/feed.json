@@ -7,10 +7,10 @@
       "id": "relay_001",
       "author": "relay@indieweb.test",
       "createdAt": "2026-06-03T10:45:00.000Z",
-      "content": "Aggregators are social browsers. They can index, rank, and display, but they do not own the graph.",
+      "content": "Aggregators are social browsers. They can help people discover each other without owning the graph.",
       "signature": {
         "alg": "ES256",
-        "value": "M9Vv82W8P9lQylfXgwAUwYtWrLB5KrdOfhYfpOUHrybWadWkTH5Kmwku0-64Yv4RoWEC0dxr2TVGYpLYoN3JWA"
+        "value": "dBGPdDnqYZp6tnrr7G86aRdJ9rEPukEVdhLFk_jUBjmwTK5k5Gh0BQE5kAyhK3xCNhLavg-iqL-hGK-eO1e_jA"
       }
     }
   ]

@@ -3,7 +3,7 @@
   "version": "0.1",
   "handle": "tommy@tommy.page",
   "name": "Tommy",
-  "bio": "Building an open social layer on plain web infrastructure.",
+  "bio": "Building an open social layer on the web.",
   "avatar": "/profiles/tommy/avatar.svg",
   "website": "https://tommy.page",
   "publicKey": {
@@ -14,8 +14,8 @@
       ],
       "ext": true,
       "kty": "EC",
-      "x": "WUYyWZ0uGo4M-rqx0t_Av6QAE1DUzzhtS2FeCGl6OEc",
-      "y": "wp9avS5b_fvvdbv_XBeds9UAhVXXMgfywsre4ZeTRDI",
+      "x": "EIoPxA9Ww5GEDq608CIPG2vwff0zTNJDVWI9apeQgbw",
+      "y": "rsanYL_bIDs8I5vPCQB3lukwZjLn67JHY1Ad6N9v6Bk",
       "crv": "P-256"
     }
   },
@@ -25,8 +25,8 @@
       "key_ops": [],
       "ext": true,
       "kty": "EC",
-      "x": "5IvWLC8CFFVuuLU8-NLLKvEyposhNgV8hQHttM3m_iA",
-      "y": "Ap9iozVCTUafjDDDzWP3MQxVEwNFRNL6ieBEScijFUk",
+      "x": "6jYVCzxgtrFUQNMLkV9VF-zg7XKQ-e3534uYFkqjXm0",
+      "y": "VEW_s1ZMxaUSEsgFlVfEVjrdFf5EYm1KSEQGwDwauvE",
       "crv": "P-256"
     }
   },
