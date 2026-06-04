@@ -1,5 +1,9 @@
 import type { TimelineResult } from '../aggregator/timeline';
 
+export function verificationRejectedCount(timeline: TimelineResult): number {
+  return timeline.rejectedPosts.length + timeline.rejectedActions.length;
+}
+
 export function renderVerificationDiagnostics(timeline: TimelineResult): string {
   const rejectedPosts = timeline.rejectedPosts
     .map(

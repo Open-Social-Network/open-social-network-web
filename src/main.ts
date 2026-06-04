@@ -5,7 +5,7 @@ import {
   focusOwnerPostComposer,
   shouldShowFloatingComposeButton,
 } from './app/compose-shortcut';
-import { renderVerificationDiagnostics } from './app/diagnostics';
+import { renderVerificationDiagnostics, verificationRejectedCount } from './app/diagnostics';
 import { loadDirectory } from './app/directory';
 import { messageAccessState, type MessageAccessState } from './app/message-access';
 import {
@@ -216,7 +216,7 @@ function render(): void {
           <div class="panel-divider"></div>
           <div class="panel-header">
             <h2>Verification</h2>
-            <span>${currentTimeline().rejectedPosts.length} rejected</span>
+            <span>${verificationRejectedCount(currentTimeline())} rejected</span>
           </div>
           ${renderDiagnostics()}
         </aside>
