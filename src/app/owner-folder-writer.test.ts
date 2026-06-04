@@ -6,6 +6,7 @@ import {
   readOwnerProjectJsonFromDirectoryHandle,
   saveOwnerActionsToProjectFolder,
   saveOwnerFeedToProjectFolder,
+  saveOwnerFollowsToProjectFolder,
   type WritableOwnerProject,
 } from './owner-folder-writer';
 
@@ -60,6 +61,28 @@ describe('owner folder writer', () => {
       version: '0.1',
       actor: session.profile.handle,
       actions: [action],
+    });
+    expect([...writer.files.keys()].some((path) => path.startsWith('private/'))).toBe(false);
+  });
+
+  it('saves portable follows without writing private files', async () => {
+    const writer = new MemoryOwnerProjectWriter();
+    const session = await createOwnerPage({
+      name: 'Ada Lovelace',
+      handle: 'ada@example.test',
+      bio: 'Building a social page.',
+      firstPost: 'Hello from my page.',
+    });
+
+    await saveOwnerFollowsToProjectFolder(writer, session, [
+      'https://tommy.example.test/profile.json',
+    ]);
+
+    expect(JSON.parse(writer.files.get('public/opensocial/follows/index.json') ?? '{}')).toEqual({
+      protocol: 'open-social-network',
+      version: '0.1',
+      owner: session.profile.handle,
+      follows: [{ profile: 'https://tommy.example.test/profile.json' }],
     });
     expect([...writer.files.keys()].some((path) => path.startsWith('private/'))).toBe(false);
   });

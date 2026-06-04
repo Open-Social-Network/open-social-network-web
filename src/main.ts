@@ -39,6 +39,7 @@ import {
   readOwnerProjectJsonFromDirectoryHandle,
   saveOwnerActionsToProjectFolder,
   saveOwnerFeedToProjectFolder,
+  saveOwnerFollowsToProjectFolder,
   type BrowserDirectoryHandle,
   type WritableOwnerProject,
 } from './app/owner-folder-writer';
@@ -70,6 +71,7 @@ import {
 } from './app/owner-session';
 import { profilePageAction } from './app/profile-actions';
 import { profileAvatarUrl, profilePageUrl } from './app/profile-links';
+import { followsFromFollowList } from './protocol/follows';
 import {
   focusMyPageAccess,
   focusOpenCommentComposer,
@@ -265,6 +267,7 @@ function bindEvents(): void {
         state.follows = [...state.follows, profileUrl];
         state.directoryProfiles = [...new Set([...state.directoryProfiles, profileUrl])];
         saveStoredFollows(state.follows);
+        void saveOwnerFollowsAfterChange();
       }
 
       input.value = '';
@@ -285,6 +288,7 @@ function bindEvents(): void {
 
       state.follows = toggleFollow(state.follows, profileUrl);
       saveStoredFollows(state.follows);
+      void saveOwnerFollowsAfterChange();
       void refreshTimeline();
     });
   }
@@ -769,6 +773,7 @@ function renderOwnerPanel(): string {
   const publishReady = summarizeOwnerPublishReady({
     pageCreated: state.pendingPublish.pageCreated,
     postCount: state.pendingPublish.postCount,
+    followCount: state.pendingPublish.followCount,
     publicUpdates: summarizeOwnerPublicUpdates(state.owner, state.pendingPublish.actions),
   });
 
@@ -927,6 +932,7 @@ async function createOwnerFromForm(form: HTMLFormElement): Promise<void> {
     savePendingPublishChanges({
       pageCreated: true,
       postCount: 0,
+      followCount: 0,
       actions: [],
     });
     saveStoredOwnerSession(owner);
@@ -951,6 +957,10 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
       projectFiles,
       'public/opensocial/actions/index.json',
     );
+    const followListFile = optionalOwnerProjectFile(
+      projectFiles,
+      'public/opensocial/follows/index.json',
+    );
     const owner = await connectOwnerPage({
       profile: (await readJsonFile(profileFile)) as OwnerSession['profile'],
       feed: (await readJsonFile(feedFile)) as OwnerSession['feed'],
@@ -962,10 +972,14 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
     const importedActions = actionLogFile
       ? await loadOwnerActionsFromActionLog(owner, await readJsonFile(actionLogFile))
       : [];
+    const importedFollows = followListFile
+      ? followsFromFollowList(owner.profile.handle, await readJsonFile(followListFile))
+      : [];
 
     state.owner = owner;
     state.ownerProjectWriter = null;
     state.actions = mergeActionsById(importedActions, state.actions);
+    mergeImportedFollows(importedFollows);
     state.ownerError = null;
     state.ownerNotice = 'Opened in this browser. Download the public site when you want to publish changes.';
     state.inboxMessages = [];
@@ -1006,6 +1020,10 @@ async function connectOwnerFromDirectoryHandle(directoryHandle: BrowserDirectory
       directoryHandle,
       'public/opensocial/actions/index.json',
     );
+    const followListJson = await optionalOwnerDirectoryJson(
+      directoryHandle,
+      'public/opensocial/follows/index.json',
+    );
     const owner = await connectOwnerPage({
       profile: (await readOwnerProjectJsonFromDirectoryHandle(
         directoryHandle,
@@ -1026,10 +1044,12 @@ async function connectOwnerFromDirectoryHandle(directoryHandle: BrowserDirectory
     const importedActions = actionLogJson
       ? await loadOwnerActionsFromActionLog(owner, actionLogJson)
       : [];
+    const importedFollows = followsFromFollowList(owner.profile.handle, followListJson);
 
     state.owner = owner;
     state.ownerProjectWriter = ownerProjectWriterFromDirectoryHandle(directoryHandle);
     state.actions = mergeActionsById(importedActions, state.actions);
+    mergeImportedFollows(importedFollows);
     state.ownerError = null;
     state.ownerNotice = 'Opened your page folder. New posts and public actions save there automatically.';
     state.inboxMessages = [];
@@ -1310,6 +1330,43 @@ async function saveOwnerActionsToOpenedFolder(): Promise<OwnerFolderSaveResult> 
   }
 }
 
+async function saveOwnerFollowsToOpenedFolder(): Promise<OwnerFolderSaveResult> {
+  if (!state.owner || !state.ownerProjectWriter) {
+    return 'unavailable';
+  }
+
+  try {
+    await saveOwnerFollowsToProjectFolder(state.ownerProjectWriter, state.owner, state.follows);
+    return 'saved';
+  } catch {
+    state.ownerProjectWriter = null;
+    state.ownerError =
+      'Could not save follows to your page folder. Download the public site to keep this change.';
+    return 'failed';
+  }
+}
+
+async function saveOwnerFollowsAfterChange(): Promise<void> {
+  if (!state.owner) {
+    return;
+  }
+
+  const folderSaveResult = await saveOwnerFollowsToOpenedFolder();
+
+  if (folderSaveResult !== 'saved') {
+    savePendingPublishChanges({
+      ...state.pendingPublish,
+      followCount: state.pendingPublish.followCount + 1,
+    });
+  }
+
+  if (folderSaveResult !== 'failed') {
+    state.ownerError = null;
+    state.ownerNotice =
+      folderSaveResult === 'saved' ? 'Saved follows to your page folder.' : null;
+  }
+}
+
 async function shouldManuallyPublishOwnerAction(
   action: OpenSocialNetworkAction,
   target: OpenSocialNetworkActionTarget,
@@ -1338,6 +1395,16 @@ function showSignedOutSocialPrompt(action: SignedOutSocialAction): void {
   state.messageTargetKey = null;
   render();
   focusMyPageAccess(app);
+}
+
+function mergeImportedFollows(importedFollows: string[]): void {
+  if (importedFollows.length === 0) {
+    return;
+  }
+
+  state.follows = [...new Set([...state.follows, ...importedFollows])];
+  state.directoryProfiles = [...new Set([...state.directoryProfiles, ...importedFollows])];
+  saveStoredFollows(state.follows);
 }
 
 async function optionalOwnerDirectoryJson(
@@ -1489,7 +1556,11 @@ function downloadOwnerSite(includePrivate: boolean): void {
   }
 
   const ownerActions = state.actions.filter((action) => action.actor === state.owner?.profile.handle);
-  const zip = exportOwnerSiteZip(state.owner, { includePrivate, actions: ownerActions });
+  const zip = exportOwnerSiteZip(state.owner, {
+    includePrivate,
+    actions: ownerActions,
+    follows: state.follows,
+  });
   const blob = new Blob([zip as BlobPart], { type: 'application/zip' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

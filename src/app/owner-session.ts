@@ -20,6 +20,7 @@ import type {
   OpenSocialNetworkPost,
   UnsignedOpenSocialNetworkPost,
 } from '../protocol/types';
+import { createFollowList, type OpenSocialNetworkFollowInput } from '../protocol/follows';
 
 const OWNER_STORAGE_KEY = 'open-social-network.ownerSession.v1';
 
@@ -46,6 +47,7 @@ export interface OwnerPostOptions {
 export interface OwnerSiteExportOptions {
   includePrivate: boolean;
   actions?: OpenSocialNetworkAction[];
+  follows?: OpenSocialNetworkFollowInput[];
 }
 
 export interface OwnerPublicUpdatesExportOptions {
@@ -250,6 +252,13 @@ export function exportOwnerFeed(session: OwnerSession): string {
   return `${JSON.stringify(session.feed, null, 2)}\n`;
 }
 
+export function exportOwnerFollowList(
+  session: OwnerSession,
+  follows: OpenSocialNetworkFollowInput[] = [],
+): string {
+  return jsonFile(createFollowList(session.profile.handle, follows));
+}
+
 export function exportOwnerActionLog(
   session: OwnerSession,
   actions: OpenSocialNetworkAction[],
@@ -279,6 +288,10 @@ export function exportOwnerSiteFiles(
     'public/feed.json': exportOwnerFeed(session),
     'public/index.html': pageHtml(session.profile),
     'public/opensocial/actions/index.json': jsonFile(actionLog),
+    'public/opensocial/follows/index.json': exportOwnerFollowList(
+      session,
+      options.follows ?? [],
+    ),
     'public/opensocial/actions/inbox/index.json': jsonFile(actionInbox),
     'public/opensocial/messages/inbox/index.json': jsonFile(messageLog),
     'public/page-social.js': pageSocialScript(),

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { normalizeProfileUrl } from './follows';
+import { createFollowList, followsFromFollowList } from '../protocol/follows';
 
 describe('follow URL normalization', () => {
   it('keeps direct profile.json URLs', () => {
@@ -21,5 +22,18 @@ describe('follow URL normalization', () => {
     expect(normalizeProfileUrl('/profiles/ada', 'http://127.0.0.1:5173/')).toBe(
       'http://127.0.0.1:5173/profiles/ada/profile.json',
     );
+  });
+});
+
+describe('portable follow lists', () => {
+  it('loads follows only from the matching profile owner', () => {
+    const followList = createFollowList('ada@example.test', [
+      'https://tommy.example.test/profile.json',
+    ]);
+
+    expect(followsFromFollowList('ada@example.test', followList)).toEqual([
+      'https://tommy.example.test/profile.json',
+    ]);
+    expect(followsFromFollowList('other@example.test', followList)).toEqual([]);
   });
 });

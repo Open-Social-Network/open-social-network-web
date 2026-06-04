@@ -6,6 +6,7 @@ import type {
   OpenSocialNetworkActionInbox,
   OpenSocialNetworkActionLog,
   OpenSocialNetworkFeed,
+  OpenSocialNetworkFollowList,
   OpenSocialNetworkIdentity,
 } from '../protocol/types';
 import { signOwnerReaction } from './owner-actions';
@@ -14,6 +15,7 @@ import {
   clearStoredOwnerSession,
   createOwnerPage,
   exportOwnerFeed,
+  exportOwnerFollowList,
   exportOwnerPublicUpdatesZip,
   exportOwnerSiteFiles,
   exportOwnerSiteZip,
@@ -111,6 +113,7 @@ describe('owner session', () => {
       'public/index.html',
       'public/opensocial/actions/inbox/index.json',
       'public/opensocial/actions/index.json',
+      'public/opensocial/follows/index.json',
       'public/opensocial/messages/inbox/index.json',
       'public/page-social.js',
       'public/page.js',
@@ -130,6 +133,12 @@ describe('owner session', () => {
       owner: session.profile.handle,
       actions: [],
     } satisfies OpenSocialNetworkActionInbox);
+    expect(JSON.parse(publicFiles['public/opensocial/follows/index.json']!)).toEqual({
+      protocol: 'open-social-network',
+      version: '0.1',
+      owner: session.profile.handle,
+      follows: [],
+    } satisfies OpenSocialNetworkFollowList);
     expect(JSON.parse(fullFiles['private/identity.private.jwk.json']!)).toEqual(session.privateKeyJwk);
     expect(publicFiles['private/messages.private.jwk.json']).toBeUndefined();
     expect(JSON.parse(fullFiles['private/messages.private.jwk.json']!)).toEqual(
@@ -197,6 +206,41 @@ describe('owner session', () => {
 
     expect(actionLog.actor).toBe(session.profile.handle);
     expect(actionLog.actions).toEqual([action]);
+  });
+
+  it('exports portable follows as public profile-owned graph data', async () => {
+    const session = await createOwnerPage({
+      name: 'Ada Lovelace',
+      handle: 'ada@example.test',
+      bio: 'Building a social page.',
+      firstPost: 'Hello from my page.',
+    });
+
+    expect(
+      JSON.parse(
+        exportOwnerFollowList(session, [
+          'https://tommy.example.test/profile.json',
+          'https://tommy.example.test/profile.json',
+          {
+            profile: 'https://relay.example.test/profile.json',
+            handle: 'relay@example.test',
+          },
+        ]),
+      ),
+    ).toEqual({
+      protocol: 'open-social-network',
+      version: '0.1',
+      owner: session.profile.handle,
+      follows: [
+        {
+          profile: 'https://tommy.example.test/profile.json',
+        },
+        {
+          profile: 'https://relay.example.test/profile.json',
+          handle: 'relay@example.test',
+        },
+      ],
+    } satisfies OpenSocialNetworkFollowList);
   });
 
   it('exports zip archives for the full site and public-only site', async () => {

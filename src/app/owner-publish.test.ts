@@ -14,6 +14,7 @@ describe('owner publish reminder', () => {
       summarizeOwnerPublishReady({
         pageCreated: false,
         postCount: 0,
+        followCount: 0,
         publicUpdates: null,
       }),
     ).toBeNull();
@@ -24,6 +25,7 @@ describe('owner publish reminder', () => {
       summarizeOwnerPublishReady({
         pageCreated: true,
         postCount: 0,
+        followCount: 0,
         publicUpdates: null,
       }),
     ).toEqual({
@@ -39,6 +41,7 @@ describe('owner publish reminder', () => {
       summarizeOwnerPublishReady({
         pageCreated: false,
         postCount: 2,
+        followCount: 0,
         publicUpdates: null,
       }),
     ).toEqual({
@@ -54,6 +57,7 @@ describe('owner publish reminder', () => {
       summarizeOwnerPublishReady({
         pageCreated: false,
         postCount: 0,
+        followCount: 0,
         publicUpdates: {
           count: 1,
           reactions: 1,
@@ -75,6 +79,7 @@ describe('owner publish reminder', () => {
       summarizeOwnerPublishReady({
         pageCreated: false,
         postCount: 1,
+        followCount: 0,
         publicUpdates: {
           count: 2,
           reactions: 1,
@@ -91,6 +96,44 @@ describe('owner publish reminder', () => {
     });
   });
 
+  it('shows a simple reminder after changing follows', () => {
+    expect(
+      summarizeOwnerPublishReady({
+        pageCreated: false,
+        postCount: 0,
+        followCount: 1,
+        publicUpdates: null,
+      }),
+    ).toEqual({
+      title: 'Follow list ready to publish',
+      detail: 'Download your public site to publish your updated follows.',
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
+    });
+  });
+
+  it('includes follow changes in combined public site reminders', () => {
+    expect(
+      summarizeOwnerPublishReady({
+        pageCreated: false,
+        postCount: 0,
+        followCount: 1,
+        publicUpdates: {
+          count: 1,
+          reactions: 1,
+          comments: 0,
+          title: '1 public update ready',
+          detail: 'Download your public updates to publish your latest reaction.',
+        },
+      }),
+    ).toEqual({
+      title: '2 updates ready to publish',
+      detail: 'Download your public site to publish your latest public update and follow change.',
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
+    });
+  });
+
   it('restores pending publish changes for the same page identity', () => {
     const storage = new MemoryStorage();
     const pendingAction = actionFor('action_1', 'owner@example.test');
@@ -100,6 +143,7 @@ describe('owner publish reminder', () => {
       {
         pageCreated: false,
         postCount: 1,
+        followCount: 1,
         actions: [pendingAction],
       },
       storage,
@@ -108,6 +152,7 @@ describe('owner publish reminder', () => {
     expect(loadStoredOwnerPublishChanges('owner@example.test', storage)).toEqual({
       pageCreated: false,
       postCount: 1,
+      followCount: 1,
       actions: [pendingAction],
     });
   });
@@ -120,6 +165,7 @@ describe('owner publish reminder', () => {
       {
         pageCreated: true,
         postCount: 0,
+        followCount: 0,
         actions: [],
       },
       storage,
@@ -128,6 +174,7 @@ describe('owner publish reminder', () => {
     expect(loadStoredOwnerPublishChanges('other@example.test', storage)).toEqual({
       pageCreated: false,
       postCount: 0,
+      followCount: 0,
       actions: [],
     });
   });
@@ -140,6 +187,7 @@ describe('owner publish reminder', () => {
       {
         pageCreated: true,
         postCount: 0,
+        followCount: 0,
         actions: [],
       },
       storage,
@@ -149,6 +197,7 @@ describe('owner publish reminder', () => {
     expect(loadStoredOwnerPublishChanges('owner@example.test', storage)).toEqual({
       pageCreated: false,
       postCount: 0,
+      followCount: 0,
       actions: [],
     });
   });
@@ -161,6 +210,7 @@ describe('owner publish reminder', () => {
       {
         pageCreated: true,
         postCount: 1,
+        followCount: 1,
         actions: [actionFor('action_1', 'owner@example.test')],
       },
       storage,
@@ -169,11 +219,13 @@ describe('owner publish reminder', () => {
     expect(markOwnerPublishChangesPublished(storage)).toEqual({
       pageCreated: false,
       postCount: 0,
+      followCount: 0,
       actions: [],
     });
     expect(loadStoredOwnerPublishChanges('owner@example.test', storage)).toEqual({
       pageCreated: false,
       postCount: 0,
+      followCount: 0,
       actions: [],
     });
   });

@@ -6,12 +6,14 @@ const OWNER_PUBLISH_STORAGE_KEY = 'open-social-network.ownerPublishChanges.v1';
 export interface OwnerPublishChanges {
   pageCreated: boolean;
   postCount: number;
+  followCount: number;
   actions: OpenSocialNetworkAction[];
 }
 
 export interface OwnerPublishReadyInput {
   pageCreated: boolean;
   postCount: number;
+  followCount?: number;
   publicUpdates: OwnerPublicUpdatesSummary | null;
 }
 
@@ -26,6 +28,7 @@ export function emptyOwnerPublishChanges(): OwnerPublishChanges {
   return {
     pageCreated: false,
     postCount: 0,
+    followCount: 0,
     actions: [],
   };
 }
@@ -57,6 +60,12 @@ export function loadStoredOwnerPublishChanges(
         parsed.postCount > 0
           ? parsed.postCount
           : 0,
+      followCount:
+        typeof parsed.followCount === 'number' &&
+        Number.isInteger(parsed.followCount) &&
+        parsed.followCount > 0
+          ? parsed.followCount
+          : 0,
       actions: Array.isArray(parsed.actions) ? parsed.actions.filter(isStoredAction) : [],
     };
   } catch {
@@ -75,6 +84,7 @@ export function saveStoredOwnerPublishChanges(
       ownerHandle,
       pageCreated: changes.pageCreated,
       postCount: Math.max(0, Math.trunc(changes.postCount)),
+      followCount: Math.max(0, Math.trunc(changes.followCount)),
       actions: changes.actions.filter(isStoredAction),
     }),
   );
@@ -94,6 +104,8 @@ export function markOwnerPublishChangesPublished(
 export function summarizeOwnerPublishReady(
   input: OwnerPublishReadyInput,
 ): OwnerPublishReadySummary | null {
+  const followCount = Math.max(0, Math.trunc(input.followCount ?? 0));
+
   if (input.pageCreated) {
     return {
       title: 'Page ready to publish',
@@ -103,11 +115,11 @@ export function summarizeOwnerPublishReady(
     };
   }
 
-  if (input.postCount === 0 && !input.publicUpdates) {
+  if (input.postCount === 0 && followCount === 0 && !input.publicUpdates) {
     return null;
   }
 
-  if (input.postCount === 0) {
+  if (input.postCount === 0 && followCount === 0) {
     return input.publicUpdates
       ? {
           title: input.publicUpdates.title,
@@ -116,6 +128,15 @@ export function summarizeOwnerPublishReady(
           downloadTarget: 'public-updates',
         }
       : null;
+  }
+
+  if (input.postCount === 0 && !input.publicUpdates) {
+    return {
+      title: 'Follow list ready to publish',
+      detail: 'Download your public site to publish your updated follows.',
+      downloadLabel: 'Download public site',
+      downloadTarget: 'public-site',
+    };
   }
 
   if (!input.publicUpdates) {
@@ -130,11 +151,16 @@ export function summarizeOwnerPublishReady(
     };
   }
 
-  const totalUpdates = input.postCount + input.publicUpdates.count;
+  const totalUpdates = input.postCount + input.publicUpdates.count + followCount;
+  const updateLabels = [
+    input.postCount > 0 ? postLabel(input.postCount) : null,
+    input.publicUpdates.count > 0 ? publicUpdateLabel(input.publicUpdates.count) : null,
+    followCount > 0 ? followLabel(followCount) : null,
+  ].filter((label): label is string => Boolean(label));
 
   return {
     title: `${totalUpdates} updates ready to publish`,
-    detail: `Download your public site to publish your latest ${postLabel(input.postCount)} and ${publicUpdateLabel(input.publicUpdates.count)}.`,
+    detail: `Download your public site to publish your latest ${joinReadableList(updateLabels)}.`,
     downloadLabel: 'Download public site',
     downloadTarget: 'public-site',
   };
@@ -146,6 +172,22 @@ function postLabel(count: number): string {
 
 function publicUpdateLabel(count: number): string {
   return count === 1 ? 'public update' : 'public updates';
+}
+
+function followLabel(count: number): string {
+  return count === 1 ? 'follow change' : 'follow changes';
+}
+
+function joinReadableList(items: string[]): string {
+  if (items.length <= 1) {
+    return items[0] ?? 'updates';
+  }
+
+  if (items.length === 2) {
+    return `${items[0]} and ${items[1]}`;
+  }
+
+  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
 }
 
 function isStoredAction(value: unknown): value is OpenSocialNetworkAction {

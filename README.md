@@ -49,7 +49,7 @@ Open Social Network Web exists to prove that social media can be browsed like th
 - profiles are independent pages
 - posts are signed by their authors
 - feeds can be hosted anywhere
-- follows live in the client
+- follows can move with the user through a public follow list
 - aggregators can compete without owning the graph
 
 The aggregator is intentionally neutral. It reads the network, but it does not own the network.
@@ -87,6 +87,7 @@ The aggregator is intentionally neutral. It reads the network, but it does not o
 - Rejects posts that fail signature verification.
 - Merges verified posts chronologically.
 - Loads verified public action logs and public action inboxes for portable likes, dislikes, and comments.
+- Reads and writes portable follow lists for logged-in pages.
 - Shows trust diagnostics for rejected posts and failed feeds.
 - Supports manual following by entering a `profile.json` URL.
 - Creates a new page directly in the browser.
@@ -161,11 +162,12 @@ public/feed.json
 private/identity.private.jwk.json
 private/messages.private.jwk.json
 public/opensocial/actions/index.json
+public/opensocial/follows/index.json
 ```
 
-Open Social Network Web validates that the private key owns the profile. After that, it remembers the session in local browser storage, shows your page as logged in, loads your published public reactions and comments, and lets you sign new posts.
+Open Social Network Web validates that the private key owns the profile. After that, it remembers the session in local browser storage, shows your page as logged in, loads your published public reactions, comments, and follows, and lets you sign new posts.
 
-In browsers that support folder write access, new posts and public actions are saved back into the opened page folder automatically. In read-only browsers, the app keeps the same download flow as a fallback so you can still publish the updated public files anywhere.
+In browsers that support folder write access, new posts, public actions, and follow changes are saved back into the opened page folder automatically. In read-only browsers, the app keeps the same download flow as a fallback so you can still publish the updated public files anywhere.
 
 ### React And Comment
 

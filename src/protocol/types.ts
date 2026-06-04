@@ -60,6 +60,18 @@ export interface OpenSocialNetworkFeed {
   posts: OpenSocialNetworkPost[];
 }
 
+export interface OpenSocialNetworkFollow {
+  profile: string;
+  handle?: string;
+}
+
+export interface OpenSocialNetworkFollowList {
+  protocol: 'open-social-network';
+  version: OpenSocialNetworkVersion;
+  owner: string;
+  follows: OpenSocialNetworkFollow[];
+}
+
 export type OpenSocialNetworkActionKind = 'reaction' | 'comment';
 export type OpenSocialNetworkReaction = 'like' | 'dislike' | 'none';
 
