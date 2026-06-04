@@ -51,6 +51,11 @@ import {
   type OwnerSession,
 } from './app/owner-session';
 import { profileAvatarUrl, profilePageUrl } from './app/profile-links';
+import {
+  focusMyPageAccess,
+  signedOutSocialActionMessage,
+  type SignedOutSocialAction,
+} from './app/social-action-access';
 import { summarizePostActions, type OpenSocialNetworkPostActionSummary } from './protocol/public-actions';
 import type {
   OpenSocialNetworkAction,
@@ -328,8 +333,7 @@ function bindEvents(): void {
       }
 
       if (!state.owner) {
-        state.ownerError = 'Open your page to comment.';
-        render();
+        showSignedOutSocialPrompt('comment');
         return;
       }
 
@@ -349,8 +353,7 @@ function bindEvents(): void {
       }
 
       if (!state.owner) {
-        state.ownerError = 'Open your page to send a message.';
-        render();
+        showSignedOutSocialPrompt('message');
         return;
       }
 
@@ -507,8 +510,8 @@ function renderPostActions(
 ): string {
   const ownerHandle = state.owner?.profile.handle;
   const activeReaction = ownerHandle ? summary.reactionsByActor[ownerHandle] : null;
-  const disabled = state.owner ? '' : 'disabled';
-  const disabledTitle = state.owner ? '' : ' title="Open your page to interact"';
+  const reactionTitle = state.owner ? '' : ` title="${signedOutSocialActionMessage('react')}"`;
+  const commentTitle = state.owner ? '' : ` title="${signedOutSocialActionMessage('comment')}"`;
   const commentOpen = state.commentTargetKey === targetKey;
   const canMessage =
     Boolean(state.owner) &&
@@ -516,8 +519,10 @@ function renderPostActions(
     profile.messagePublicKey?.alg === 'ECDH-P256' &&
     Boolean(profile.endpoints.messages);
   const messageOpen = state.messageTargetKey === messageTargetKey;
-  const messageDisabled = canMessage ? '' : 'disabled';
-  const messageTitle = messageButtonTitle(profile, canMessage);
+  const messageDisabled = state.owner && !canMessage ? 'disabled' : '';
+  const messageTitle = state.owner
+    ? messageButtonTitle(profile, canMessage)
+    : signedOutSocialActionMessage('message');
 
   return `
     <footer class="post-social-bar" aria-label="Post actions">
@@ -527,8 +532,7 @@ function renderPostActions(
         data-post-reaction="like"
         data-target-key="${escapeAttribute(targetKey)}"
         aria-label="Like post"
-        ${disabled}
-        ${disabledTitle}
+        ${reactionTitle}
       >
         ${heartIcon(activeReaction === 'like')}
         <span>${summary.likes}</span>
@@ -539,8 +543,7 @@ function renderPostActions(
         data-post-reaction="dislike"
         data-target-key="${escapeAttribute(targetKey)}"
         aria-label="Dislike post"
-        ${disabled}
-        ${disabledTitle}
+        ${reactionTitle}
       >
         ${thumbDownIcon(activeReaction === 'dislike')}
         <span>${summary.dislikes}</span>
@@ -551,8 +554,7 @@ function renderPostActions(
         data-action="toggle-comment"
         data-target-key="${escapeAttribute(targetKey)}"
         aria-label="Comment on post"
-        ${disabled}
-        ${disabledTitle}
+        ${commentTitle}
       >
         ${commentIcon()}
         <span>${summary.comments.length}</span>
@@ -683,7 +685,7 @@ function renderOwnerPanel(): string {
 
   if (!state.owner) {
     return `
-      <section class="owner-panel" aria-label="My Page">
+      <section class="owner-panel" aria-label="My Page" data-owner-access>
         <div class="panel-header">
           <h2>My Page</h2>
           <span>${disconnected.status}</span>
@@ -733,7 +735,7 @@ function renderOwnerPanel(): string {
   });
 
   return `
-    <section class="owner-panel" aria-label="My Page">
+    <section class="owner-panel" aria-label="My Page" data-owner-access>
       <div class="panel-header">
         <h2>My Page</h2>
         <span>${connected.status}</span>
@@ -944,8 +946,7 @@ async function publishOwnerPost(form: HTMLFormElement): Promise<void> {
 
 async function reactToPost(button: HTMLButtonElement): Promise<void> {
   if (!state.owner) {
-    state.ownerError = 'Open your page to react.';
-    render();
+    showSignedOutSocialPrompt('react');
     return;
   }
 
@@ -981,8 +982,7 @@ async function reactToPost(button: HTMLButtonElement): Promise<void> {
 
 async function commentOnPost(form: HTMLFormElement): Promise<void> {
   if (!state.owner) {
-    state.ownerError = 'Open your page to comment.';
-    render();
+    showSignedOutSocialPrompt('comment');
     return;
   }
 
@@ -1009,8 +1009,7 @@ async function commentOnPost(form: HTMLFormElement): Promise<void> {
 
 async function sendDirectMessage(form: HTMLFormElement): Promise<void> {
   if (!state.owner) {
-    state.ownerError = 'Open your page to send a message.';
-    render();
+    showSignedOutSocialPrompt('message');
     return;
   }
 
@@ -1116,6 +1115,14 @@ function savePendingPublishChanges(changes: OwnerPublishChanges): void {
   if (state.owner) {
     saveStoredOwnerPublishChanges(state.owner.profile.handle, changes);
   }
+}
+
+function showSignedOutSocialPrompt(action: SignedOutSocialAction): void {
+  state.ownerError = signedOutSocialActionMessage(action);
+  state.commentTargetKey = null;
+  state.messageTargetKey = null;
+  render();
+  focusMyPageAccess(app);
 }
 
 function postActionTarget(post: TimelineResult['posts'][number]): OpenSocialNetworkActionTarget {
