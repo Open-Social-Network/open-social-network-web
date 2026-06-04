@@ -61,6 +61,7 @@ import { profilePageAction } from './app/profile-actions';
 import { profileAvatarUrl, profilePageUrl } from './app/profile-links';
 import {
   focusMyPageAccess,
+  socialInteractionCopy,
   signedOutSocialActionMessage,
   type SignedOutSocialAction,
 } from './app/social-action-access';
@@ -587,8 +588,8 @@ function renderPostActions(
           <form class="post-comment-form" data-form="post-comment">
             <input type="hidden" name="targetKey" value="${escapeAttribute(targetKey)}" />
             <label class="sr-only" for="comment-${escapeAttribute(target.id)}">Comment</label>
-            <textarea id="comment-${escapeAttribute(target.id)}" name="content" rows="2" maxlength="600" placeholder="Write a comment..."></textarea>
-            <button class="button button-primary" type="submit">Post</button>
+            <textarea id="comment-${escapeAttribute(target.id)}" name="content" rows="2" maxlength="600" placeholder="${socialInteractionCopy.commentPlaceholder}"></textarea>
+            <button class="button button-primary" type="submit">${socialInteractionCopy.commentSubmit}</button>
           </form>
         `
         : ''
@@ -617,8 +618,8 @@ function renderMessageComposer(
     <form class="post-message-form" data-form="direct-message">
       <input type="hidden" name="targetKey" value="${escapeAttribute(targetKey)}" />
       <label class="sr-only" for="message-${escapeAttribute(targetKey)}">Message ${escapeHtml(profile.name)}</label>
-      <textarea id="message-${escapeAttribute(targetKey)}" name="content" rows="3" maxlength="1200" placeholder="Write a private message..."></textarea>
-      <button class="button button-primary" type="submit">Send</button>
+      <textarea id="message-${escapeAttribute(targetKey)}" name="content" rows="3" maxlength="1200" placeholder="${socialInteractionCopy.messagePlaceholder}"></textarea>
+      <button class="button button-primary" type="submit">${socialInteractionCopy.messageSubmit}</button>
     </form>
     ${status ? renderMessageStatus(status) : ''}
   `;
@@ -632,7 +633,7 @@ function renderMessageStatus(status: MessageStatus): string {
   return `
     <p class="message-status message-status-prepared">
       ${escapeHtml(status.text)}
-      <a href="${escapeAttribute(status.downloadHref)}" download="${escapeAttribute(status.downloadName)}">Download encrypted message</a>
+      <a href="${escapeAttribute(status.downloadHref)}" download="${escapeAttribute(status.downloadName)}">${socialInteractionCopy.messageDownload}</a>
     </p>
   `;
 }
@@ -1077,13 +1078,13 @@ async function sendDirectMessage(form: HTMLFormElement): Promise<void> {
       state.messageStatus = {
         targetKey,
         kind: 'sent',
-        text: 'Encrypted message sent.',
+        text: socialInteractionCopy.messageSent,
       };
     } else {
       state.messageStatus = {
         targetKey,
         kind: 'prepared',
-        text: 'Encrypted message ready. This host does not accept automatic delivery yet.',
+        text: socialInteractionCopy.messagePrepared,
         downloadHref: directMessageDownloadHref(prepared),
         downloadName: prepared.fileName,
       };

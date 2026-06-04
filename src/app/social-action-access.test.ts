@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   focusMyPageAccess,
+  socialInteractionCopy,
   signedOutSocialActionMessage,
 } from './social-action-access';
 
@@ -11,6 +12,18 @@ describe('signed-out social action access', () => {
     );
     expect(signedOutSocialActionMessage('comment')).toBe('Create or open your page to comment.');
     expect(signedOutSocialActionMessage('message')).toBe('Create or open your page to send messages.');
+  });
+
+  it('uses familiar labels for logged-in comments and messages', () => {
+    expect(socialInteractionCopy.commentPlaceholder).toBe('Write a comment...');
+    expect(socialInteractionCopy.commentSubmit).toBe('Comment');
+    expect(socialInteractionCopy.messagePlaceholder).toBe('Write a message...');
+    expect(socialInteractionCopy.messageSubmit).toBe('Send');
+    expect(socialInteractionCopy.messageSent).toBe('Message sent.');
+    expect(socialInteractionCopy.messagePrepared).toBe(
+      'Message ready to download. This page host does not accept automatic delivery yet.',
+    );
+    expect(socialInteractionCopy.messageDownload).toBe('Download message file');
   });
 
   it('focuses the first simple page access field', () => {

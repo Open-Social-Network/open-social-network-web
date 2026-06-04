@@ -1,5 +1,15 @@
 export type SignedOutSocialAction = 'react' | 'comment' | 'message';
 
+export const socialInteractionCopy = {
+  commentPlaceholder: 'Write a comment...',
+  commentSubmit: 'Comment',
+  messagePlaceholder: 'Write a message...',
+  messageSubmit: 'Send',
+  messageSent: 'Message sent.',
+  messagePrepared: 'Message ready to download. This page host does not accept automatic delivery yet.',
+  messageDownload: 'Download message file',
+} as const;
+
 export function signedOutSocialActionMessage(action: SignedOutSocialAction): string {
   if (action === 'react') {
     return 'Create or open your page to like or dislike posts.';
