@@ -20,6 +20,10 @@ import {
   deliverDirectMessage,
   readOwnerDirectMessage,
 } from './app/owner-messages';
+import {
+  summarizeOwnerPublishReady,
+  type OwnerPublishReadySummary,
+} from './app/owner-publish';
 import type {
   PreparedDirectMessage,
   ReadOwnerDirectMessage as OwnerInboxMessage,
@@ -61,12 +65,19 @@ type MessageStatus =
       downloadName: string;
     };
 
+interface PendingPublishChanges {
+  pageCreated: boolean;
+  postCount: number;
+  actions: OpenSocialNetworkAction[];
+}
+
 interface AppState {
   directoryProfiles: string[];
   follows: string[];
   timeline: TimelineResult | null;
   owner: OwnerSession | null;
   actions: OpenSocialNetworkAction[];
+  pendingPublish: PendingPublishChanges;
   loading: boolean;
   error: string | null;
   ownerError: string | null;
@@ -91,6 +102,7 @@ const state: AppState = {
   timeline: null,
   owner: null,
   actions: [],
+  pendingPublish: emptyPendingPublishChanges(),
   loading: true,
   error: null,
   ownerError: null,
@@ -266,6 +278,7 @@ function bindEvents(): void {
     state.messageStatus = null;
     state.inboxMessages = [];
     state.inboxError = null;
+    state.pendingPublish = emptyPendingPublishChanges();
     render();
   });
 
@@ -682,7 +695,11 @@ function renderOwnerPanel(): string {
 
   const pageUrl = ownerPageUrl(state.owner);
   const avatarUrl = profileAvatarUrl(state.owner.profile, state.owner.pageUrl ?? window.location.href);
-  const publicUpdates = summarizeOwnerPublicUpdates(state.owner, state.actions);
+  const publishReady = summarizeOwnerPublishReady({
+    pageCreated: state.pendingPublish.pageCreated,
+    postCount: state.pendingPublish.postCount,
+    publicUpdates: summarizeOwnerPublicUpdates(state.owner, state.pendingPublish.actions),
+  });
 
   return `
     <section class="owner-panel" aria-label="My Page">
@@ -710,7 +727,7 @@ function renderOwnerPanel(): string {
         <button class="button button-secondary" type="button" data-owner-download="public">Download public site</button>
         <button class="button button-secondary owner-logout-button" type="button" data-action="owner-disconnect" aria-label="Log out of this page">${connected.logoutLabel}</button>
       </div>
-      ${publicUpdates ? renderPublicUpdatesReady(publicUpdates) : ''}
+      ${publishReady ? renderPublishReady(publishReady) : ''}
       ${renderOwnerInbox()}
       <p class="owner-session-note">${connected.logoutHelp}</p>
       <section class="publish-anywhere">
@@ -727,11 +744,9 @@ function renderOwnerPanel(): string {
   `;
 }
 
-function renderPublicUpdatesReady(
-  summary: NonNullable<ReturnType<typeof summarizeOwnerPublicUpdates>>,
-): string {
+function renderPublishReady(summary: OwnerPublishReadySummary): string {
   return `
-    <section class="owner-publish-ready" aria-label="Public updates ready">
+    <section class="owner-publish-ready" aria-label="Public changes ready">
       <strong>${escapeHtml(summary.title)}</strong>
       <p>${escapeHtml(summary.detail)}</p>
       <p>Upload the public folder anywhere your page is hosted.</p>
@@ -800,6 +815,11 @@ async function createOwnerFromForm(form: HTMLFormElement): Promise<void> {
     state.ownerError = null;
     state.inboxMessages = [];
     state.inboxError = null;
+    state.pendingPublish = {
+      pageCreated: true,
+      postCount: 0,
+      actions: [],
+    };
     saveStoredOwnerSession(owner);
     render();
   } catch (error) {
@@ -839,6 +859,7 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
     state.ownerError = null;
     state.inboxMessages = [];
     state.inboxError = null;
+    state.pendingPublish = emptyPendingPublishChanges();
     saveStoredOwnerSession(owner);
     saveStoredOwnerActions(state.actions);
     render();
@@ -857,6 +878,10 @@ async function publishOwnerPost(form: HTMLFormElement): Promise<void> {
     const content = (form.elements.namedItem('content') as HTMLTextAreaElement | null)?.value ?? '';
     state.owner = await signOwnerPost(state.owner, content);
     state.ownerError = null;
+    state.pendingPublish = {
+      ...state.pendingPublish,
+      postCount: state.pendingPublish.postCount + 1,
+    };
     saveStoredOwnerSession(state.owner);
     render();
   } catch (error) {
@@ -889,6 +914,10 @@ async function reactToPost(button: HTMLButtonElement): Promise<void> {
     const signedAction = await signOwnerReaction(state.owner, target, nextReaction);
 
     state.actions = [signedAction, ...state.actions];
+    state.pendingPublish = {
+      ...state.pendingPublish,
+      actions: [signedAction, ...state.pendingPublish.actions],
+    };
     state.ownerError = null;
     saveStoredOwnerActions(state.actions);
     render();
@@ -911,6 +940,10 @@ async function commentOnPost(form: HTMLFormElement): Promise<void> {
     const signedAction = await signOwnerComment(state.owner, decodeActionTarget(targetKey), content);
 
     state.actions = [signedAction, ...state.actions];
+    state.pendingPublish = {
+      ...state.pendingPublish,
+      actions: [signedAction, ...state.pendingPublish.actions],
+    };
     state.commentTargetKey = null;
     state.messageTargetKey = null;
     state.ownerError = null;
@@ -1023,6 +1056,14 @@ function mergeActionsById(
 
 function currentTimeline(): TimelineResult {
   return mergeOwnerTimeline(state.timeline, state.owner);
+}
+
+function emptyPendingPublishChanges(): PendingPublishChanges {
+  return {
+    pageCreated: false,
+    postCount: 0,
+    actions: [],
+  };
 }
 
 function postActionTarget(post: TimelineResult['posts'][number]): OpenSocialNetworkActionTarget {
