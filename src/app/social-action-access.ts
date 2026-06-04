@@ -20,7 +20,11 @@ export function focusMyPageAccess(root: ParentNode = document): boolean {
   }
 
   panel.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  panel.querySelector<HTMLElement>('input, textarea, button')?.focus();
+  const preferredControl =
+    panel.querySelector<HTMLElement>('[data-owner-folder-button]') ??
+    panel.querySelector<HTMLElement>('input, textarea, button');
+
+  preferredControl?.focus();
 
   return true;
 }

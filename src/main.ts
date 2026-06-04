@@ -736,7 +736,7 @@ function renderOwnerPanel(): string {
             </ol>
             <p>${disconnected.openExistingPrivateHelp}</p>
           </div>
-          <label class="button button-primary owner-folder-button" for="ownerFolder">${disconnected.openExistingLabel}</label>
+          <label class="button button-primary owner-folder-button" for="ownerFolder" tabindex="0" data-owner-folder-button>${disconnected.openExistingLabel}</label>
           <input
             class="sr-only"
             id="ownerFolder"

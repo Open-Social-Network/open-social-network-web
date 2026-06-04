@@ -25,6 +25,20 @@ describe('signed-out social action access', () => {
     expect(input.focused).toBe(true);
   });
 
+  it('prefers the visible folder login control over hidden file inputs', () => {
+    const folderControl = new FakeFocusableElement();
+    const hiddenInput = new FakeFocusableElement();
+    const panel = new FakePanelWithFolderControl(folderControl, hiddenInput);
+    const root = {
+      querySelector: (selector: string) => (selector === '[data-owner-access]' ? panel : null),
+    } as ParentNode;
+
+    expect(focusMyPageAccess(root)).toBe(true);
+    expect(panel.scrolledIntoView).toBe(true);
+    expect(folderControl.focused).toBe(true);
+    expect(hiddenInput.focused).toBe(false);
+  });
+
   it('returns false when the page access panel is unavailable', () => {
     const root = {
       querySelector: () => null,
@@ -41,6 +55,31 @@ class FakePanel {
 
   querySelector(): FakeFocusableElement {
     return this.focusable;
+  }
+
+  scrollIntoView(): void {
+    this.scrolledIntoView = true;
+  }
+}
+
+class FakePanelWithFolderControl {
+  scrolledIntoView = false;
+
+  constructor(
+    private readonly folderControl: FakeFocusableElement,
+    private readonly hiddenInput: FakeFocusableElement,
+  ) {}
+
+  querySelector(selector: string): FakeFocusableElement | null {
+    if (selector === '[data-owner-folder-button]') {
+      return this.folderControl;
+    }
+
+    if (selector === 'input, textarea, button') {
+      return this.hiddenInput;
+    }
+
+    return null;
   }
 
   scrollIntoView(): void {
