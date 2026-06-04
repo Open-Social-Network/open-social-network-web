@@ -22,6 +22,12 @@ import {
   toggleFollow,
 } from './app/follows';
 import {
+  ownerCommentNotice,
+  ownerPostNotice,
+  ownerReactionNotice,
+  type OwnerLocalSaveResult,
+} from './app/owner-feedback';
+import {
   loadStoredOwnerActions,
   loadOwnerActionsFromActionLog,
   saveStoredOwnerActions,
@@ -105,7 +111,7 @@ type MessageStatus =
       downloadName: string;
     };
 
-type OwnerFolderSaveResult = 'saved' | 'unavailable' | 'failed';
+type OwnerFolderSaveResult = OwnerLocalSaveResult;
 
 interface AppState {
   directoryProfiles: string[];
@@ -1106,7 +1112,7 @@ async function publishOwnerPost(form: HTMLFormElement): Promise<void> {
 
     if (folderSaveResult !== 'failed') {
       state.ownerError = null;
-      state.ownerNotice = folderSaveResult === 'saved' ? 'Saved to your page folder.' : null;
+      state.ownerNotice = ownerPostNotice(folderSaveResult);
     }
 
     saveStoredOwnerSession(state.owner);
@@ -1152,7 +1158,11 @@ async function reactToPost(button: HTMLButtonElement): Promise<void> {
 
     if (folderSaveResult !== 'failed') {
       state.ownerError = null;
-      state.ownerNotice = folderSaveResult === 'saved' ? 'Saved to your page folder.' : null;
+      state.ownerNotice = ownerReactionNotice({
+        reaction: nextReaction,
+        saveResult: folderSaveResult,
+        manualPublishNeeded,
+      });
     }
 
     saveStoredOwnerActions(state.actions);
@@ -1190,7 +1200,10 @@ async function commentOnPost(form: HTMLFormElement): Promise<void> {
 
     if (folderSaveResult !== 'failed') {
       state.ownerError = null;
-      state.ownerNotice = folderSaveResult === 'saved' ? 'Saved to your page folder.' : null;
+      state.ownerNotice = ownerCommentNotice({
+        saveResult: folderSaveResult,
+        manualPublishNeeded,
+      });
     }
 
     saveStoredOwnerActions(state.actions);
