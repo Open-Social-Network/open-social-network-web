@@ -52,6 +52,7 @@ import {
   signOwnerPost,
   type OwnerSession,
 } from './app/owner-session';
+import { profilePageAction } from './app/profile-actions';
 import { profileAvatarUrl, profilePageUrl } from './app/profile-links';
 import {
   focusMyPageAccess,
@@ -476,6 +477,7 @@ function renderTimeline(): string {
         const targetKey = encodeActionTarget(target);
         const messageTargetKey = encodeMessageTarget(post.profile, targetKey);
         const actionSummary = summarizePostActions(state.actions, target);
+        const pageAction = profilePageAction(post.profile.name);
 
         return `
         <article class="post-card">
@@ -486,6 +488,13 @@ function renderTimeline(): string {
                 <h3>${escapeHtml(post.profile.name)}</h3>
                 <p>${escapeHtml(post.author)} · ${formatDate(post.createdAt)}</p>
               </span>
+            </a>
+            <a
+              class="button button-secondary post-view-page"
+              href="${escapeAttribute(pageUrl)}"
+              aria-label="${escapeAttribute(pageAction.ariaLabel)}"
+            >
+              ${escapeHtml(pageAction.label)}
             </a>
           </header>
           <p class="post-content">${escapeHtml(post.content)}</p>
