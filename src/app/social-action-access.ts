@@ -6,8 +6,8 @@ export const socialInteractionCopy = {
   messagePlaceholder: 'Write a message...',
   messageSubmit: 'Send',
   messageSent: 'Message sent.',
-  messagePrepared: 'Message ready to download. This page host does not accept automatic delivery yet.',
-  messageDownload: 'Download message file',
+  messagePrepared: 'Encrypted message ready. Download it and send it any way you like.',
+  messageDownload: 'Download encrypted message',
 } as const;
 
 export function signedOutSocialActionMessage(action: SignedOutSocialAction): string {

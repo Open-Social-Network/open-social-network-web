@@ -23,9 +23,9 @@ describe('signed-out social action access', () => {
     expect(socialInteractionCopy.messageSubmit).toBe('Send');
     expect(socialInteractionCopy.messageSent).toBe('Message sent.');
     expect(socialInteractionCopy.messagePrepared).toBe(
-      'Message ready to download. This page host does not accept automatic delivery yet.',
+      'Encrypted message ready. Download it and send it any way you like.',
     );
-    expect(socialInteractionCopy.messageDownload).toBe('Download message file');
+    expect(socialInteractionCopy.messageDownload).toBe('Download encrypted message');
   });
 
   it('focuses the first simple page access field', () => {
