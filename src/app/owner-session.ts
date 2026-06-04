@@ -532,8 +532,18 @@ function pageHtml(profile: OpenSocialNetworkIdentity): string {
           <summary>Technical details</summary>
           <a href="./profile.json">Profile file</a>
           <a href="./feed.json">Feed file</a>
+          <a href="./opensocial/follows/index.json">Following file</a>
           <a href="./.well-known/open-social-network.json">Discovery file</a>
         </details>
+      </section>
+      <section class="follow-section" aria-label="Following">
+        <div class="section-header">
+          <div>
+            <h2>Following</h2>
+            <p>Pages this profile follows. This list can move with the page.</p>
+          </div>
+        </div>
+        <div data-follows></div>
       </section>
     </main>
     <script type="module" src="./page.js"></script>
@@ -543,7 +553,11 @@ function pageHtml(profile: OpenSocialNetworkIdentity): string {
 }
 
 function pageScript(): string {
-  return `import { renderPostSocialSummary, summarizePostActions } from './page-social.js';
+  return `import {
+  renderPostSocialSummary,
+  renderProfileFollows,
+  summarizePostActions,
+} from './page-social.js';
 
 const profileName = document.querySelector('[data-profile-name]');
 const profileBio = document.querySelector('[data-profile-bio]');
@@ -551,6 +565,7 @@ const profileAvatar = document.querySelector('[data-profile-avatar]');
 const profileHandle = document.querySelector('[data-profile-handle]');
 const profileWebsite = document.querySelector('[data-profile-website]');
 const postsRoot = document.querySelector('[data-posts]');
+const followsRoot = document.querySelector('[data-follows]');
 const verificationStatus = document.querySelector('[data-verification-status]');
 
 await boot();
@@ -571,6 +586,12 @@ async function boot() {
       actor: profile.handle,
       actions: [],
     });
+    const followList = await fetchOptionalJson('./opensocial/follows/index.json', {
+      protocol: 'open-social-network',
+      version: '0.1',
+      owner: profile.handle,
+      follows: [],
+    });
     const publicActions = mergeActionsById(actionInbox.actions ?? [], actionLog.actions ?? []);
     const verifiedPosts = [];
 
@@ -579,6 +600,7 @@ async function boot() {
     profileHandle.textContent = profile.handle;
     renderProfileAvatar(profile);
     renderProfileWebsite(profile);
+    followsRoot.innerHTML = renderProfileFollows(followList, profile.handle);
 
     for (const post of feed.posts) {
       if (await verifyPost(post, profile)) {
@@ -819,6 +841,30 @@ export function renderPostSocialSummary(summary) {
   \`;
 }
 
+export function renderProfileFollows(followList, owner) {
+  const follows = normalizeFollows(followList, owner);
+
+  if (follows.length === 0) {
+    return '<p class="empty-state">Not following anyone yet.</p>';
+  }
+
+  return \`
+    <div class="follow-count">\${formatCount(follows.length, 'page')}</div>
+    <div class="follow-list">
+      \${follows
+        .map(
+          (follow) => \`
+            <a class="follow-card" href="\${escapeAttribute(follow.profile)}">
+              <strong>\${escapeHtml(follow.handle || readableProfileName(follow.profile))}</strong>
+              <span>\${escapeHtml(readableProfileName(follow.profile))}</span>
+            </a>
+          \`,
+        )
+        .join('')}
+    </div>
+  \`;
+}
+
 function targetsPost(action, post) {
   return (
     action?.target?.type === 'post' &&
@@ -827,8 +873,46 @@ function targetsPost(action, post) {
   );
 }
 
+function normalizeFollows(followList, owner) {
+  if (
+    followList?.protocol !== 'open-social-network' ||
+    followList.version !== '0.1' ||
+    followList.owner !== owner ||
+    !Array.isArray(followList.follows)
+  ) {
+    return [];
+  }
+
+  const followsByProfile = new Map();
+
+  for (const follow of followList.follows) {
+    const profile = typeof follow?.profile === 'string' ? follow.profile.trim() : '';
+    const handle = typeof follow?.handle === 'string' ? follow.handle.trim() : '';
+
+    if (!profile || followsByProfile.has(profile)) {
+      continue;
+    }
+
+    followsByProfile.set(profile, {
+      profile,
+      ...(handle ? { handle } : {}),
+    });
+  }
+
+  return [...followsByProfile.values()];
+}
+
 function formatCount(count, singular) {
   return \`\${count} \${count === 1 ? singular : \`\${singular}s\`}\`;
+}
+
+function readableProfileName(value) {
+  try {
+    const url = new URL(value);
+    return url.host.replace(/^www\\./u, '');
+  } catch {
+    return value;
+  }
 }
 
 function formatSocialDate(value) {
@@ -838,6 +922,10 @@ function formatSocialDate(value) {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(value));
+}
+
+function escapeAttribute(value) {
+  return escapeHtml(value);
 }
 
 function likeIcon() {
@@ -885,7 +973,7 @@ body {
 }
 a { color: #b9caff; }
 .page-shell { width: min(920px, 100%); margin: 0 auto; padding: 40px 20px; }
-.profile-hero, .feed-section {
+.profile-hero, .feed-section, .follow-section {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: rgba(16, 22, 36, 0.92);
@@ -932,7 +1020,8 @@ h1 { margin-top: 8px; font-size: clamp(2rem, 7vw, 4rem); line-height: 1; }
   text-decoration: none;
 }
 .profile-website[hidden] { display: none; }
-.feed-section { padding: 24px; }
+.feed-section, .follow-section { padding: 24px; }
+.follow-section { margin-top: 20px; }
 .section-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 [data-verification-status] {
   border-radius: 8px;
@@ -943,6 +1032,32 @@ h1 { margin-top: 8px; font-size: clamp(2rem, 7vw, 4rem); line-height: 1; }
   font-weight: 750;
 }
 .post-list { display: grid; gap: 12px; }
+.follow-count {
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 780;
+}
+.follow-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+.follow-card {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(128, 153, 193, 0.22);
+  border-radius: 8px;
+  background: rgba(10, 16, 29, 0.72);
+  color: inherit;
+  text-decoration: none;
+}
+.follow-card:hover { border-color: var(--cyan); }
+.follow-card strong, .follow-card span { overflow-wrap: anywhere; }
+.follow-card strong { color: var(--ink); font-size: 0.94rem; }
+.follow-card span { color: var(--muted); font-size: 0.82rem; }
 .post-card { padding: 18px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-strong); }
 .post-card-header { display: flex; align-items: center; gap: 12px; }
 .post-card-header strong { display: block; color: var(--ink); }

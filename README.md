@@ -22,7 +22,7 @@ It keeps the main flow simple:
 4. open encrypted messages locally
 5. download your site and host it anywhere
 
-There is no account system in this MVP. Follows are stored locally in your browser.
+There is no account system in this MVP. Follows can be kept locally for convenience and published as a portable follow list on your own page.
 
 If you already have a sovereign page, the browser can also log in locally with that page folder. The private key stays in your browser and is used only to sign new posts.
 
@@ -88,6 +88,7 @@ The aggregator is intentionally neutral. It reads the network, but it does not o
 - Merges verified posts chronologically.
 - Loads verified public action logs and public action inboxes for portable likes, dislikes, and comments.
 - Reads and writes portable follow lists for logged-in pages.
+- Exports generated pages that show their public following list.
 - Shows trust diagnostics for rejected posts and failed feeds.
 - Supports manual following by entering a `profile.json` URL.
 - Creates a new page directly in the browser.

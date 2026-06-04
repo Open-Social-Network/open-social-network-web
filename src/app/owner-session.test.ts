@@ -150,8 +150,10 @@ describe('owner session', () => {
       owner: session.profile.handle,
       messages: [],
     });
+    expect(publicFiles['public/page.js']).toContain('renderPostSocialSummary');
+    expect(publicFiles['public/page.js']).toContain('summarizePostActions');
     expect(publicFiles['public/page.js']).toContain(
-      "import { renderPostSocialSummary, summarizePostActions } from './page-social.js';",
+      'renderProfileFollows(followList, profile.handle)',
     );
     expect(publicFiles['public/page.js']).toContain(
       "fetchOptionalJson('./opensocial/actions/inbox/index.json'",
@@ -159,8 +161,12 @@ describe('owner session', () => {
     expect(publicFiles['public/page.js']).toContain(
       "fetchOptionalJson('./opensocial/actions/index.json'",
     );
+    expect(publicFiles['public/page.js']).toContain(
+      "fetchOptionalJson('./opensocial/follows/index.json'",
+    );
     expect(publicFiles['public/page.js']).toContain('mergeActionsById');
     expect(publicFiles['public/page-social.js']).toContain('export function summarizePostActions');
+    expect(publicFiles['public/page-social.js']).toContain('export function renderProfileFollows');
     expect(publicFiles['public/page-social.js']).toContain('aria-label="Likes"');
     expect(publicFiles['public/page-social.js']).toContain('class="social-icon social-icon-like"');
     expect(publicFiles['public/page-social.js']).toContain('formatSocialDate(comment.createdAt)');
@@ -168,7 +174,10 @@ describe('owner session', () => {
     expect(publicFiles['public/index.html']).toContain('data-profile-avatar');
     expect(publicFiles['public/index.html']).toContain('data-profile-handle');
     expect(publicFiles['public/index.html']).toContain('data-profile-website');
+    expect(publicFiles['public/index.html']).toContain('<h2>Following</h2>');
+    expect(publicFiles['public/index.html']).toContain('data-follows');
     expect(publicFiles['public/styles.css']).toContain('.profile-avatar');
+    expect(publicFiles['public/styles.css']).toContain('.follow-card');
     expect(publicFiles['public/styles.css']).toContain('.verified-badge');
     expect(publicFiles['public/styles.css']).toContain('.profile-website[hidden]');
     expect(publicFiles['public/styles.css']).toContain('.post-social-summary');
