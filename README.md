@@ -96,9 +96,9 @@ The aggregator is intentionally neutral. It reads the network, but it does not o
 - Signs new posts in the browser and exports an updated `feed.json`.
 - Signs likes, dislikes, and comments as public portable updates.
 - Attempts automatic public action delivery to compatible action inbox endpoints and falls back to a small public-updates export on static-only hosts.
-- Creates encrypted direct-message envelopes for profiles that advertise a message inbox.
-- Attempts automatic message delivery to compatible inbox endpoints and falls back to a downloadable encrypted message file on static-only hosts.
-- Opens encrypted message files locally when the current page owns the matching message key and the sender profile is loaded.
+- Sends private messages to profiles that have messages turned on.
+- Attempts automatic message delivery to compatible inbox endpoints and falls back to a downloadable private message on static-only hosts.
+- Imports private messages locally when the current page owns the matching message key and the sender profile is loaded.
 - Exports public files that can be hosted anywhere static files are supported.
 
 ## What This MVP Does Not Do Yet
@@ -180,9 +180,9 @@ If the host is static-only, the app keeps the action in your own public action l
 
 ### Read Messages
 
-When your page is open, use `Messages` -> `Open message` to choose encrypted message files.
+When your page is open, use `Messages` -> `Import message` to read a message someone sent you.
 
-Messages are decrypted only in this browser. The app verifies that the message was sent to your page and that the sender profile is loaded before showing the text.
+Messages stay private and open only in this browser. Under the hood, each message is an encrypted protocol file; the app verifies that it was sent to your page and that the sender profile is loaded before showing the text.
 
 ### Host It Anywhere
 

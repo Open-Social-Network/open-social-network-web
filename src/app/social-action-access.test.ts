@@ -23,9 +23,12 @@ describe('signed-out social action access', () => {
     expect(socialInteractionCopy.messageSubmit).toBe('Send');
     expect(socialInteractionCopy.messageSent).toBe('Message sent.');
     expect(socialInteractionCopy.messagePrepared).toBe(
-      'Encrypted message ready. Download it and send it any way you like.',
+      'Message ready. Download it and send it any way you like.',
     );
-    expect(socialInteractionCopy.messageDownload).toBe('Download encrypted message');
+    expect(socialInteractionCopy.messageDownload).toBe('Download message');
+    expect(`${socialInteractionCopy.messagePrepared} ${socialInteractionCopy.messageDownload}`).not.toMatch(
+      /encrypted message/i,
+    );
   });
 
   it('focuses the first simple page access field', () => {

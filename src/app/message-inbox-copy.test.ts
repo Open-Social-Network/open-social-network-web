@@ -3,13 +3,10 @@ import { messageInboxCopy } from './message-inbox-copy';
 
 describe('message inbox copy', () => {
   it('uses simple message language before technical details', () => {
-    expect(messageInboxCopy.help).toBe(
-      'Open an encrypted message file someone sent you. It is read only in this browser.',
-    );
-    expect(messageInboxCopy.openLabel).toBe('Open message');
-    expect(messageInboxCopy.empty).toBe(
-      'No messages yet. When someone sends you an encrypted message file, open it here.',
-    );
-    expect(messageInboxCopy.invalidFile).toBe('Open an encrypted message file to read it.');
+    expect(messageInboxCopy.help).toBe('Messages stay private and open only in this browser.');
+    expect(messageInboxCopy.openLabel).toBe('Import message');
+    expect(messageInboxCopy.empty).toBe('No messages yet.');
+    expect(messageInboxCopy.invalidFile).toBe('Choose a message file to open.');
+    expect(`${messageInboxCopy.help} ${messageInboxCopy.empty}`).not.toMatch(/encrypted message file/i);
   });
 });
