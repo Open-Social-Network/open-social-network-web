@@ -104,6 +104,7 @@ interface AppState {
   loading: boolean;
   error: string | null;
   ownerError: string | null;
+  ownerNotice: string | null;
   commentTargetKey: string | null;
   messageTargetKey: string | null;
   messageStatus: MessageStatus | null;
@@ -129,6 +130,7 @@ const state: AppState = {
   loading: true,
   error: null,
   ownerError: null,
+  ownerNotice: null,
   commentTargetKey: null,
   messageTargetKey: null,
   messageStatus: null,
@@ -319,6 +321,7 @@ function bindEvents(): void {
     state.inboxError = null;
     state.pendingPublish = emptyOwnerPublishChanges();
     clearStoredOwnerPublishChanges();
+    state.ownerNotice = accountAccessCopy.connected.logoutSuccess;
     render();
   });
 
@@ -705,6 +708,7 @@ function renderOwnerPanel(): string {
           <span>${disconnected.status}</span>
         </div>
         <p class="owner-copy">Create a page, write posts, and host it anywhere.</p>
+        ${state.ownerNotice ? `<p class="owner-notice">${escapeHtml(state.ownerNotice)}</p>` : ''}
         ${state.ownerError ? `<p class="app-error">${escapeHtml(state.ownerError)}</p>` : ''}
         <section class="owner-access-card owner-access-primary" aria-label="Open existing page">
           <div>
@@ -879,6 +883,7 @@ async function createOwnerFromForm(form: HTMLFormElement): Promise<void> {
 
     state.owner = owner;
     state.ownerError = null;
+    state.ownerNotice = null;
     state.inboxMessages = [];
     state.inboxError = null;
     savePendingPublishChanges({
@@ -923,6 +928,7 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
     state.owner = owner;
     state.actions = mergeActionsById(importedActions, state.actions);
     state.ownerError = null;
+    state.ownerNotice = null;
     state.inboxMessages = [];
     state.inboxError = null;
     state.pendingPublish = emptyOwnerPublishChanges();
@@ -945,6 +951,7 @@ async function publishOwnerPost(form: HTMLFormElement): Promise<void> {
     const content = (form.elements.namedItem('content') as HTMLTextAreaElement | null)?.value ?? '';
     state.owner = await signOwnerPost(state.owner, content);
     state.ownerError = null;
+    state.ownerNotice = null;
     savePendingPublishChanges({
       ...state.pendingPublish,
       postCount: state.pendingPublish.postCount + 1,
@@ -988,6 +995,7 @@ async function reactToPost(button: HTMLButtonElement): Promise<void> {
       });
     }
     state.ownerError = null;
+    state.ownerNotice = null;
     saveStoredOwnerActions(state.actions);
     render();
   } catch (error) {
@@ -1019,6 +1027,7 @@ async function commentOnPost(form: HTMLFormElement): Promise<void> {
     state.commentTargetKey = null;
     state.messageTargetKey = null;
     state.ownerError = null;
+    state.ownerNotice = null;
     saveStoredOwnerActions(state.actions);
     render();
   } catch (error) {
@@ -1058,6 +1067,7 @@ async function sendDirectMessage(form: HTMLFormElement): Promise<void> {
     }
 
     state.ownerError = null;
+    state.ownerNotice = null;
     render();
   } catch (error) {
     state.ownerError = error instanceof Error ? error.message : 'Could not send this message';
@@ -1103,6 +1113,7 @@ async function openOwnerMessageFiles(files: FileList | null): Promise<void> {
     );
     state.inboxError = null;
     state.ownerError = null;
+    state.ownerNotice = null;
     render();
   } catch (error) {
     state.inboxError = error instanceof Error ? error.message : 'Could not open this message';

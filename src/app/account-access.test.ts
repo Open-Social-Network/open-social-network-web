@@ -29,7 +29,10 @@ describe('account access copy', () => {
       'This only logs out of this browser. Your public page stays online.',
     );
     expect(accountAccessCopy.connected.logoutReturnHelp).toBe(
-      'To come back, choose Open my page and select the same folder.',
+      'To come back, choose Open my page folder and select the same folder.',
+    );
+    expect(accountAccessCopy.connected.logoutSuccess).toBe(
+      'You are logged out of this browser. Your public page is still online.',
     );
   });
 });

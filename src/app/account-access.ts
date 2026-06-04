@@ -19,6 +19,7 @@ export const accountAccessCopy = {
     logoutTitle: 'Log out anytime',
     logoutLabel: 'Log out',
     logoutHelp: 'This only logs out of this browser. Your public page stays online.',
-    logoutReturnHelp: 'To come back, choose Open my page and select the same folder.',
+    logoutReturnHelp: 'To come back, choose Open my page folder and select the same folder.',
+    logoutSuccess: 'You are logged out of this browser. Your public page is still online.',
   },
 } as const;

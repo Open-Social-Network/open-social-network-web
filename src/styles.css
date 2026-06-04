@@ -289,7 +289,8 @@ button {
   resize: vertical;
 }
 
-.owner-warning {
+.owner-warning,
+.owner-notice {
   margin: 0;
   padding: 10px 12px;
   border: 1px solid rgba(44, 231, 240, 0.22);
