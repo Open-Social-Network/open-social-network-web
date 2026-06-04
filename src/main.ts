@@ -5,6 +5,7 @@ import {
   focusOwnerPostComposer,
   shouldShowFloatingComposeButton,
 } from './app/compose-shortcut';
+import { renderVerificationDiagnostics } from './app/diagnostics';
 import { loadDirectory } from './app/directory';
 import { messageAccessState, type MessageAccessState } from './app/message-access';
 import {
@@ -682,42 +683,7 @@ function renderDiagnostics(): string {
     return '<p class="empty-state">Diagnostics load with the timeline.</p>';
   }
 
-  const rejected = timeline.rejectedPosts
-    .map(
-      (post) => `
-        <li>
-          <strong>${escapeHtml(post.postId)}</strong>
-          <span>${escapeHtml(post.reason)}</span>
-        </li>
-      `,
-    )
-    .join('');
-  const failures = timeline.failures
-    .map(
-      (failure) => `
-        <li>
-          <strong>${escapeHtml(shortUrl(failure.source))}</strong>
-          <span>${escapeHtml(failure.reason)}</span>
-        </li>
-      `,
-    )
-    .join('');
-
-  if (!rejected && !failures) {
-    return `
-      <div class="trust-ok">
-        <strong>All followed posts verified.</strong>
-        <span>Each visible post matched its identity public key.</span>
-      </div>
-    `;
-  }
-
-  return `
-    <ul class="diagnostic-list">
-      ${rejected}
-      ${failures}
-    </ul>
-  `;
+  return renderVerificationDiagnostics(timeline);
 }
 
 function renderOwnerPanel(): string {
