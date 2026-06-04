@@ -2,6 +2,7 @@ import { importPrivateKeyJwk } from '../protocol/keys';
 import { signAction, verifyAction } from '../protocol/public-actions';
 import type {
   OpenSocialNetworkAction,
+  OpenSocialNetworkActionLog,
   OpenSocialNetworkActionTarget,
   OpenSocialNetworkReaction,
   UnsignedOpenSocialNetworkAction,
@@ -96,6 +97,29 @@ export function saveStoredOwnerActions(
   storage.setItem(OWNER_ACTIONS_STORAGE_KEY, JSON.stringify(actions));
 }
 
+export async function loadOwnerActionsFromActionLog(
+  session: OwnerSession,
+  value: unknown,
+): Promise<OpenSocialNetworkAction[]> {
+  if (!isActionLogForOwner(session, value)) {
+    return [];
+  }
+
+  const verifiedActions: OpenSocialNetworkAction[] = [];
+
+  for (const action of value.actions) {
+    if (
+      isSignedAction(action) &&
+      action.actor === session.profile.handle &&
+      (await verifyAction(action, session.profile))
+    ) {
+      verifiedActions.push(action);
+    }
+  }
+
+  return verifiedActions;
+}
+
 export function summarizeOwnerPublicUpdates(
   session: OwnerSession,
   actions: OpenSocialNetworkAction[],
@@ -151,6 +175,24 @@ function createActionId(kind: 'reaction' | 'comment', createdAt?: string): strin
       : Math.random().toString(36).slice(2);
 
   return `${kind}_${Date.parse(createdAt ?? new Date().toISOString()).toString(36)}_${entropy}`;
+}
+
+function isActionLogForOwner(
+  session: OwnerSession,
+  value: unknown,
+): value is OpenSocialNetworkActionLog {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const actionLog = value as Partial<OpenSocialNetworkActionLog>;
+
+  return (
+    actionLog.protocol === 'open-social-network' &&
+    actionLog.version === '0.1' &&
+    actionLog.actor === session.profile.handle &&
+    Array.isArray(actionLog.actions)
+  );
 }
 
 function isSignedAction(value: unknown): value is OpenSocialNetworkAction {

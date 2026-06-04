@@ -156,9 +156,10 @@ public/profile.json
 public/feed.json
 private/identity.private.jwk.json
 private/messages.private.jwk.json
+public/opensocial/actions/index.json
 ```
 
-Open Social Network Web validates that the private key owns the profile. After that, it remembers the session in local browser storage, shows your page as logged in, lets you sign a new post, and lets you download the updated `feed.json`.
+Open Social Network Web validates that the private key owns the profile. After that, it remembers the session in local browser storage, shows your page as logged in, loads your published public reactions and comments, lets you sign a new post, and lets you download the updated `feed.json`.
 
 ### React And Comment
 

@@ -4,6 +4,7 @@ import type { OpenSocialNetworkActionTarget } from '../protocol/types';
 import { createOwnerPage } from './owner-session';
 import {
   loadStoredOwnerActions,
+  loadOwnerActionsFromActionLog,
   saveStoredOwnerActions,
   signOwnerComment,
   signOwnerReaction,
@@ -129,6 +130,66 @@ describe('owner public actions', () => {
     });
 
     expect(summarizeOwnerPublicUpdates(owner, [otherReaction])).toBeNull();
+  });
+
+  it('loads verified owner actions from a public action log', async () => {
+    const owner = await createOwnerPage({
+      name: 'Owner',
+      handle: 'owner@example.test',
+      bio: '',
+      firstPost: 'First post',
+    });
+    const target = targetFor(owner.feed.posts[0]!.id, owner.feed.posts[0]!.author);
+    const action = await signOwnerReaction(owner, target, 'like', {
+      id: 'reaction_1',
+      createdAt: '2026-06-03T12:00:00.000Z',
+    });
+
+    await expect(
+      loadOwnerActionsFromActionLog(owner, {
+        protocol: 'open-social-network',
+        version: '0.1',
+        actor: owner.profile.handle,
+        actions: [action],
+      }),
+    ).resolves.toEqual([action]);
+  });
+
+  it('ignores malformed, tampered, and non-owner actions from a public action log', async () => {
+    const owner = await createOwnerPage({
+      name: 'Owner',
+      handle: 'owner@example.test',
+      bio: '',
+      firstPost: 'First post',
+    });
+    const otherOwner = await createOwnerPage({
+      name: 'Other',
+      handle: 'other@example.test',
+      bio: '',
+      firstPost: 'Other post',
+    });
+    const target = targetFor(owner.feed.posts[0]!.id, owner.feed.posts[0]!.author);
+    const ownerAction = await signOwnerReaction(owner, target, 'like', {
+      id: 'reaction_1',
+      createdAt: '2026-06-03T12:00:00.000Z',
+    });
+    const tamperedAction = {
+      ...ownerAction,
+      reaction: 'dislike' as const,
+    };
+    const otherAction = await signOwnerReaction(otherOwner, target, 'like', {
+      id: 'reaction_2',
+      createdAt: '2026-06-03T12:02:00.000Z',
+    });
+
+    await expect(
+      loadOwnerActionsFromActionLog(owner, {
+        protocol: 'open-social-network',
+        version: '0.1',
+        actor: owner.profile.handle,
+        actions: [tamperedAction, otherAction, { broken: true }],
+      }),
+    ).resolves.toEqual([]);
   });
 });
 

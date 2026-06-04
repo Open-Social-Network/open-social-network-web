@@ -9,6 +9,7 @@ import {
 } from './app/follows';
 import {
   loadStoredOwnerActions,
+  loadOwnerActionsFromActionLog,
   saveStoredOwnerActions,
   signOwnerComment,
   signOwnerReaction,
@@ -817,6 +818,10 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
       projectFiles,
       'private/messages.private.jwk.json',
     );
+    const actionLogFile = optionalOwnerProjectFile(
+      projectFiles,
+      'public/opensocial/actions/index.json',
+    );
     const owner = await connectOwnerPage({
       profile: (await readJsonFile(profileFile)) as OwnerSession['profile'],
       feed: (await readJsonFile(feedFile)) as OwnerSession['feed'],
@@ -825,12 +830,17 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
         ? ((await readJsonFile(messagePrivateKeyFile)) as JsonWebKey)
         : undefined,
     });
+    const importedActions = actionLogFile
+      ? await loadOwnerActionsFromActionLog(owner, await readJsonFile(actionLogFile))
+      : [];
 
     state.owner = owner;
+    state.actions = mergeActionsById(importedActions, state.actions);
     state.ownerError = null;
     state.inboxMessages = [];
     state.inboxError = null;
     saveStoredOwnerSession(owner);
+    saveStoredOwnerActions(state.actions);
     render();
   } catch (error) {
     state.ownerError = error instanceof Error ? error.message : 'Could not log in with this folder';
@@ -994,6 +1004,21 @@ async function openOwnerMessageFiles(files: FileList | null): Promise<void> {
     state.inboxError = error instanceof Error ? error.message : 'Could not open this message';
     render();
   }
+}
+
+function mergeActionsById(
+  preferredActions: OpenSocialNetworkAction[],
+  fallbackActions: OpenSocialNetworkAction[],
+): OpenSocialNetworkAction[] {
+  const actionsById = new Map<string, OpenSocialNetworkAction>();
+
+  for (const action of [...preferredActions, ...fallbackActions]) {
+    if (!actionsById.has(action.id)) {
+      actionsById.set(action.id, action);
+    }
+  }
+
+  return [...actionsById.values()];
 }
 
 function currentTimeline(): TimelineResult {
