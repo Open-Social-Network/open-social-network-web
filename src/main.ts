@@ -1,5 +1,6 @@
 import { loadVerifiedTimeline, type TimelineResult } from './aggregator/timeline';
 import { accountAccessCopy } from './app/account-access';
+import { commentAuthorDisplay } from './app/comment-display';
 import {
   focusOwnerPostComposer,
   shouldShowFloatingComposeButton,
@@ -488,7 +489,7 @@ function renderTimeline(): string {
           </header>
           <p class="post-content">${escapeHtml(post.content)}</p>
           ${renderPostActions(target, targetKey, actionSummary, post.profile, messageTargetKey)}
-          ${renderPostComments(actionSummary)}
+          ${renderPostComments(actionSummary, currentTimeline().profiles)}
           <details class="technical-details post-details">
             <summary>Technical details</summary>
             <span>Signature algorithm: ES256</span>
@@ -614,7 +615,10 @@ function renderMessageStatus(status: MessageStatus): string {
   `;
 }
 
-function renderPostComments(summary: OpenSocialNetworkPostActionSummary): string {
+function renderPostComments(
+  summary: OpenSocialNetworkPostActionSummary,
+  profiles: OpenSocialNetworkIdentity[],
+): string {
   if (summary.comments.length === 0) {
     return '';
   }
@@ -622,14 +626,23 @@ function renderPostComments(summary: OpenSocialNetworkPostActionSummary): string
   return `
     <div class="post-comments" aria-label="Comments">
       ${summary.comments
-        .map(
-          (comment) => `
+        .map((comment) => {
+          const author = commentAuthorDisplay(comment.actor, profiles);
+          const avatarUrl = author.profile ? profileAvatarUrl(author.profile, window.location.href) : null;
+
+          return `
             <article class="post-comment">
-              <strong>${escapeHtml(comment.actor)}</strong>
+              <div class="post-comment-author">
+                ${renderAvatar(author.name, avatarUrl, 'comment-avatar')}
+                <span>
+                  <strong>${escapeHtml(author.name)}</strong>
+                  ${author.handle ? `<span>${escapeHtml(author.handle)}</span>` : ''}
+                </span>
+              </div>
               <p>${escapeHtml(comment.content)}</p>
             </article>
-          `,
-        )
+          `;
+        })
         .join('')}
     </div>
   `;
