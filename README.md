@@ -271,12 +271,17 @@ This web aggregator is one interface for that network, not the network itself.
 
 ### The Open Social Network Direction
 
-- **Profiles are sovereign.** A profile belongs to the person, organization, project, or community that publishes it.
+- **Profiles belong to users, not platforms.** A profile is a sovereign web identity, closer to a website, domain, or email identity than an account rented from an app.
+- **Followers belong to creators.** Audience, reputation, and social history should be portable protocol data, not assets trapped inside one company database.
+- **Profiles are independent web pages.** A social identity should be able to live on static hosting, a personal server, a community host, object storage, mirrors, or future compatible storage layers.
 - **Aggregators are replaceable.** Aggregators browse, verify, rank, moderate, and display the network. They do not own the identities underneath.
-- **Publishing should work anywhere.** A public folder can live on static hosting, a personal server, a community host, object storage, mirrors, or future compatible storage layer.
-- **Algorithms should compete.** Different clients should be able to offer different ranking, moderation, and discovery without controlling the protocol.
-- **Decentralization should feel familiar.** Users should experience simple actions: create a page, post, follow, react, comment, message, and publish. The protocol details should be there for verification, not forced into daily use.
-- **The protocol has no global account switch.** Safety and moderation are real requirements, but they should be handled by hosts, apps, communities, filters, and user choice rather than a central protocol owner.
+- **Algorithms should compete.** Recommendation systems should influence discovery, not decide whether a person effectively exists online.
+- **The protocol has no global ban switch.** Safety and moderation are real requirements, but they should be handled by hosts, apps, communities, filters, user choice, and applicable infrastructure law rather than a central protocol owner.
+- **Identity must be portable.** Users should be able to migrate hosts, change providers, self-host, or create mirrors without losing identity or audience.
+- **Self-hosting must remain possible.** Hosted providers can make the network easier, but the protocol must preserve the right to fully own and host a presence independently.
+- **The protocol belongs to nobody.** Open Social Network is open source infrastructure, not a platform controlled by one company.
+- **Decentralization must stay practical.** Users should experience simple actions: create a page, post, follow, react, comment, message, and publish. Protocol details should support verification without becoming a daily burden.
+- **Evolution must protect users.** The protocol should remain modular, extensible, and forward-compatible so new capabilities do not break existing identities.
 
 ### What v0.1 Is Trying To Prove
 
