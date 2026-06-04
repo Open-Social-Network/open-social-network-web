@@ -2,7 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { importMessagePrivateKeyJwk } from '../protocol/keys';
 import { decryptDirectMessage, verifyDirectMessage } from '../protocol/direct-messages';
 import { createOwnerPage } from './owner-session';
-import { createOwnerDirectMessage, deliverDirectMessage, readOwnerDirectMessage } from './owner-messages';
+import {
+  createOwnerDirectMessage,
+  deliverDirectMessage,
+  readOwnerDirectMessage,
+  readOwnerDirectMessageInbox,
+} from './owner-messages';
 
 describe('owner direct messages', () => {
   it('creates an encrypted signed message for a recipient inbox', async () => {
@@ -161,6 +166,50 @@ describe('owner direct messages', () => {
       recipient: 'recipient@example.test',
       createdAt: '2026-06-04T12:00:00.000Z',
       content: 'Private hello',
+    });
+  });
+
+  it('opens valid encrypted messages from the public message inbox', async () => {
+    const sender = await createOwnerPage({
+      name: 'Sender',
+      handle: 'sender@example.test',
+      bio: '',
+      firstPost: 'Sender page',
+    });
+    const recipient = await createOwnerPage({
+      name: 'Recipient',
+      handle: 'recipient@example.test',
+      bio: '',
+      firstPost: 'Recipient page',
+    });
+    const prepared = await createOwnerDirectMessage(sender, recipient.profile, 'Inbox hello', {
+      id: 'message_1',
+      createdAt: '2026-06-04T12:00:00.000Z',
+    });
+
+    await expect(
+      readOwnerDirectMessageInbox(
+        recipient,
+        {
+          protocol: 'open-social-network',
+          version: '0.1',
+          owner: recipient.profile.handle,
+          messages: [prepared.message, { id: 'not_a_message' }],
+        },
+        {
+          senderProfiles: [sender.profile],
+        },
+      ),
+    ).resolves.toMatchObject({
+      messages: [
+        {
+          id: 'message_1',
+          sender: 'sender@example.test',
+          senderName: 'Sender',
+          content: 'Inbox hello',
+        },
+      ],
+      failures: ['Skipped a message that was not a valid Open Social Network message.'],
     });
   });
 

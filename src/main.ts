@@ -41,6 +41,7 @@ import {
   createOwnerDirectMessage,
   deliverDirectMessage,
   readOwnerDirectMessage,
+  readOwnerDirectMessageInbox,
 } from './app/owner-messages';
 import {
   ownerProjectWriterFromDirectoryHandle,
@@ -114,6 +115,11 @@ type MessageStatus =
     };
 
 type OwnerFolderSaveResult = OwnerLocalSaveResult;
+
+type ImportedOwnerInbox = {
+  messages: OwnerInboxMessage[];
+  failures: string[];
+};
 
 interface AppState {
   directoryProfiles: string[];
@@ -1006,6 +1012,10 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
       projectFiles,
       'public/opensocial/follows/index.json',
     );
+    const messageInboxFile = optionalOwnerProjectFile(
+      projectFiles,
+      'public/opensocial/messages/inbox/index.json',
+    );
     const owner = await connectOwnerPage({
       profile: (await readJsonFile(profileFile)) as OwnerSession['profile'],
       feed: (await readJsonFile(feedFile)) as OwnerSession['feed'],
@@ -1020,6 +1030,10 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
     const importedFollows = followListFile
       ? followsFromFollowList(owner.profile.handle, await readJsonFile(followListFile))
       : [];
+    const importedInbox = await importOwnerInboxMessages(
+      owner,
+      messageInboxFile ? await readJsonFile(messageInboxFile) : undefined,
+    );
 
     state.owner = owner;
     state.ownerProjectWriter = null;
@@ -1027,8 +1041,8 @@ async function connectOwnerFromFolder(files: FileList | null): Promise<void> {
     mergeImportedFollows(importedFollows);
     state.ownerError = null;
     state.ownerNotice = 'Opened in this browser. Download the public site when you want to publish changes.';
-    state.inboxMessages = [];
-    state.inboxError = null;
+    state.inboxMessages = mergeInboxMessages(importedInbox.messages, []);
+    state.inboxError = inboxFailureMessage(importedInbox.failures);
     state.pendingPublish = emptyOwnerPublishChanges();
     clearStoredOwnerPublishChanges();
     saveStoredOwnerSession(owner);
@@ -1069,6 +1083,10 @@ async function connectOwnerFromDirectoryHandle(directoryHandle: BrowserDirectory
       directoryHandle,
       'public/opensocial/follows/index.json',
     );
+    const messageInboxJson = await optionalOwnerDirectoryJson(
+      directoryHandle,
+      'public/opensocial/messages/inbox/index.json',
+    );
     const owner = await connectOwnerPage({
       profile: (await readOwnerProjectJsonFromDirectoryHandle(
         directoryHandle,
@@ -1090,15 +1108,19 @@ async function connectOwnerFromDirectoryHandle(directoryHandle: BrowserDirectory
       ? await loadOwnerActionsFromActionLog(owner, actionLogJson)
       : [];
     const importedFollows = followsFromFollowList(owner.profile.handle, followListJson);
+    const importedInbox = await importOwnerInboxMessages(owner, messageInboxJson);
 
     state.owner = owner;
     state.ownerProjectWriter = ownerProjectWriterFromDirectoryHandle(directoryHandle);
     state.actions = mergeActionsById(importedActions, state.actions);
     mergeImportedFollows(importedFollows);
     state.ownerError = null;
-    state.ownerNotice = 'Opened your page folder. New posts and public actions save there automatically.';
-    state.inboxMessages = [];
-    state.inboxError = null;
+    state.ownerNotice =
+      importedInbox.messages.length > 0
+        ? 'Opened your page folder. Messages in your inbox opened automatically.'
+        : 'Opened your page folder. New posts and public actions save there automatically.';
+    state.inboxMessages = mergeInboxMessages(importedInbox.messages, []);
+    state.inboxError = inboxFailureMessage(importedInbox.failures);
     state.pendingPublish = emptyOwnerPublishChanges();
     clearStoredOwnerPublishChanges();
     saveStoredOwnerSession(owner);
@@ -1296,16 +1318,7 @@ async function openOwnerMessageFiles(files: FileList | null): Promise<void> {
       );
     }
 
-    const messagesById = new Map<string, OwnerInboxMessage>();
-
-    for (const message of [...openedMessages, ...state.inboxMessages]) {
-      messagesById.set(message.id, message);
-    }
-
-    state.inboxMessages = [...messagesById.values()].sort(
-      (left, right) =>
-        new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
-    );
+    state.inboxMessages = mergeInboxMessages(openedMessages, state.inboxMessages);
     state.inboxError = null;
     state.ownerError = null;
     state.ownerNotice = null;
@@ -1329,6 +1342,58 @@ function mergeActionsById(
   }
 
   return [...actionsById.values()];
+}
+
+async function importOwnerInboxMessages(
+  owner: OwnerSession,
+  messageLogJson: unknown | undefined,
+): Promise<ImportedOwnerInbox> {
+  if (!messageLogJson) {
+    return {
+      messages: [],
+      failures: [],
+    };
+  }
+
+  try {
+    return await readOwnerDirectMessageInbox(owner, messageLogJson, {
+      senderProfiles: currentTimeline().profiles,
+    });
+  } catch (error) {
+    return {
+      messages: [],
+      failures: [error instanceof Error ? error.message : 'Could not open the message inbox.'],
+    };
+  }
+}
+
+function mergeInboxMessages(
+  preferredMessages: OwnerInboxMessage[],
+  fallbackMessages: OwnerInboxMessage[],
+): OwnerInboxMessage[] {
+  const messagesById = new Map<string, OwnerInboxMessage>();
+
+  for (const message of [...preferredMessages, ...fallbackMessages]) {
+    if (!messagesById.has(message.id)) {
+      messagesById.set(message.id, message);
+    }
+  }
+
+  return [...messagesById.values()].sort(
+    (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+  );
+}
+
+function inboxFailureMessage(failures: string[]): string | null {
+  if (failures.length === 0) {
+    return null;
+  }
+
+  if (failures.length === 1) {
+    return failures[0];
+  }
+
+  return `${failures.length} messages could not be opened. ${failures[0]}`;
 }
 
 function currentTimeline(): TimelineResult {

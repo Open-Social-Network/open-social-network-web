@@ -4,7 +4,11 @@ import {
   importMessagePublicKeyJwk,
   importPrivateKeyJwk,
 } from '../protocol/keys';
-import type { OpenSocialNetworkDirectMessage, OpenSocialNetworkIdentity } from '../protocol/types';
+import type {
+  OpenSocialNetworkDirectMessage,
+  OpenSocialNetworkDirectMessageLog,
+  OpenSocialNetworkIdentity,
+} from '../protocol/types';
 import type { OwnerSession } from './owner-session';
 
 export interface OwnerDirectMessageOptions {
@@ -34,6 +38,11 @@ export interface ReadOwnerDirectMessage {
   recipient: string;
   createdAt: string;
   content: string;
+}
+
+export interface ReadOwnerDirectMessageInbox {
+  messages: ReadOwnerDirectMessage[];
+  failures: string[];
 }
 
 export type DirectMessageDeliveryResult =
@@ -157,6 +166,42 @@ export async function readOwnerDirectMessage(
   };
 }
 
+export async function readOwnerDirectMessageInbox(
+  session: OwnerSession,
+  messageLog: unknown,
+  options: ReadOwnerDirectMessageOptions,
+): Promise<ReadOwnerDirectMessageInbox> {
+  if (!isDirectMessageLog(messageLog)) {
+    throw new Error('Choose a valid Open Social Network message inbox.');
+  }
+
+  if (messageLog.owner !== session.profile.handle) {
+    throw new Error('This message inbox belongs to another page.');
+  }
+
+  const messages: ReadOwnerDirectMessage[] = [];
+  const failures: string[] = [];
+
+  for (const value of messageLog.messages) {
+    if (!isDirectMessage(value)) {
+      failures.push('Skipped a message that was not a valid Open Social Network message.');
+      continue;
+    }
+
+    try {
+      messages.push(await readOwnerDirectMessage(session, value, options));
+    } catch (error) {
+      failures.push(error instanceof Error ? error.message : 'Could not open one message.');
+    }
+  }
+
+  messages.sort(
+    (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+  );
+
+  return { messages, failures };
+}
+
 function resolveRecipientInboxUrl(
   recipient: OpenSocialNetworkIdentity,
   profileBaseUrl?: string,
@@ -196,4 +241,43 @@ function isAbsoluteUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function isDirectMessageLog(value: unknown): value is OpenSocialNetworkDirectMessageLog {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    value.protocol === 'open-social-network' &&
+    value.version === '0.1' &&
+    typeof value.owner === 'string' &&
+    Array.isArray(value.messages)
+  );
+}
+
+function isDirectMessage(value: unknown): value is OpenSocialNetworkDirectMessage {
+  if (!isRecord(value) || !isRecord(value.encryption) || !isRecord(value.signature)) {
+    return false;
+  }
+
+  return (
+    value.protocol === 'open-social-network' &&
+    value.version === '0.1' &&
+    value.kind === 'direct-message' &&
+    typeof value.id === 'string' &&
+    typeof value.sender === 'string' &&
+    typeof value.recipient === 'string' &&
+    typeof value.createdAt === 'string' &&
+    value.encryption.alg === 'ECDH-P256-A256GCM' &&
+    isRecord(value.encryption.epk) &&
+    typeof value.encryption.iv === 'string' &&
+    typeof value.encryption.ciphertext === 'string' &&
+    value.signature.alg === 'ES256' &&
+    typeof value.signature.value === 'string'
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
