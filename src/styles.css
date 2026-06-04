@@ -535,6 +535,11 @@ button {
   gap: 10px;
 }
 
+.profile-card {
+  display: grid;
+  gap: 8px;
+}
+
 .profile-row {
   justify-content: space-between;
   gap: 10px;
@@ -577,6 +582,13 @@ button {
   min-width: 0;
 }
 
+.profile-row-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
 .profile-row strong,
 .profile-row span {
   display: block;
@@ -604,6 +616,10 @@ button {
 .icon-button-active {
   color: #06101d;
   background: linear-gradient(135deg, var(--accent), var(--cyan));
+}
+
+.profile-message-panel .post-message-form {
+  margin-top: 0;
 }
 
 .status-pill {

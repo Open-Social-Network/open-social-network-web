@@ -70,6 +70,7 @@ import {
   type OwnerSession,
 } from './app/owner-session';
 import { profilePageAction } from './app/profile-actions';
+import { renderProfileMessageAction } from './app/profile-card';
 import { profileAvatarUrl, profilePageUrl } from './app/profile-links';
 import { followsFromFollowList } from './protocol/follows';
 import {
@@ -459,25 +460,49 @@ function renderProfiles(): string {
       const handle = profile?.handle ?? profileUrl;
       const pageUrl = profile ? profilePageUrl(profile, profileUrl) : profileUrl;
       const avatarUrl = profile ? profileAvatarUrl(profile, profileUrl) : null;
+      const messageTargetKey = profile ? encodeMessageTarget(profile, 'profile') : null;
+      const messageOpen = messageTargetKey ? state.messageTargetKey === messageTargetKey : false;
+      const messageAccess = profile
+        ? messageAccessState(profile, state.owner?.profile.handle)
+        : null;
 
       return `
-        <article class="profile-row ${followed ? 'profile-row-active' : ''}">
-          <a class="profile-link" href="${escapeAttribute(pageUrl)}" aria-label="Open ${escapeAttribute(name)} page">
-            ${renderAvatar(name, avatarUrl, 'profile-picture')}
-            <span class="profile-copy">
-              <strong>${escapeHtml(name)}</strong>
-              <span>${escapeHtml(handle)}</span>
-            </span>
-          </a>
-          <button
-            class="icon-button ${followed ? 'icon-button-active' : ''}"
-            type="button"
-            data-profile-url="${escapeAttribute(profileUrl)}"
-            aria-label="${followed ? 'Unfollow' : 'Follow'} ${escapeAttribute(name)}"
-            title="${followed ? 'Unfollow' : 'Follow'}"
-          >
-            ${followed ? 'On' : 'Off'}
-          </button>
+        <article class="profile-card">
+          <div class="profile-row ${followed ? 'profile-row-active' : ''}">
+            <a class="profile-link" href="${escapeAttribute(pageUrl)}" aria-label="Open ${escapeAttribute(name)} page">
+              ${renderAvatar(name, avatarUrl, 'profile-picture')}
+              <span class="profile-copy">
+                <strong>${escapeHtml(name)}</strong>
+                <span>${escapeHtml(handle)}</span>
+              </span>
+            </a>
+            <div class="profile-row-actions">
+              ${
+                profile && messageTargetKey
+                  ? renderProfileMessageAction({
+                      profile,
+                      ownerHandle: state.owner?.profile.handle,
+                      messageTargetKey,
+                      iconHtml: messageIcon(),
+                    })
+                  : ''
+              }
+              <button
+                class="icon-button ${followed ? 'icon-button-active' : ''}"
+                type="button"
+                data-profile-url="${escapeAttribute(profileUrl)}"
+                aria-label="${followed ? 'Unfollow' : 'Follow'} ${escapeAttribute(name)}"
+                title="${followed ? 'Unfollow' : 'Follow'}"
+              >
+                ${followed ? 'On' : 'Off'}
+              </button>
+            </div>
+          </div>
+          ${
+            profile && messageTargetKey && messageAccess && messageOpen
+              ? `<div class="profile-message-panel">${renderMessageComposer(profile, messageTargetKey, messageAccess)}</div>`
+              : ''
+          }
         </article>
       `;
     })
