@@ -147,8 +147,21 @@ describe('owner session', () => {
     expect(publicFiles['public/page.js']).toContain(
       "fetchOptionalJson('./opensocial/actions/inbox/index.json'",
     );
+    expect(publicFiles['public/page.js']).toContain(
+      "fetchOptionalJson('./opensocial/actions/index.json'",
+    );
+    expect(publicFiles['public/page.js']).toContain('mergeActionsById');
     expect(publicFiles['public/page-social.js']).toContain('export function summarizePostActions');
+    expect(publicFiles['public/page-social.js']).toContain('aria-label="Likes"');
+    expect(publicFiles['public/page-social.js']).toContain('class="social-icon social-icon-like"');
+    expect(publicFiles['public/page-social.js']).toContain('formatSocialDate(comment.createdAt)');
     expect(publicFiles['public/page-social.js']).toContain('escapeHtml(comment.content)');
+    expect(publicFiles['public/index.html']).toContain('data-profile-avatar');
+    expect(publicFiles['public/index.html']).toContain('data-profile-handle');
+    expect(publicFiles['public/index.html']).toContain('data-profile-website');
+    expect(publicFiles['public/styles.css']).toContain('.profile-avatar');
+    expect(publicFiles['public/styles.css']).toContain('.verified-badge');
+    expect(publicFiles['public/styles.css']).toContain('.profile-website[hidden]');
     expect(publicFiles['public/styles.css']).toContain('.post-social-summary');
     expect(publicFiles['public/index.html']).toContain('rel="icon"');
   });

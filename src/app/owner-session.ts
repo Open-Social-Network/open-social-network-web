@@ -495,9 +495,19 @@ function pageHtml(profile: OpenSocialNetworkIdentity): string {
   <body>
     <main class="page-shell">
       <section class="profile-hero">
-        <p class="network-label">Open Social Network</p>
-        <h1 data-profile-name>${escapeHtml(profile.name)}</h1>
-        <p data-profile-bio>${escapeHtml(profile.bio || profile.handle)}</p>
+        <div class="profile-summary">
+          <div class="profile-avatar" data-profile-avatar>${escapeHtml(profileInitials(profile.name))}</div>
+          <div>
+            <p class="network-label">Open Social Network</p>
+            <h1 data-profile-name>${escapeHtml(profile.name)}</h1>
+            <p class="profile-handle" data-profile-handle>${escapeHtml(profile.handle)}</p>
+          </div>
+        </div>
+        <p class="profile-bio" data-profile-bio>${escapeHtml(profile.bio || profile.handle)}</p>
+        <div class="profile-actions">
+          <span class="verified-badge">Verified page</span>
+          <a class="profile-website" data-profile-website href="${escapeHtml(profile.website ?? '')}"${profile.website ? '' : ' hidden'}>${escapeHtml(profile.website ?? 'Website')}</a>
+        </div>
       </section>
       <section class="feed-section">
         <div class="section-header">
@@ -524,6 +534,9 @@ function pageScript(): string {
 
 const profileName = document.querySelector('[data-profile-name]');
 const profileBio = document.querySelector('[data-profile-bio]');
+const profileAvatar = document.querySelector('[data-profile-avatar]');
+const profileHandle = document.querySelector('[data-profile-handle]');
+const profileWebsite = document.querySelector('[data-profile-website]');
 const postsRoot = document.querySelector('[data-posts]');
 const verificationStatus = document.querySelector('[data-verification-status]');
 
@@ -539,10 +552,20 @@ async function boot() {
       owner: profile.handle,
       actions: [],
     });
+    const actionLog = await fetchOptionalJson('./opensocial/actions/index.json', {
+      protocol: 'open-social-network',
+      version: '0.1',
+      actor: profile.handle,
+      actions: [],
+    });
+    const publicActions = mergeActionsById(actionInbox.actions ?? [], actionLog.actions ?? []);
     const verifiedPosts = [];
 
     profileName.textContent = profile.name;
     profileBio.textContent = profile.bio || profile.handle;
+    profileHandle.textContent = profile.handle;
+    renderProfileAvatar(profile);
+    renderProfileWebsite(profile);
 
     for (const post of feed.posts) {
       if (await verifyPost(post, profile)) {
@@ -551,12 +574,51 @@ async function boot() {
     }
 
     verifiedPosts.sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
-    verificationStatus.textContent = verifiedPosts.length === 1 ? '1 verified post' : \`\${verifiedPosts.length} verified posts\`;
-    postsRoot.innerHTML = renderPosts(verifiedPosts, actionInbox);
+    verificationStatus.textContent = verifiedPosts.length === 1 ? 'Verified · 1 post' : \`Verified · \${verifiedPosts.length} posts\`;
+    postsRoot.innerHTML = renderPosts(verifiedPosts, { actions: publicActions }, profile);
   } catch (error) {
     verificationStatus.textContent = 'Unavailable';
     postsRoot.innerHTML = \`<p class="empty-state">\${escapeHtml(error.message || 'Could not load feed')}</p>\`;
   }
+}
+
+function renderProfileAvatar(profile) {
+  if (!profileAvatar) return;
+
+  if (profile.avatar) {
+    profileAvatar.textContent = '';
+    profileAvatar.style.backgroundImage = \`url("\${escapeAttribute(profile.avatar)}")\`;
+    profileAvatar.classList.add('profile-avatar-image');
+    return;
+  }
+
+  profileAvatar.textContent = profileInitials(profile.name || profile.handle);
+  profileAvatar.classList.remove('profile-avatar-image');
+}
+
+function renderProfileWebsite(profile) {
+  if (!profileWebsite) return;
+
+  if (!profile.website) {
+    profileWebsite.hidden = true;
+    return;
+  }
+
+  profileWebsite.hidden = false;
+  profileWebsite.href = profile.website;
+  profileWebsite.textContent = readableUrl(profile.website);
+}
+
+function mergeActionsById(...actionGroups) {
+  const actionsById = new Map();
+
+  for (const action of actionGroups.flat()) {
+    if (action?.id && !actionsById.has(action.id)) {
+      actionsById.set(action.id, action);
+    }
+  }
+
+  return [...actionsById.values()];
 }
 
 async function fetchOptionalJson(url, fallback) {
@@ -615,12 +677,19 @@ function base64UrlToBytes(value) {
   return bytes.buffer;
 }
 
-function renderPosts(posts, actionInbox) {
+function renderPosts(posts, actionInbox, profile) {
   if (posts.length === 0) return '<p class="empty-state">No verified posts yet.</p>';
   return posts.map((post) => \`
     <article class="post-card">
-      <h3>\${escapeHtml(formatDate(post.createdAt))}</h3>
-      <p>\${escapeHtml(post.content)}</p>
+      <header class="post-card-header">
+        <div class="post-author-avatar">\${escapeHtml(profileInitials(profile.name || post.author))}</div>
+        <div>
+          <strong>\${escapeHtml(profile.name || post.author)}</strong>
+          <span>\${escapeHtml(profile.handle || post.author)} · \${escapeHtml(formatDate(post.createdAt))}</span>
+        </div>
+        <span class="verified-badge post-verified">Verified</span>
+      </header>
+      <p class="post-content">\${escapeHtml(post.content)}</p>
       \${renderPostSocialSummary(summarizePostActions(post, actionInbox))}
       <details class="technical-details post-details">
         <summary>Signature</summary>
@@ -634,8 +703,30 @@ function formatDate(value) {
   return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
 }
 
+function profileInitials(value) {
+  return String(value || 'OS')
+    .split(/[\\s@._-]+/u)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('') || 'OS';
+}
+
+function readableUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.host.replace(/^www\\./u, '');
+  } catch {
+    return value;
+  }
+}
+
 function escapeHtml(value) {
   return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function escapeAttribute(value) {
+  return String(value).replace(/"/g, '%22');
 }
 `;
 }
@@ -692,7 +783,10 @@ export function renderPostSocialSummary(summary) {
             .map(
               (comment) => \`
                 <article class="post-comment">
-                  <strong>\${escapeHtml(comment.actor)}</strong>
+                  <header>
+                    <strong>\${escapeHtml(comment.actor)}</strong>
+                    <span>\${escapeHtml(formatSocialDate(comment.createdAt))}</span>
+                  </header>
                   <p>\${escapeHtml(comment.content)}</p>
                 </article>
               \`,
@@ -704,9 +798,9 @@ export function renderPostSocialSummary(summary) {
 
   return \`
     <section class="post-social-summary" aria-label="Public reactions">
-      <span>\${formatCount(summary.likes, 'like')}</span>
-      <span>\${formatCount(summary.dislikes, 'dislike')}</span>
-      <span>\${formatCount(summary.comments.length, 'comment')}</span>
+      <span aria-label="Likes"><span class="social-icon social-icon-like">\${likeIcon()}</span>\${formatCount(summary.likes, 'like')}</span>
+      <span aria-label="Dislikes"><span class="social-icon social-icon-dislike">\${dislikeIcon()}</span>\${formatCount(summary.dislikes, 'dislike')}</span>
+      <span aria-label="Comments"><span class="social-icon social-icon-comment">\${commentIcon()}</span>\${formatCount(summary.comments.length, 'comment')}</span>
     </section>
     \${commentList}
   \`;
@@ -722,6 +816,27 @@ function targetsPost(action, post) {
 
 function formatCount(count, singular) {
   return \`\${count} \${count === 1 ? singular : \`\${singular}s\`}\`;
+}
+
+function formatSocialDate(value) {
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
+}
+
+function likeIcon() {
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6c-2-1.8-5.1-1.5-6.9.6L12 7.4l-1.9-2.2C8.3 3.1 5.2 2.8 3.2 4.6 1 6.6.9 10 .9 10.1c0 4.9 7.8 10 10.2 11.4.6.3 1.2.3 1.8 0C15.3 20.1 23.1 15 23.1 10.1c0-.1-.1-3.5-2.3-5.5Z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+}
+
+function dislikeIcon() {
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h9.4c1.1 0 2.1.7 2.5 1.8l2 5.5c.6 1.6-.6 3.2-2.3 3.2h-4.4l.6 4.1c.2 1.3-.8 2.4-2.1 2.4h-.3c-.8 0-1.5-.4-1.9-1.1L6.5 14" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.8"/><path d="M3.5 4v10" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"/></svg>';
+}
+
+function commentIcon() {
+  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.2 5.1h13.6c1.2 0 2.2 1 2.2 2.2v6.9c0 1.2-1 2.2-2.2 2.2h-5.5L8 20.4v-4H5.2c-1.2 0-2.2-1-2.2-2.2V7.3c0-1.2 1-2.2 2.2-2.2Z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.8"/></svg>';
 }
 
 function escapeHtml(value) {
@@ -756,18 +871,54 @@ body {
   background: linear-gradient(180deg, rgba(77, 124, 255, 0.1), transparent 320px), linear-gradient(180deg, #060810 0%, #0b1020 58%, #070a12 100%);
 }
 a { color: #b9caff; }
-.page-shell { width: min(920px, 100%); margin: 0 auto; padding: 48px 20px; }
+.page-shell { width: min(920px, 100%); margin: 0 auto; padding: 40px 20px; }
 .profile-hero, .feed-section {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: rgba(16, 22, 36, 0.92);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
 }
-.profile-hero { padding: 32px; margin-bottom: 20px; }
+.profile-hero { padding: 28px; margin-bottom: 20px; }
 .network-label, h1, h2, p { margin: 0; }
 .network-label { color: var(--cyan); font-size: 0.82rem; font-weight: 800; text-transform: uppercase; }
 h1 { margin-top: 8px; font-size: clamp(2rem, 7vw, 4rem); line-height: 1; }
-.profile-hero p:last-child { max-width: 680px; margin-top: 14px; color: var(--muted); font-size: 1.05rem; line-height: 1.55; }
+.profile-summary { display: flex; align-items: center; gap: 18px; }
+.profile-avatar, .post-author-avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(44, 231, 240, 0.26);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(77, 124, 255, 0.95), rgba(44, 231, 240, 0.82));
+  color: #07101d;
+  font-weight: 900;
+}
+.profile-avatar { width: 84px; height: 84px; font-size: 1.55rem; }
+.profile-avatar-image { background-position: center; background-size: cover; }
+.profile-handle { margin-top: 8px; color: var(--muted); font-weight: 750; }
+.profile-bio { max-width: 680px; margin-top: 18px; color: #dce7f7; font-size: 1.05rem; line-height: 1.55; }
+.profile-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.verified-badge, .profile-website {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+.verified-badge {
+  border: 1px solid rgba(44, 231, 240, 0.26);
+  background: rgba(44, 231, 240, 0.12);
+  color: #aefbff;
+}
+.profile-website {
+  border: 1px solid rgba(128, 153, 193, 0.22);
+  background: rgba(17, 29, 51, 0.78);
+  color: #dce7f7;
+  text-decoration: none;
+}
+.profile-website[hidden] { display: none; }
 .feed-section { padding: 24px; }
 .section-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 [data-verification-status] {
@@ -780,10 +931,17 @@ h1 { margin-top: 8px; font-size: clamp(2rem, 7vw, 4rem); line-height: 1; }
 }
 .post-list { display: grid; gap: 12px; }
 .post-card { padding: 18px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-strong); }
-.post-card h3 { color: var(--muted); font-size: 0.86rem; }
-.post-card p { margin-top: 10px; color: #dce7f7; font-size: 1.05rem; line-height: 1.58; }
+.post-card-header { display: flex; align-items: center; gap: 12px; }
+.post-card-header strong { display: block; color: var(--ink); }
+.post-card-header span:not(.verified-badge) { color: var(--muted); font-size: 0.86rem; }
+.post-author-avatar { width: 40px; height: 40px; font-size: 0.84rem; }
+.post-verified { margin-left: auto; }
+.post-content { margin-top: 14px; color: #dce7f7; font-size: 1.05rem; line-height: 1.58; }
 .post-social-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-.post-social-summary span {
+.post-social-summary > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   min-height: 32px;
   padding: 7px 10px;
   border: 1px solid rgba(128, 153, 193, 0.2);
@@ -793,6 +951,8 @@ h1 { margin-top: 8px; font-size: clamp(2rem, 7vw, 4rem); line-height: 1; }
   font-size: 0.82rem;
   font-weight: 760;
 }
+.social-icon { width: 16px; height: 16px; color: var(--cyan); }
+.social-icon svg { display: block; width: 100%; height: 100%; }
 .post-comments { display: grid; gap: 8px; margin-top: 12px; }
 .post-comment {
   padding: 10px 12px;
@@ -800,7 +960,9 @@ h1 { margin-top: 8px; font-size: clamp(2rem, 7vw, 4rem); line-height: 1; }
   border-radius: 8px;
   background: rgba(17, 29, 51, 0.58);
 }
+.post-comment header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .post-comment strong { display: block; color: var(--ink); font-size: 0.8rem; }
+.post-comment span { color: var(--muted); font-size: 0.75rem; }
 .post-comment p { margin-top: 5px; font-size: 0.9rem; }
 .post-card code { color: var(--cyan); overflow-wrap: anywhere; }
 .technical-details { margin-top: 20px; color: var(--muted); }
@@ -810,9 +972,24 @@ h1 { margin-top: 8px; font-size: clamp(2rem, 7vw, 4rem); line-height: 1; }
 .empty-state { color: var(--muted); }
 @media (max-width: 640px) {
   .page-shell { padding: 20px 16px; }
+  .profile-summary { align-items: flex-start; flex-direction: column; }
+  .profile-avatar { width: 72px; height: 72px; }
   .section-header { align-items: flex-start; flex-direction: column; }
+  .post-card-header { align-items: flex-start; }
+  .post-verified { margin-left: 0; }
 }
 `;
+}
+
+function profileInitials(value: string): string {
+  return (
+    value
+      .split(/[\s@._-]+/u)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || 'OS'
+  );
 }
 
 function escapeHtml(value: string): string {
