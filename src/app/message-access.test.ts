@@ -26,8 +26,8 @@ describe('message access state', () => {
     expect(messageAccessState(profile(), 'owner@example.test')).toEqual({
       canSend: false,
       buttonDisabled: false,
-      buttonTitle: 'This page cannot receive messages yet',
-      notice: 'Ada cannot receive messages yet.',
+      buttonTitle: 'Messages are not turned on for this page yet',
+      notice: 'Ada has not turned on messages yet.',
     });
   });
 

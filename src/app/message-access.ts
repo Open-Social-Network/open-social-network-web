@@ -45,7 +45,7 @@ export function messageAccessState(
   return {
     canSend: false,
     buttonDisabled: false,
-    buttonTitle: 'This page cannot receive messages yet',
-    notice: `${profile.name} cannot receive messages yet.`,
+    buttonTitle: 'Messages are not turned on for this page yet',
+    notice: `${profile.name} has not turned on messages yet.`,
   };
 }
