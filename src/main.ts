@@ -481,7 +481,7 @@ function renderTimeline(): string {
         const target = postActionTarget(post);
         const targetKey = encodeActionTarget(target);
         const messageTargetKey = encodeMessageTarget(post.profile, targetKey);
-        const actionSummary = summarizePostActions(state.actions, target);
+        const actionSummary = summarizePostActions(visibleActions(), target);
         const pageAction = profilePageAction(post.profile.name);
 
         return `
@@ -1004,7 +1004,7 @@ async function reactToPost(button: HTMLButtonElement): Promise<void> {
 
   try {
     const target = decodeActionTarget(targetKey);
-    const currentReaction = summarizePostActions(state.actions, target).reactionsByActor[
+    const currentReaction = summarizePostActions(visibleActions(), target).reactionsByActor[
       state.owner.profile.handle
     ];
     const nextReaction: OpenSocialNetworkReaction =
@@ -1159,6 +1159,12 @@ function mergeActionsById(
 
 function currentTimeline(): TimelineResult {
   return mergeOwnerTimeline(state.timeline, state.owner);
+}
+
+function visibleActions(): OpenSocialNetworkAction[] {
+  const timelineActions = currentTimeline().actions;
+
+  return mergeActionsById(state.actions, timelineActions);
 }
 
 function savePendingPublishChanges(changes: OwnerPublishChanges): void {

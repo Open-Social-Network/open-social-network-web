@@ -344,7 +344,9 @@ export function mergeOwnerTimeline(
   const baseTimeline: TimelineResult = timeline ?? {
     profiles: [],
     posts: [],
+    actions: [],
     rejectedPosts: [],
+    rejectedActions: [],
     failures: [],
   };
 
@@ -373,7 +375,9 @@ export function mergeOwnerTimeline(
       (left, right) =>
         new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
     ),
+    actions: baseTimeline.actions,
     rejectedPosts: baseTimeline.rejectedPosts,
+    rejectedActions: baseTimeline.rejectedActions,
     failures: baseTimeline.failures,
   };
 }

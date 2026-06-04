@@ -204,7 +204,9 @@ describe('owner session', () => {
       {
         profiles: [session.profile],
         posts: [{ ...session.feed.posts[1]!, profile: session.profile }],
+        actions: [],
         rejectedPosts: [],
+        rejectedActions: [],
         failures: [],
       },
       session,
