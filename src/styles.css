@@ -454,6 +454,17 @@ button {
   margin: 0;
 }
 
+.owner-publish-ready-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.owner-publish-ready-actions .button {
+  flex: 1 1 160px;
+}
+
 .owner-message-button {
   width: 100%;
 }

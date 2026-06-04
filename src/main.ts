@@ -9,6 +9,7 @@ import { renderVerificationDiagnostics, verificationRejectedCount } from './app/
 import { loadDirectory } from './app/directory';
 import { messageAccessState, type MessageAccessState } from './app/message-access';
 import { messageInboxCopy } from './app/message-inbox-copy';
+import { renderPublishReady } from './app/publish-ready-view';
 import {
   deliverOwnerAction,
   needsManualActionPublish,
@@ -41,7 +42,6 @@ import {
   saveStoredOwnerPublishChanges,
   summarizeOwnerPublishReady,
   type OwnerPublishChanges,
-  type OwnerPublishReadySummary,
 } from './app/owner-publish';
 import type {
   PreparedDirectMessage,
@@ -810,17 +810,6 @@ function renderFloatingComposeButton(): string {
       ${composeIcon()}
       <span>Post</span>
     </button>
-  `;
-}
-
-function renderPublishReady(summary: OwnerPublishReadySummary): string {
-  return `
-    <section class="owner-publish-ready" aria-label="Public changes ready">
-      <strong>${escapeHtml(summary.title)}</strong>
-      <p>${escapeHtml(summary.detail)}</p>
-      <p>Upload the public folder anywhere your page is hosted.</p>
-      <button class="button button-secondary" type="button" data-action="owner-published">I published this</button>
-    </section>
   `;
 }
 
