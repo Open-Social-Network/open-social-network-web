@@ -131,17 +131,17 @@ export async function readOwnerDirectMessage(
   options: ReadOwnerDirectMessageOptions,
 ): Promise<ReadOwnerDirectMessage> {
   if (message.recipient !== session.profile.handle) {
-    throw new Error('This message was not sent to your page');
+    throw new Error('This message was sent to a different page.');
   }
 
   if (!session.messagePrivateKeyJwk) {
-    throw new Error('Open your page folder with private/messages.private.jwk.json to read messages');
+    throw new Error('Open your page folder again to read encrypted messages.');
   }
 
   const senderProfile = options.senderProfiles.find((profile) => profile.handle === message.sender);
 
   if (!senderProfile) {
-    throw new Error('Follow or load the sender profile before opening this message');
+    throw new Error("Follow or open the sender's page before reading this message.");
   }
 
   const recipientMessagePrivateKey = await importMessagePrivateKeyJwk(session.messagePrivateKeyJwk);

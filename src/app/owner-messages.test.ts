@@ -186,7 +186,7 @@ describe('owner direct messages', () => {
       readOwnerDirectMessage(recipient, prepared.message, {
         senderProfiles: [],
       }),
-    ).rejects.toThrow('Follow or load the sender profile before opening this message');
+    ).rejects.toThrow("Follow or open the sender's page before reading this message.");
   });
 
   it('rejects encrypted messages sent to another page', async () => {
@@ -217,6 +217,38 @@ describe('owner direct messages', () => {
       readOwnerDirectMessage(otherRecipient, prepared.message, {
         senderProfiles: [sender.profile],
       }),
-    ).rejects.toThrow('This message was not sent to your page');
+    ).rejects.toThrow('This message was sent to a different page.');
+  });
+
+  it('explains missing private message access without exposing key paths', async () => {
+    const sender = await createOwnerPage({
+      name: 'Sender',
+      handle: 'sender@example.test',
+      bio: '',
+      firstPost: 'Sender page',
+    });
+    const recipient = await createOwnerPage({
+      name: 'Recipient',
+      handle: 'recipient@example.test',
+      bio: '',
+      firstPost: 'Recipient page',
+    });
+    const prepared = await createOwnerDirectMessage(sender, recipient.profile, 'Private hello', {
+      id: 'message_1',
+      createdAt: '2026-06-04T12:00:00.000Z',
+    });
+
+    await expect(
+      readOwnerDirectMessage(
+        {
+          ...recipient,
+          messagePrivateKeyJwk: undefined,
+        },
+        prepared.message,
+        {
+          senderProfiles: [sender.profile],
+        },
+      ),
+    ).rejects.toThrow('Open your page folder again to read encrypted messages.');
   });
 });
