@@ -275,6 +275,7 @@ export function exportOwnerSiteFiles(
     'public/opensocial/actions/index.json': jsonFile(actionLog),
     'public/opensocial/actions/inbox/index.json': jsonFile(actionInbox),
     'public/opensocial/messages/inbox/index.json': jsonFile(messageLog),
+    'public/page-social.js': pageSocialScript(),
     'public/page.js': pageScript(),
     'public/profile.json': jsonFile(session.profile),
     'public/styles.css': pageStyles(),
@@ -457,6 +458,7 @@ function pageHtml(profile: OpenSocialNetworkIdentity): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(profile.name)} - Open Social Network</title>
     <meta name="description" content="${escapeHtml(profile.bio || profile.handle)}" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23070a12'/%3E%3Cpath d='M15 34c0-10 7-17 17-17s17 7 17 17-7 17-17 17-17-7-17-17Z' fill='%232ce7f0'/%3E%3Cpath d='M25 32c0-5 3-8 8-8s8 3 8 8-3 8-8 8-8-3-8-8Z' fill='%234d7cff'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="./styles.css" />
     <link rel="alternate" type="application/json" href="./profile.json" title="Open Social Network profile" />
     <link rel="alternate" type="application/json" href="./feed.json" title="Open Social Network feed" />
@@ -489,7 +491,9 @@ function pageHtml(profile: OpenSocialNetworkIdentity): string {
 }
 
 function pageScript(): string {
-  return `const profileName = document.querySelector('[data-profile-name]');
+  return `import { renderPostSocialSummary, summarizePostActions } from './page-social.js';
+
+const profileName = document.querySelector('[data-profile-name]');
 const profileBio = document.querySelector('[data-profile-bio]');
 const postsRoot = document.querySelector('[data-posts]');
 const verificationStatus = document.querySelector('[data-verification-status]');
@@ -500,6 +504,12 @@ async function boot() {
   try {
     const profile = await fetchJson('./profile.json');
     const feed = await fetchJson('./feed.json');
+    const actionInbox = await fetchOptionalJson('./opensocial/actions/inbox/index.json', {
+      protocol: 'open-social-network',
+      version: '0.1',
+      owner: profile.handle,
+      actions: [],
+    });
     const verifiedPosts = [];
 
     profileName.textContent = profile.name;
@@ -513,10 +523,18 @@ async function boot() {
 
     verifiedPosts.sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
     verificationStatus.textContent = verifiedPosts.length === 1 ? '1 verified post' : \`\${verifiedPosts.length} verified posts\`;
-    postsRoot.innerHTML = renderPosts(verifiedPosts);
+    postsRoot.innerHTML = renderPosts(verifiedPosts, actionInbox);
   } catch (error) {
     verificationStatus.textContent = 'Unavailable';
     postsRoot.innerHTML = \`<p class="empty-state">\${escapeHtml(error.message || 'Could not load feed')}</p>\`;
+  }
+}
+
+async function fetchOptionalJson(url, fallback) {
+  try {
+    return await fetchJson(url);
+  } catch {
+    return fallback;
   }
 }
 
@@ -568,12 +586,13 @@ function base64UrlToBytes(value) {
   return bytes.buffer;
 }
 
-function renderPosts(posts) {
+function renderPosts(posts, actionInbox) {
   if (posts.length === 0) return '<p class="empty-state">No verified posts yet.</p>';
   return posts.map((post) => \`
     <article class="post-card">
       <h3>\${escapeHtml(formatDate(post.createdAt))}</h3>
       <p>\${escapeHtml(post.content)}</p>
+      \${renderPostSocialSummary(summarizePostActions(post, actionInbox))}
       <details class="technical-details post-details">
         <summary>Signature</summary>
         <code>\${escapeHtml(post.signature.value)}</code>
@@ -588,6 +607,101 @@ function formatDate(value) {
 
 function escapeHtml(value) {
   return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+`;
+}
+
+function pageSocialScript(): string {
+  return `export function summarizePostActions(post, actionInbox) {
+  const reactionsByActor = new Map();
+  const comments = [];
+
+  const actions = [...(actionInbox?.actions ?? [])].sort(
+    (left, right) => new Date(left.createdAt) - new Date(right.createdAt),
+  );
+
+  for (const action of actions) {
+    if (!targetsPost(action, post)) {
+      continue;
+    }
+
+    if (action.kind === 'reaction') {
+      if (action.reaction === 'none') {
+        reactionsByActor.delete(action.actor);
+      } else if (action.reaction === 'like' || action.reaction === 'dislike') {
+        reactionsByActor.set(action.actor, action.reaction);
+      }
+
+      continue;
+    }
+
+    if (action.kind === 'comment' && typeof action.content === 'string') {
+      comments.push({
+        id: action.id,
+        actor: action.actor,
+        content: action.content,
+        createdAt: action.createdAt,
+      });
+    }
+  }
+
+  const reactions = [...reactionsByActor.values()];
+
+  return {
+    likes: reactions.filter((reaction) => reaction === 'like').length,
+    dislikes: reactions.filter((reaction) => reaction === 'dislike').length,
+    comments,
+  };
+}
+
+export function renderPostSocialSummary(summary) {
+  const commentList =
+    summary.comments.length > 0
+      ? \`
+        <div class="post-comments">
+          \${summary.comments
+            .map(
+              (comment) => \`
+                <article class="post-comment">
+                  <strong>\${escapeHtml(comment.actor)}</strong>
+                  <p>\${escapeHtml(comment.content)}</p>
+                </article>
+              \`,
+            )
+            .join('')}
+        </div>
+      \`
+      : '';
+
+  return \`
+    <section class="post-social-summary" aria-label="Public reactions">
+      <span>\${formatCount(summary.likes, 'like')}</span>
+      <span>\${formatCount(summary.dislikes, 'dislike')}</span>
+      <span>\${formatCount(summary.comments.length, 'comment')}</span>
+    </section>
+    \${commentList}
+  \`;
+}
+
+function targetsPost(action, post) {
+  return (
+    action?.target?.type === 'post' &&
+    action.target.id === post.id &&
+    action.target.author === post.author
+  );
+}
+
+function formatCount(count, singular) {
+  return \`\${count} \${count === 1 ? singular : \`\${singular}s\`}\`;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 `;
 }
@@ -639,6 +753,26 @@ h1 { margin-top: 8px; font-size: clamp(2rem, 7vw, 4rem); line-height: 1; }
 .post-card { padding: 18px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-strong); }
 .post-card h3 { color: var(--muted); font-size: 0.86rem; }
 .post-card p { margin-top: 10px; color: #dce7f7; font-size: 1.05rem; line-height: 1.58; }
+.post-social-summary { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.post-social-summary span {
+  min-height: 32px;
+  padding: 7px 10px;
+  border: 1px solid rgba(128, 153, 193, 0.2);
+  border-radius: 8px;
+  background: rgba(17, 29, 51, 0.8);
+  color: #b9caff;
+  font-size: 0.82rem;
+  font-weight: 760;
+}
+.post-comments { display: grid; gap: 8px; margin-top: 12px; }
+.post-comment {
+  padding: 10px 12px;
+  border: 1px solid rgba(128, 153, 193, 0.18);
+  border-radius: 8px;
+  background: rgba(17, 29, 51, 0.58);
+}
+.post-comment strong { display: block; color: var(--ink); font-size: 0.8rem; }
+.post-comment p { margin-top: 5px; font-size: 0.9rem; }
 .post-card code { color: var(--cyan); overflow-wrap: anywhere; }
 .technical-details { margin-top: 20px; color: var(--muted); }
 .technical-details summary { color: var(--ink); cursor: pointer; font-weight: 800; }

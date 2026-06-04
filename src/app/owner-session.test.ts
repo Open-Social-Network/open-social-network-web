@@ -111,6 +111,7 @@ describe('owner session', () => {
       'public/opensocial/actions/inbox/index.json',
       'public/opensocial/actions/index.json',
       'public/opensocial/messages/inbox/index.json',
+      'public/page-social.js',
       'public/page.js',
       'public/profile.json',
       'public/styles.css',
@@ -139,6 +140,16 @@ describe('owner session', () => {
       owner: session.profile.handle,
       messages: [],
     });
+    expect(publicFiles['public/page.js']).toContain(
+      "import { renderPostSocialSummary, summarizePostActions } from './page-social.js';",
+    );
+    expect(publicFiles['public/page.js']).toContain(
+      "fetchOptionalJson('./opensocial/actions/inbox/index.json'",
+    );
+    expect(publicFiles['public/page-social.js']).toContain('export function summarizePostActions');
+    expect(publicFiles['public/page-social.js']).toContain('escapeHtml(comment.content)');
+    expect(publicFiles['public/styles.css']).toContain('.post-social-summary');
+    expect(publicFiles['public/index.html']).toContain('rel="icon"');
   });
 
   it('exports signed public actions into the portable action folder', async () => {
