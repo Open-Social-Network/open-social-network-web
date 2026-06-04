@@ -137,7 +137,9 @@ The app starts with demo profiles and signed posts.
 
 ### Follow a Profile
 
-Paste a URL to a compatible `profile.json` file into the profile input and select `Follow`.
+Paste a profile page link into the profile input and select `Follow`.
+
+For generated Open Social Network pages, a normal page URL such as `https://ada.example/` or `https://ada.example/index.html` is enough. The app will look for the matching `profile.json` file automatically. Direct `profile.json` links still work for technical users and automated tools.
 
 The profile must expose:
 

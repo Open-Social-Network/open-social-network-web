@@ -25,7 +25,26 @@ export function saveStoredFollows(follows: string[]): void {
 }
 
 export function normalizeProfileUrl(value: string, baseUrl: string): string {
-  return new URL(value.trim(), baseUrl).toString();
+  const url = new URL(value.trim(), baseUrl);
+  const lastPathSegment = url.pathname.split('/').filter(Boolean).at(-1) ?? '';
+
+  url.search = '';
+  url.hash = '';
+
+  if (url.pathname.endsWith('/profile.json')) {
+    return url.toString();
+  }
+
+  if (url.pathname.endsWith('/index.html')) {
+    url.pathname = `${url.pathname.slice(0, -'index.html'.length)}profile.json`;
+    return url.toString();
+  }
+
+  if (!lastPathSegment || !lastPathSegment.includes('.')) {
+    url.pathname = `${url.pathname.replace(/\/?$/, '/')}profile.json`;
+  }
+
+  return url.toString();
 }
 
 export function toggleFollow(follows: string[], profileUrl: string): string[] {

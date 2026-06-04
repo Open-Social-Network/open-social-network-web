@@ -237,7 +237,7 @@ function bindEvents(): void {
       input.value = '';
       void refreshTimeline();
     } catch {
-      state.error = 'Enter a valid profile.json URL';
+      state.error = 'Enter a valid Open Social Network page link';
       render();
     }
   });
@@ -379,8 +379,8 @@ function bindEvents(): void {
 function renderFollowForm(): string {
   return `
     <form class="follow-form" data-form="follow">
-      <label class="sr-only" for="profileUrl">Profile URL</label>
-      <input id="profileUrl" name="profileUrl" type="url" placeholder="Paste a profile link" />
+      <label class="sr-only" for="profileUrl">Profile link</label>
+      <input id="profileUrl" name="profileUrl" type="text" inputmode="url" placeholder="Paste a profile page link" />
       <button class="button button-secondary" type="submit">Follow</button>
     </form>
   `;
